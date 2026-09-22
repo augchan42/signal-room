@@ -100,7 +100,7 @@ for x in [-2.3,2.3]:
     box('Floor monitor',(x,-1.15,.33),(.65,.45,.35),black)
     for z in [.23,.29,.35,.41]: box('Monitor grille',(x,-1.385,z),(.54,.025,.012),silver,.004)
 
-for i,(x,y) in enumerate([(-1.8,.15),(-.6,-.18),(.6,-.05),(1.8,.25)]):
+for i,(x,y) in enumerate([(0,-1.08),(-1.55,.28),(1.45,-.42),(0,.73)]):
     prefix=['01 Cropped jacket','02 Long vest','03 Oversized blazer','04 Sleeveless'][i]
     for side in [-1,1]:
         hip=(x+side*.115,y,1.03)
@@ -122,9 +122,18 @@ for i,(x,y) in enumerate([(-1.8,.15),(-.6,-.18),(.6,-.05),(1.8,.25)]):
         a=(x+side*(shoulder+.025),y,1.53)
         b=(x+side*(shoulder+.09),y-.025,1.23)
         c=(x+side*(shoulder+.06),y-.13,1.02)
+        if i==1:
+            b=(x+side*.30,y-.12,1.20)
+            c=(x+side*.26,y-.43,1.21)
+        elif i==2:
+            b=(x+side*.35,y-.12,1.25)
+            c=(x+side*.27,y-.27,1.22+side*.09)
+        elif i==3:
+            b=(x+side*.33,y-.14,1.22)
+            c=(x+side*.24,y-.38,1.27)
         limb(prefix+' upper arm',a,b,.14,.17,skin if i==3 else garment)
         limb(prefix+' forearm',b,c,.105,.135,skin if i in [1,3] else garment)
-        ellipsoid(prefix+' hand',(c[0],c[1],.98),(.065,.065,.10),skin)
+        ellipsoid(prefix+' hand',(c[0],c[1],c[2]-.035),(.065,.065,.08),skin)
     box(prefix+' neck',(x,y,1.67),(.13,.14,.18),skin,.03)
     head=ellipsoid(prefix+' head',(x,y-.015,1.88),(.145,.125,.205),skin)
     head.rotation_euler.z=[-.1,.1,-.12,.08][i]
@@ -141,6 +150,11 @@ for i,(x,y) in enumerate([(-1.8,.15),(-.6,-.18),(.6,-.05),(1.8,.25)]):
     box(prefix+' belt',(x,y-.122,1.07),(.33,.035,.035),black,.006)
     box(prefix+' buckle',(x,y-.146,1.07),(.055,.02,.045),silver,.005)
 
+for ob in list(kit.objects):
+    if ob.name.startswith('04 Sleeveless'): ob.location.z+=.57
+box('Drummer raised rostrum',(0,.67,.405),(1.35,1.5,.56),black)
+box('Rostrum light edge',(0,-.09,.64),(1.31,.025,.035),cyan,.006)
+
 def light(name,loc,target,color,power,size):
     data=bpy.data.lights.new(name,'AREA'); data.energy=power; data.color=color; data.shape='DISK'; data.size=size
     ob=bpy.data.objects.new(name,data); kit.objects.link(ob); ob.location=loc
@@ -152,7 +166,7 @@ light('Cyan rear rim',(-2,1,3),(0,0,1),(.04,.7,1),950,2)
 light('Coral rear rim',(2,1,3),(0,0,1),(1,.12,.07),750,2)
 camera_data=bpy.data.cameras.new('Portrait master')
 cam=bpy.data.objects.new('Portrait master',camera_data); kit.objects.link(cam)
-cam.location=(.15,-10,3.5)
+cam.location=(.15,-10,5.3)
 cam.rotation_euler=(Vector((0,0,1.65))-cam.location).to_track_quat('-Z','Y').to_euler()
 cam.data.type='ORTHO'; cam.data.ortho_scale=10.9; scene.camera=cam
 scene.render.resolution_x=1080; scene.render.resolution_y=1920; scene.render.resolution_percentage=50
