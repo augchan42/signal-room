@@ -32,6 +32,7 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = false }
+    sourceSets.getByName("test").resources.srcDir("src/main/assets")
 }
 
 dependencies {

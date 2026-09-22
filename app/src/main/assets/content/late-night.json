@@ -1,0 +1,153 @@
+{
+  "contentVersion": 1,
+  "title": "Late-night debut",
+  "brief": [
+    "The late-night slot rewards restrained atmosphere and a coherent performance.",
+    "A richer warm arrangement can grow the retro audience even when it is not the safest invitation plan.",
+    "Electric Driving can reach performance fans, but its exposed pace makes fatigue matter."
+  ],
+  "members": {
+    "FRONTMAN": {
+      "displayName": "Frontman",
+      "strength": "Restrained lead presence; strongest when the melody has space.",
+      "skill": 86,
+      "fatigue": 40,
+      "suitability": { "SPARSE": 12, "DRIVING": 0, "LAYERED": -4 },
+      "conceptSuitability": { "MONOCHROME": 12, "WARM": 0, "ELECTRIC": -4 }
+    },
+    "KEYBOARDIST": {
+      "displayName": "Keyboardist",
+      "strength": "Warm synth arranger; handles dense counterlines cleanly.",
+      "skill": 80,
+      "fatigue": 15,
+      "suitability": { "SPARSE": 6, "DRIVING": -4, "LAYERED": 10 },
+      "conceptSuitability": { "MONOCHROME": 0, "WARM": 8, "ELECTRIC": 0 }
+    },
+    "KEYTAR": {
+      "displayName": "Keytar player",
+      "strength": "Electric showmanship; turns active passages into visible hooks.",
+      "skill": 74,
+      "fatigue": 25,
+      "suitability": { "SPARSE": 0, "DRIVING": 14, "LAYERED": 2 },
+      "conceptSuitability": { "MONOCHROME": -4, "WARM": 0, "ELECTRIC": 10 }
+    },
+    "DRUMMER": {
+      "displayName": "Drummer",
+      "strength": "Precise restrained percussion; supports silhouette-led staging.",
+      "skill": 82,
+      "fatigue": 30,
+      "suitability": { "SPARSE": -6, "DRIVING": 8, "LAYERED": 4 },
+      "conceptSuitability": { "MONOCHROME": 10, "WARM": -4, "ELECTRIC": 0 }
+    }
+  },
+  "arrangements": {
+    "SPARSE": {
+      "displayName": "Sparse",
+      "riskDescription": "Exposed lead: featured-member skill is easy to hear.",
+      "baseExecution": -12,
+      "skillWeight": 0.80,
+      "fatigueWeight": 0.25,
+      "coordinationWeight": 0,
+      "conceptCoherence": { "MONOCHROME": 75, "WARM": 72, "ELECTRIC": 42 },
+      "conceptFit": { "MONOCHROME": 84, "WARM": 72, "ELECTRIC": 35 },
+      "energy": 30,
+      "texture": 70
+    },
+    "DRIVING": {
+      "displayName": "Driving",
+      "riskDescription": "Active rhythm: fatigue can pull the whole take down.",
+      "baseExecution": 27,
+      "skillWeight": 0.50,
+      "fatigueWeight": 0.75,
+      "coordinationWeight": 0,
+      "conceptCoherence": { "MONOCHROME": 52, "WARM": 62, "ELECTRIC": 76 },
+      "conceptFit": { "MONOCHROME": 50, "WARM": 60, "ELECTRIC": 55 },
+      "energy": 85,
+      "texture": 40
+    },
+    "LAYERED": {
+      "displayName": "Layered",
+      "riskDescription": "Dense coordination: coherence and refinement affect execution.",
+      "baseExecution": 5,
+      "skillWeight": 0.50,
+      "fatigueWeight": 0.30,
+      "coordinationWeight": 0.45,
+      "conceptCoherence": { "MONOCHROME": 68, "WARM": 78, "ELECTRIC": 65 },
+      "conceptFit": { "MONOCHROME": 48, "WARM": 60, "ELECTRIC": 45 },
+      "energy": 60,
+      "texture": 90
+    }
+  },
+  "concepts": {
+    "MONOCHROME": { "displayName": "Monochrome signal", "brightness": 20 },
+    "WARM": { "displayName": "Warm transmission", "brightness": 50 },
+    "ELECTRIC": { "displayName": "Electric broadcast", "brightness": 85 }
+  },
+  "segments": {
+    "performance": {
+      "displayName": "Performance fans",
+      "initial": { "awareness": 10, "affinity": 20 },
+      "preferences": { "energy": 85, "texture": 45, "brightness": 85 }
+    },
+    "vocal": {
+      "displayName": "Melodic-lead fans",
+      "initial": { "awareness": 10, "affinity": 20 },
+      "preferences": { "energy": 35, "texture": 25, "brightness": 35 }
+    },
+    "fashion": {
+      "displayName": "Fashion fans",
+      "initial": { "awareness": 10, "affinity": 20 },
+      "preferences": { "energy": 70, "texture": 75, "brightness": 80 }
+    },
+    "story": {
+      "displayName": "Story fans",
+      "initial": { "awareness": 10, "affinity": 20 },
+      "preferences": { "energy": 35, "texture": 45, "brightness": 50 }
+    },
+    "retro": {
+      "displayName": "Retro synth fans",
+      "initial": { "awareness": 10, "affinity": 20 },
+      "preferences": { "energy": 45, "texture": 85, "brightness": 50 }
+    }
+  },
+  "balance": {
+    "weights": [0.35, 0.40, 0.25],
+    "invitationThreshold": 65,
+    "rehearsalGains": [10, 6, 3],
+    "refinementGains": [12, 7, 4],
+    "fatiguePerRehearsal": 12,
+    "recoveryPerRest": 25,
+    "audience": {
+      "maxAwarenessGain": 20,
+      "awarenessFitCoefficient": 0.10,
+      "awarenessQualityCoefficient": 0.08,
+      "affinityQualityCoefficient": 0.20,
+      "affinityFitCoefficient": 0.18,
+      "adoptionAffinityGain": 10,
+      "adoptionFinalAffinity": 30,
+      "adoptionAwarenessGain": 10
+    }
+  },
+  "researchReport": [
+    "Performance fans prefer high energy and bright staging; Driving with electric light reaches them fastest but fatigue is visible.",
+    "Melodic-lead fans prefer lower energy and open texture; this instrumental booking judges space for the lead, not singing.",
+    "Fashion fans respond to bright styling, texture and movement together.",
+    "Story fans prefer restrained energy with a clear warm visual idea.",
+    "Retro synth fans prefer rich texture and warm brightness; Layered warm arrangements can build their affinity.",
+    "The late-night booker values atmosphere, coherence and clean execution over raw spectacle."
+  ],
+  "mixDescriptions": {
+    "sparse-frontman": "Exposed lead over open bass and pad; the frontman's synth melody is foregrounded, with no singing.",
+    "sparse-keyboardist": "Exposed lead over open bass and pad; the keyboardist's arpeggio and countermelody are foregrounded.",
+    "sparse-keytar": "Exposed lead over open bass and pad; the keytar player's short melodic answers are foregrounded.",
+    "sparse-drummer": "Exposed lead over open bass and pad; the drummer's percussion variation is foregrounded.",
+    "driving-frontman": "Active bass and electronic drums; the frontman's synth melody is foregrounded, with no singing.",
+    "driving-keyboardist": "Active bass and electronic drums; the keyboardist's arpeggio and countermelody are foregrounded.",
+    "driving-keytar": "Active bass and electronic drums; the keytar player's short melodic answers are foregrounded.",
+    "driving-drummer": "Active bass and electronic drums; the drummer's percussion variation is foregrounded.",
+    "layered-frontman": "Pad and counterline surround the lead; the frontman's synth melody is foregrounded, with no singing.",
+    "layered-keyboardist": "Pad and counterline surround the lead; the keyboardist's arpeggio and countermelody are foregrounded.",
+    "layered-keytar": "Pad and counterline surround the lead; the keytar player's short melodic answers are foregrounded.",
+    "layered-drummer": "Pad and counterline surround the lead; the drummer's percussion variation is foregrounded."
+  }
+}
