@@ -1,0 +1,8 @@
+.DS_Store
+*.blend1
+*.blend2
+art/blender/mvp/draft-*.png
+art/blender/mvp/frames/
+art/blender/mvp/mask-frames/
+art/blender/mvp/raw-*.png
+__pycache__/

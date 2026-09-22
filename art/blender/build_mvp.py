@@ -93,10 +93,28 @@ for i,(x,y) in enumerate([(0,-1.08),(-1.55,.28),(1.45,-.42),(0,.73)]):
     origin=root.location.copy()
     for f in range(1,122,12):
         t=(f-1)/120*math.tau
-        root.location=origin+Vector((.018*math.sin(t),0,.010*math.sin(t*2)))
+        root.location=origin+Vector((.032*math.sin(t),0,.010*math.sin(t*2)))
         root.rotation_euler=(0,.013*math.sin(t),.018*math.sin(t))
         root.keyframe_insert(data_path='location',frame=f)
         root.keyframe_insert(data_path='rotation_euler',frame=f)
+    scene.frame_set(1); bpy.context.view_layer.update()
+    head_joint=empty('HEAD TURN %d'%i,(x,y,lift+2.08))
+    bpy.context.view_layer.update(); parent_keep(head_joint,root)
+    for ob in list(kit.objects):
+        if ob.name.startswith(prefix) and any(p in ob.name for p in head_parts): parent_keep(ob,head_joint)
+    for f in [1,31,61,91,121]:
+        head_joint.rotation_euler.z=.075*math.sin((f-1)*math.tau/120+i)
+        head_joint.keyframe_insert('rotation_euler',frame=f)
+
+# Raise the frontman's right hand to the microphone: deliberate held pose.
+for part in ['upper arm.001','forearm.001','hand.001']:
+    ob=bpy.data.objects.get('01 Cropped jacket '+part)
+    if ob: bpy.data.objects.remove(ob,do_unlink=True)
+upper=limb('01 Cropped jacket mic upper arm',(.29,-1.08,1.70),(.39,-1.25,1.46),.14,.17,bpy.data.materials['SUIT 0'])
+fore=limb('01 Cropped jacket mic forearm',(.39,-1.25,1.46),(.13,-1.37,1.76),.11,.13,bpy.data.materials['SUIT 0'])
+hand=ellipsoid('01 Cropped jacket mic hand',(.13,-1.37,1.76),(.066,.055,.078),skin)
+bpy.context.view_layer.update()
+for ob in [upper,fore,hand]: parent_keep(ob,roots[0])
 
 # Recessed rig, an arched broadcast identifier, and modular tier additions.
 for ob in list(kit.objects):
@@ -138,7 +156,7 @@ import numpy as np
 w,h=1024,512
 yy,xx=np.mgrid[0:h,0:w]; u=xx/w; v=yy/h
 patterns={}
-for kind in ['signal-bars','test-pattern','waveform']:
+for kind in ['signal-bars','test-pattern','waveform','blank']:
     pixels=np.zeros((h,w,4),dtype=np.float32); pixels[:,:,:3]=(.005,.012,.024); pixels[:,:,3]=1
     if kind=='signal-bars':
         for j in range(19):
@@ -149,7 +167,7 @@ for kind in ['signal-bars','test-pattern','waveform']:
         colors=[(.55,.52,.39),(.03,.38,.53),(.37,.08,.28),(.18,.40,.23),(.44,.09,.07)]
         for j,col in enumerate(colors): pixels[(u>=j/5)&(u<(j+1)/5)&(v>.25)&(v<.70),:3]=col
         pixels[(abs(v-.19)<.01)|(abs(v-.76)<.008),:3]=(.4,.45,.45)
-    else:
+    elif kind=='waveform':
         for j in range(3):
             wave=.36+j*.15+.10*np.sin(u*math.tau*(2+j)+j)*np.sin(u*math.pi)
             pixels[abs(v-wave)<.0035,:3]=[(.02,.55,.7),(.4,.14,.24),(.36,.37,.26)][j]
@@ -167,6 +185,8 @@ for f in range(1,122,12):
 # Linked crowd silhouettes and one shared light-stick mesh per colour.
 rng=random.Random(23)
 audience=empty('AUDIENCE | five fan segments')
+silhouette=material('Audience matte silhouettes',(.004,.007,.012))
+sn=next(n for n in silhouette.node_tree.nodes if n.type=='BSDF_PRINCIPLED'); sn.inputs['Roughness'].default_value=1; sn.inputs['Specular IOR Level'].default_value=0
 crowd_heads={}; crowd_bodies={}; stick_meshes={}
 for row in range(4):
     count=9+row*2
@@ -175,8 +195,8 @@ for row in range(4):
         y=-2.45-row*.56+rng.uniform(-.07,.07)
         z=.76+rng.uniform(-.12,.12)
         before=set(kit.objects)
-        body=ellipsoid('Audience silhouette torso',(x,y,z*.60),(.17,.095,z*.42),black,8,6)
-        head=ellipsoid('Audience silhouette head',(x,y,z),(.10,.095,.13),black,8,6)
+        body=ellipsoid('Audience silhouette torso',(x,y,z*.47),(.17,.095,z*.48),silhouette,8,6)
+        head=ellipsoid('Audience silhouette head',(x,y,z),(.10,.095,.13),silhouette,8,6)
         # These remain silhouettes, never individual detailed characters.
         if row in crowd_heads: head.data=crowd_heads[row]
         else: crowd_heads[row]=head.data
@@ -184,7 +204,7 @@ for row in range(4):
         else: crowd_bodies[row]=body.data
         segment=(j+row*3)%5
         hand=(x+.18,y,z+.15)
-        limb('Audience raised arm',(x+.11,y,z*.75),hand,.055,.065,black)
+        limb('Audience raised arm',(x+.11,y,z*.75),hand,.055,.065,silhouette)
         stick=cylinder('FAN STICK %02d %02d'%(row,j),(hand[0],y,z+.31),.028,.24,segment_mats[segment],8)
         if segment in stick_meshes: stick.data=stick_meshes[segment]
         else: stick_meshes[segment]=stick.data
@@ -222,6 +242,8 @@ box('Booth lower wall',(0,-4.75,.68),(7,.20,1.35),panel)
 for x in [-3.15,3.15]: box('Booth window jamb',(x,-4.75,2.65),(.3,.22,2.65),black)
 for z in [1.38,3.97]: box('Booth window sill',(0,-4.75,z),(6.5,.25,.14),silver)
 box('Booth header',(0,-4.75,4.35),(7,.23,.66),panel)
+box('Booth upper acoustic wall',(0,-4.74,6.7),(9,.25,4.1),black)
+for x in [-3.8,3.8]: box('Booth side acoustic wall',(x,-4.74,2.2),(1.0,.25,4.2),black)
 label('Booth broadcast mark','S I G N A L   R O O M',(-2.50,-4.90,4.32),.24,ivory)
 label('Booth subtitle','CONTROL 01   /   WEEKLY MUSIC TRANSMISSION',(-2.50,-4.90,4.08),.095,muted)
 box('Booth ON AIR enclosure',(2.05,-4.94,4.29),(1.35,.14,.37),black)
@@ -273,7 +295,7 @@ fancam=camera('CAM | Frontman fancam',(.10,-7.5,2.8),(0,-1.08,1.35),3.40)
 synthcam=camera('CAM | Producer fancam',(-2.7,-5.4,3.1),(-1.5,0,1.3),3.25)
 keycam=camera('CAM | Keytar fancam',(2.6,-5.4,2.9),(1.45,-.42,1.30),3.25)
 drumcam=camera('CAM | Drummer fancam',(.2,-4.6,3.4),(0,.65,1.8),3.25)
-controlcam=camera('CAM | Control room',(0,-11.4,4.5),(0,-4.75,2.0),8.8)
+controlcam=camera('CAM | Control room',(0,-11.4,3.0),(0,-5.4,1.8),11.7)
 for cam in [fancam,synthcam,keycam,drumcam]:
     base=cam.location.copy()
     for f in [1,31,61,91,121]:
@@ -294,6 +316,7 @@ for matname in ['Signal coral','Electric cyan']:
         n.inputs['Emission Strength'].default_value=.7; n.inputs['Emission Strength'].keyframe_insert('default_value',frame=f+5)
 
 # Settings used by the render driver and editable in Blender's scene properties.
+exec(compile((ROOT/'add_special_stage.py').read_text(),'add_special_stage.py','exec'))
 manifest={'show':'Signal Room','band':'Synthwave','hooks':['Afterimage','Night Frequency','Last Signal'],'fps':24,'frames':120,'bpm':120,'segments':[{'id':i,'name':s[0],'hex':s[2]} for i,s in enumerate(SEGMENTS)],'cameras':[c.name for c in [group,fancam,synthcam,keycam,drumcam,controlcam]],'patterns':list(patterns),'screen_object':screen.name,'tiers':{'1':'Late-night cable','2':'Mid-week show','3':'Flagship broadcast'}}
 (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
 # Keep the runtime controller as a Blender text block as well as a source file.

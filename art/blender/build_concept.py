@@ -15,7 +15,12 @@ def material(name, color, metal=0, emission=0):
     m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     m.diffuse_color = (*color, 1)
     m.use_nodes = True
-    n = next(n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
+    n = next((n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+    if n is None:
+        m.node_tree.nodes.clear()
+        n = m.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
+        output = m.node_tree.nodes.new('ShaderNodeOutputMaterial')
+        m.node_tree.links.new(n.outputs[0], output.inputs['Surface'])
     n.inputs['Base Color'].default_value = (*color, 1)
     n.inputs['Roughness'].default_value = .48
     n.inputs['Metallic'].default_value = metal
