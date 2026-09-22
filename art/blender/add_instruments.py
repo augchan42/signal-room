@@ -21,11 +21,11 @@ def keyboard(name,x,y,z,width=1.42,white_count=35):
     for j in range(13):
         box(name+' knob %02d'%j,(x-width*.40+j*width*.062,y+.12,z+.116),(.027,.026,.038),silver,.006)
     box(name+' green display',(x+.36,y+.105,z+.104),(.14,.09,.01),led,.003)
-    label(name+' KORG badge','KORG',(x-width*.40,y-.236,z-.006),.088,keys)
+    label(name+' BORG badge','BORG',(x-width*.40,y-.236,z-.006),.088,keys)
     label(name+' panel legend','POLYPHONIC  /  SIGNAL',(x-.30,y+.08,z+.104),.020,keys,(0,0,0))
 
-keyboard('KORG main synthesizer',-1.55,-.24,1.13)
-keyboard('KORG upper synthesizer',-1.55,.11,1.40,1.27,28)
+keyboard('BORG main synthesizer',-1.55,-.24,1.13)
+keyboard('BORG upper synthesizer',-1.55,.11,1.40,1.27,28)
 for side in [-1,1]:
     x=-1.55+side*.55
     limb('Synth X stand',(x,-.46,.18),(-1.55-side*.55,-.10,1.09),.035,.035,silver)
