@@ -1,0 +1,87 @@
+{
+  "portrait_stills_checked": 22,
+  "mask_checks": {
+    "screen-mask-producer.png": {
+      "size": [
+        1080,
+        1920
+      ],
+      "range": [
+        0,
+        255
+      ]
+    },
+    "screen-mask-drummer.png": {
+      "size": [
+        1080,
+        1920
+      ],
+      "range": [
+        0,
+        255
+      ]
+    },
+    "screen-mask-frontman.png": {
+      "size": [
+        1080,
+        1920
+      ],
+      "range": [
+        0,
+        255
+      ]
+    },
+    "screen-mask-control.png": {
+      "size": [
+        1080,
+        1920
+      ],
+      "range": [
+        0,
+        255
+      ]
+    },
+    "screen-mask-keytar.png": {
+      "size": [
+        1080,
+        1920
+      ],
+      "range": [
+        0,
+        255
+      ]
+    },
+    "screen-mask-group.png": {
+      "size": [
+        1080,
+        1920
+      ],
+      "range": [
+        0,
+        255
+      ]
+    }
+  },
+  "screen_patterns": 3,
+  "transparent_hook_captions": 3,
+  "videos": {
+    "signal-room-fancam-5s.mp4": {
+      "codec_name": "h264",
+      "width": 1080,
+      "height": 1920,
+      "r_frame_rate": "24/1",
+      "duration": "5.000000",
+      "nb_frames": "120"
+    },
+    "screen-mask-fancam-5s.mp4": {
+      "codec_name": "h264",
+      "width": 1080,
+      "height": 1920,
+      "r_frame_rate": "24/1",
+      "duration": "5.000000",
+      "nb_frames": "120"
+    }
+  },
+  "per_frame_screen_projections": 120,
+  "review_browser_test": "Pattern change and occlusion observed; video playback observed; control-room overlay observed separately."
+}

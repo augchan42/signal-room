@@ -173,7 +173,7 @@ for kind in ['signal-bars','test-pattern','waveform','blank']:
             pixels[abs(v-wave)<.0035,:3]=[(.02,.55,.7),(.4,.14,.24),(.36,.37,.26)][j]
         pixels[(xx%64<1)|(yy%64<1),:3]+=.008
     img=bpy.data.images.new('SCREEN '+kind,width=w,height=h,alpha=True)
-    img.pixels.foreach_set(pixels.reshape(-1)); img.filepath_raw=str(OUT/(kind+'.png')); img.file_format='PNG'; img.save(); img.pack()
+    img.pixels.foreach_set(pixels.reshape(-1)); img.filepath_raw=str(OUT/(kind+'.png')); img.file_format='PNG'; img.save(); img.pack(); img.use_fake_user=True
     patterns[kind]=img
 nodes=screen_material.node_tree.nodes; nodes.clear()
 output=nodes.new('ShaderNodeOutputMaterial'); emission=nodes.new('ShaderNodeEmission'); tex=nodes.new('ShaderNodeTexImage'); tex.image=patterns['waveform']
@@ -311,7 +311,7 @@ for ob in kit.objects:
             ob.data.energy=base*.45; ob.data.keyframe_insert('energy',frame=f+4)
 for matname in ['Signal coral','Electric cyan']:
     n=next(n for n in bpy.data.materials[matname].node_tree.nodes if n.type=='BSDF_PRINCIPLED')
-    for f in range(1,122,48):
+    for f in range(1,122,24):
         n.inputs['Emission Strength'].default_value=3.5; n.inputs['Emission Strength'].keyframe_insert('default_value',frame=f)
         n.inputs['Emission Strength'].default_value=.7; n.inputs['Emission Strength'].keyframe_insert('default_value',frame=f+5)
 

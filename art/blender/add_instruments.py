@@ -10,6 +10,7 @@ rubber=material('Drum pad rubber',(.014,.019,.024))
 led=material('Display phosphor',(.2,.82,.65),emission=2)
 
 def keyboard(name,x,y,z,width=1.42,white_count=35):
+    before=set(kit.objects)
     box(name+' chassis',(x,y,z),(width,.46,.12),black,.025)
     for side in [-1,1]: box(name+' walnut cheek',(x+side*(width/2-.025),y,z+.03),(.06,.46,.17),wood,.015)
     usable=width-.18; step=usable/white_count; left=x-usable/2
@@ -23,6 +24,14 @@ def keyboard(name,x,y,z,width=1.42,white_count=35):
     box(name+' green display',(x+.36,y+.105,z+.104),(.14,.09,.01),led,.003)
     label(name+' BORG badge','BORG',(x-width*.40,y-.236,z-.006),.088,keys)
     label(name+' panel legend','POLYPHONIC  /  SIGNAL',(x-.30,y+.08,z+.104),.020,keys,(0,0,0))
+    # Performer stands behind the instrument at +Y: keys must be on that side.
+    # Rotate the entire chassis/panel/key assembly, then add a rear maker badge.
+    from mathutils import Matrix, Vector
+    rotation=Matrix.Rotation(math.pi,3,'Z'); pivot=Vector((x,y,z))
+    for ob in set(kit.objects)-before:
+        ob.location=pivot+rotation@(ob.location-pivot)
+        ob.rotation_euler=(rotation@ob.rotation_euler.to_matrix()).to_euler()
+    label(name+' audience rear badge','BORG',(x-width*.40,y-.236,z-.006),.088,keys)
 
 keyboard('BORG main synthesizer',-1.55,-.24,1.13)
 keyboard('BORG upper synthesizer',-1.55,.11,1.40,1.27,28)

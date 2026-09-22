@@ -28,6 +28,15 @@ if mode in ['drafts','stills']:
         set_state(tier=3,camera_name='group',encore=True); render('first-win')
         set_state(tier=1,camera_name='group',tone='neutral',special=True); render('special-stage')
         set_state(tier=3,camera_name='producer'); render('producer')
+elif mode=='plates':
+    for tier in [1,2,3]:
+        for camera in ['group','frontman','producer']:
+            set_state(tier=tier,camera_name=camera,pattern='blank'); scene.frame_set(1)
+            render('plate-%d-%s'%(tier,camera))
+elif mode=='control-special':
+    for tier in [1,2,3]:
+        set_state(tier=tier,camera_name='control'); scene.frame_set(1); render('control-%d'%tier)
+    set_state(tier=1,camera_name='group',tone='neutral',special=True); render('special-stage')
 elif mode=='loop':
     set_state(tier=3,camera_name='frontman',tone='cool')
     folder=OUT/'frames'; folder.mkdir(exist_ok=True)
@@ -52,6 +61,9 @@ elif mode in ['masks','loop-masks']:
     for camera in (['frontman'] if mode=='loop-masks' else ['group','frontman','producer','keytar','drummer','control']):
         set_state(tier=3,camera_name=camera); scene.frame_set(1)
         for ob in scene.objects:
+            if ob.type in ['MESH','FONT','CURVE'] and ob.name!='T3 bounded haze':
+                for slot in ob.material_slots:
+                    slot.link='OBJECT'; slot.material=white if ob.name=='REAR SCREEN | mask target' else black
             if ob.type=='LIGHT' or ob.name=='T3 bounded haze' or ob.get('role')=='screen-echo': ob.hide_render=True
         render('screen-mask-'+camera)
         target=bpy.data.objects['REAR SCREEN | mask target']
