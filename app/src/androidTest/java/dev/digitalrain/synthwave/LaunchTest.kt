@@ -3,6 +3,7 @@ package dev.digitalrain.synthwave
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -34,5 +35,11 @@ class LaunchTest {
             }
         }
         assert(hasLightTextPixel) { "Booking title has no readable light pixels" }
+    }
+
+    @Test
+    fun showsBlenderControlRoomBackdrop() {
+        compose.onNodeWithContentDescription("Signal Room control room")
+            .assertIsDisplayed()
     }
 }

@@ -43,3 +43,9 @@ The invitation threshold remains 65.
 - A Driving/frontman/monochrome rest example scores 67.10 versus 63.00 after replacing one rest with rehearsal.
 
 These figures are prototype balance evidence, not claims about later bookings.
+
+## Runtime visual bridge
+
+The booking shell loads `app/src/main/assets/demo/visual/control-room.webp`, derived from the 1080 × 1920 Blender render `art/blender/mvp/control-1.png`. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The later concept stills and member stills will use the same asset path contract before `AssetCatalog` selects them dynamically.
+
+Display text uses the bundled Oxanium variable font from the official Google Fonts repository. Its SIL Open Font License is packaged at `app/src/main/assets/licenses/oxanium-ofl.txt`. Body text continues to use the platform sans-serif for readability.

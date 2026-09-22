@@ -23,29 +23,46 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.digitalrain.synthwave.core.ui.SceneBackdrop
 
 @Composable
 fun BookingScreen(modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
-    CompositionLocalProvider(LocalContentColor provides colors.onBackground) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(colors.background),
+    ) {
+        SceneBackdrop(
+            assetPath = "demo/visual/control-room.webp",
+            contentDescription = "Signal Room control room",
+            modifier = Modifier.fillMaxSize(),
+        )
         Box(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        listOf(colors.background, Color(0xFF13233A), colors.background),
+                        listOf(
+                            Color(0xB308111D),
+                            Color(0x2208111D),
+                            Color(0xD908111D),
+                        ),
                     ),
-                )
-                .safeDrawingPadding()
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-        ) {
+                ),
+        )
+        CompositionLocalProvider(LocalContentColor provides colors.onBackground) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = "SIGNAL ROOM / BOOKING 01",
+                        style = MaterialTheme.typography.labelLarge,
                         color = colors.primary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
@@ -53,13 +70,14 @@ fun BookingScreen(modifier: Modifier = Modifier) {
                     )
                     Text(
                         text = "Late-night debut",
-                        fontSize = 36.sp,
-                        lineHeight = 40.sp,
-                        fontWeight = FontWeight.Black,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontSize = 38.sp,
+                        lineHeight = 42.sp,
+                        fontWeight = FontWeight.ExtraBold,
                     )
                     Text(
                         text = "Build a coherent special stage, then take it live.",
-                        color = colors.onSurface.copy(alpha = 0.72f),
+                        color = colors.onBackground.copy(alpha = 0.78f),
                         fontSize = 17.sp,
                         lineHeight = 24.sp,
                     )
@@ -67,7 +85,7 @@ fun BookingScreen(modifier: Modifier = Modifier) {
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = colors.surface.copy(alpha = 0.92f),
+                    color = colors.surface.copy(alpha = 0.94f),
                     shape = RoundedCornerShape(18.dp),
                 ) {
                     Row(
@@ -76,10 +94,25 @@ fun BookingScreen(modifier: Modifier = Modifier) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text("SHOW", color = colors.secondary, fontSize = 11.sp)
-                            Text("23:40 / Cable slot", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = "SHOW",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colors.secondary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "23:40 / Cable slot",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
                         }
-                        Text("3 PLAN SLOTS", color = colors.primary, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "3 PLAN SLOTS",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = colors.primary,
+                            fontWeight = FontWeight.Bold,
+                        )
                     }
                 }
             }
