@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.SignalRoom" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#08111D</item>
+        <item name="android:navigationBarColor">#08111D</item>
+    </style>
+</resources>

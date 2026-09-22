@@ -1,0 +1,40 @@
+{
+  "dimensions": [
+    1080,
+    1920
+  ],
+  "seconds": 5,
+  "brand": "BORG",
+  "keybed_orientation": "Both keybeds face +Y toward the keyboardist",
+  "keyboard_stack": "Upper tier steps away; both playing surfaces tilt toward player",
+  "tiers": {
+    "1": {
+      "light_sticks": 0,
+      "visible_objects": 381
+    },
+    "2": {
+      "light_sticks": 9,
+      "visible_objects": 437
+    },
+    "3": {
+      "light_sticks": 48,
+      "visible_objects": 654
+    }
+  },
+  "audience_mix_all_five_inputs": "passed",
+  "segment_monitor_inputs": "Awareness lamps and affinity bar scales respond to five-segment data",
+  "material_only_tone_swaps": "passed",
+  "cameras": {
+    "group": "CAM | Broadcast group",
+    "frontman": "CAM | Frontman fancam",
+    "producer": "CAM | Producer fancam",
+    "keytar": "CAM | Keytar fancam",
+    "drummer": "CAM | Drummer fancam",
+    "control": "CAM | Control room"
+  },
+  "encore": "trophy and confetti visible",
+  "special_stage": "8 actual performer-derived silhouettes, 12-frame echo delay",
+  "loop_transform_closure": "frame 1 equals frame 121; middle differs",
+  "beat_lighting": "periodic light energies verified",
+  "engine": "BLENDER_EEVEE"
+}

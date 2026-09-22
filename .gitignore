@@ -1,0 +1,12 @@
+.DS_Store
+*.blend1
+*.blend2
+.gradle/
+build/
+app/build/
+local.properties
+art/blender/mvp/draft-*.png
+art/blender/mvp/frames/
+art/blender/mvp/mask-frames/
+art/blender/mvp/raw-*.png
+__pycache__/

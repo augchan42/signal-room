@@ -1,0 +1,58 @@
+{
+  "show": "Signal Room",
+  "band": "Synthwave",
+  "hooks": [
+    "Afterimage",
+    "Night Frequency",
+    "Last Signal"
+  ],
+  "fps": 24,
+  "frames": 120,
+  "bpm": 120,
+  "segments": [
+    {
+      "id": 0,
+      "name": "Performance",
+      "hex": "#36CFFF"
+    },
+    {
+      "id": 1,
+      "name": "Vocal",
+      "hex": "#FFD166"
+    },
+    {
+      "id": 2,
+      "name": "Fashion / concept",
+      "hex": "#F75B9A"
+    },
+    {
+      "id": 3,
+      "name": "Story / personality",
+      "hex": "#83E6A7"
+    },
+    {
+      "id": 4,
+      "name": "Retro / alternative",
+      "hex": "#AE86FF"
+    }
+  ],
+  "cameras": [
+    "CAM | Broadcast group",
+    "CAM | Frontman fancam",
+    "CAM | Producer fancam",
+    "CAM | Keytar fancam",
+    "CAM | Drummer fancam",
+    "CAM | Control room"
+  ],
+  "patterns": [
+    "signal-bars",
+    "test-pattern",
+    "waveform"
+  ],
+  "screen_object": "REAR SCREEN | mask target",
+  "tiers": {
+    "1": "Late-night cable",
+    "2": "Mid-week show",
+    "3": "Flagship broadcast"
+  }
+}
