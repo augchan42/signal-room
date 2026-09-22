@@ -2,9 +2,9 @@
 
 ## Status and scope
 
-The user approved a producer-decision demo on September 22, 2026: three bookings over approximately 10–15 minutes, starting with one complete replayable booking. This document specifies the first booking for review before implementation.
+Approved for implementation planning. The user approved a producer-decision demo on September 22, 2026: three bookings over approximately 10–15 minutes, starting with one complete replayable booking. This document specifies that first booking.
 
-Revision after review: research commitment and the four-second animation production method below are proposed resolutions for final review.
+The design review is resolved. Research immediately commits one preparation slot when the report is opened. Four-second loops will be produced with separately timed motion and beat lighting. This specification records the agreed design; implementation and new media production have not started.
 
 For this demo, this design supersedes the older concept brief's recruitment step and three-song requirement. Use the existing four band members and one original musical theme. The earlier direction remains applicable to the art, audience segments and native Android platform.
 
