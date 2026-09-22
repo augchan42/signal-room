@@ -2,7 +2,7 @@
 
 ## Status
 
-This document records the product and art-direction decisions approved on September 22, 2026. The repository is still named `resonance`; it will be renamed separately.
+This document records the product and art-direction decisions approved on September 22, 2026.
 
 ## Product
 

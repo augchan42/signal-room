@@ -1,8 +1,8 @@
-# Resonance Android Scaffold Design
+# The Garden Android Scaffold Design
 
 ## Purpose
 
-Create a buildable native Android foundation for the CLOCK IN Solana Mobile Hackathon. Resonance is a working codename. The initial product loop is:
+Create a buildable native Android foundation for the CLOCK IN Solana Mobile Hackathon. The Garden is a separate concept retained for reference. Its initial product loop is:
 
 1. Read a shared daily situation.
 2. Choose a perspective without being scored right or wrong.
@@ -14,8 +14,8 @@ The scaffold establishes technical boundaries for that loop without committing t
 
 ## Project Identity
 
-- Project name: `Resonance`
-- Android application ID and namespace: `dev.digitalrain.resonance`
+- Project name: `The Garden`
+- Android application ID and namespace: `dev.digitalrain.garden`
 - The application ID may be changed before any public store release if the final product name changes.
 - Native Android application written in Kotlin.
 - Jetpack Compose and Material 3 for UI.
@@ -30,7 +30,7 @@ Use a Gradle version catalog and Kotlin DSL. Include a Gradle wrapper, standard 
 The package structure is:
 
 ```text
-dev.digitalrain.resonance
+dev.digitalrain.garden
 ├── app
 ├── core
 │   ├── data
