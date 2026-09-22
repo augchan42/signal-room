@@ -6,6 +6,7 @@
   "seconds": 5,
   "brand": "BORG",
   "keybed_orientation": "Both keybeds face +Y toward the keyboardist",
+  "keyboard_stack": "Upper tier steps away; both playing surfaces tilt toward player",
   "tiers": {
     "1": {
       "light_sticks": 0,

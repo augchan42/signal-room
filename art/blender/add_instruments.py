@@ -40,6 +40,7 @@ for side in [-1,1]:
     limb('Synth X stand',(x,-.46,.18),(-1.55-side*.55,-.10,1.09),.035,.035,silver)
     limb('Synth upper tier support',(x,.20,.20),(x,.20,1.40),.028,.03,silver)
 box('Synth sustain pedal',(-1.43,-.24,.18),(.12,.24,.035),black,.01)
+exec(compile(open('/Users/auchan/projects/signal-room/art/blender/correct_keyboard_stack.py').read(), 'correct_keyboard_stack.py', 'exec'))
 
 # A separate movable keytar assembly, with real individual keys.
 keytar_objects=set(kit.objects)

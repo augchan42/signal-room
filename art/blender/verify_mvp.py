@@ -16,6 +16,13 @@ for prefix in ['BORG main synthesizer','BORG upper synthesizer']:
     panel=bpy.data.objects[prefix+' control panel']
     assert sum(keys)/len(keys)>panel.location.y, 'Keys face away from the performer'
 report['keybed_orientation']='Both keybeds face +Y toward the keyboardist'
+upper=bpy.data.objects['BORG upper synthesizer chassis']
+lower=bpy.data.objects['BORG main synthesizer chassis']
+assert upper.location.y < lower.location.y, 'Upper tier must step away from player'
+from mathutils import Vector
+for chassis in [lower,upper]:
+    assert (chassis.rotation_euler.to_matrix() @ Vector((0,0,1))).y > .1, 'Keybed must tilt toward player'
+report['keyboard_stack']='Upper tier steps away; both playing surfaces tilt toward player'
 report['tiers']={}
 for tier in [1,2,3]:
     set_state(tier=tier,camera_name='group')
