@@ -94,17 +94,18 @@ class PreviewController(private val engine: AudioEngine) : AudioEngine.Listener 
         }
     }
 
-    suspend fun startBroadcast(asset: AudioAsset) {
+    suspend fun startBroadcast(asset: AudioAsset, atMs: Long = 0L) {
         check(!closed)
+        val position = atMs.coerceIn(0L, 20_000L)
         val token = generation.incrementAndGet()
         engine.cancelPendingLoad()
         commands.withLock {
             if (token != generation.get()) return@withLock
             engine.stop()
-            mutableState.value = mutableState.value.copy(assetId = asset.id, positionMs = 0,
+            mutableState.value = mutableState.value.copy(assetId = asset.id, positionMs = position,
                 status = PlaybackStatus.LOADING, errorAssetId = null)
             try {
-                engine.load(asset.path, 0)
+                engine.load(asset.path, position)
                 if (token != generation.get()) return@withLock
                 engine.volume = if (mutableState.value.muted) 0f else 1f
                 if (resumeAllowed) {
@@ -138,6 +139,22 @@ class PreviewController(private val engine: AudioEngine) : AudioEngine.Listener 
         engine.seekTo(0)
         mutableState.value = mutableState.value.copy(positionMs = 0,
             status = if (engine.play()) PlaybackStatus.PLAYING else PlaybackStatus.PAUSED)
+    }
+
+    fun seekTo(positionMs: Long) {
+        if (closed || mutableState.value.assetId == null || mutableState.value.status == PlaybackStatus.ERROR) return
+        val bounded = positionMs.coerceIn(0L, 20_000L)
+        engine.seekTo(bounded)
+        mutableState.value = mutableState.value.copy(positionMs = bounded)
+    }
+
+    fun reset() {
+        if (closed) return
+        generation.incrementAndGet()
+        engine.cancelPendingLoad()
+        engine.stop()
+        resumeAllowed = true
+        mutableState.value = PlaybackState(muted = mutableState.value.muted)
     }
 
     fun setMuted(muted: Boolean) {

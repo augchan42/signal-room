@@ -4,6 +4,7 @@ import dev.digitalrain.synthwave.core.model.ArrangementId
 import dev.digitalrain.synthwave.core.model.ConceptId
 import dev.digitalrain.synthwave.core.model.MemberId
 import dev.digitalrain.synthwave.core.model.Phase
+import dev.digitalrain.synthwave.core.model.PrepAction
 import dev.digitalrain.synthwave.core.model.Preparation
 import dev.digitalrain.synthwave.core.model.Selection
 import org.junit.Assert.assertEquals
@@ -12,6 +13,19 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RunReducerTest {
+    @Test fun rapidPartialChoicesAndPreparationDoNotOverwriteOneAnother() {
+        val content = TestContent.lateNight()
+        var state = reduceRun(newRun(content), RunAction.OpenDesk, content)
+        state = reduceRun(state, RunAction.ChooseArrangement(ArrangementId.DRIVING), content)
+        state = reduceRun(state, RunAction.ChooseConcept(ConceptId.WARM), content)
+        state = reduceRun(state, RunAction.OpenPreparation, content)
+        state = reduceRun(state, RunAction.AdjustPreparation(PrepAction.REHEARSE, 1), content)
+        state = reduceRun(state, RunAction.AdjustPreparation(PrepAction.REFINE, 1), content)
+        state = reduceRun(state, RunAction.AdjustPreparation(PrepAction.REST, 1), content)
+        assertEquals(ArrangementId.DRIVING, state.selection.arrangement)
+        assertEquals(ConceptId.WARM, state.selection.concept)
+        assertEquals(Preparation(1, 1, 1, false), state.preparation)
+    }
     private val content = TestContent.lateNight()
 
     @Test fun researchConsumesOneSlotOnlyOnce() {

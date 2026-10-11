@@ -5,6 +5,7 @@ import dev.digitalrain.synthwave.core.model.BookingContent
 import dev.digitalrain.synthwave.core.model.ConceptId
 import dev.digitalrain.synthwave.core.model.MemberId
 import dev.digitalrain.synthwave.core.model.Phase
+import dev.digitalrain.synthwave.core.model.PrepAction
 import dev.digitalrain.synthwave.core.model.Preparation
 import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.model.Selection
@@ -15,8 +16,13 @@ const val BROADCAST_DURATION_MS = 20_000L
 sealed interface RunAction {
     data object OpenDesk : RunAction
     data class Select(val selection: Selection) : RunAction
+    data class ChooseArrangement(val id: ArrangementId) : RunAction
+    data class ChooseMember(val id: MemberId) : RunAction
+    data class ChooseConcept(val id: ConceptId) : RunAction
     data class SetPreparation(val preparation: Preparation) : RunAction
+    data class AdjustPreparation(val kind: PrepAction, val delta: Int) : RunAction
     data object OpenPreparation : RunAction
+    data object ReturnToDesk : RunAction
     data object PurchaseResearch : RunAction
     data object ConfirmBroadcast : RunAction
     data class CheckpointPlayback(val positionMs: Long) : RunAction
@@ -46,6 +52,21 @@ fun actionError(state: RunSnapshot, action: RunAction, content: BookingContent):
                 action.selection.concept !in content.concepts -> "Unknown selection"
             else -> null
         }
+        is RunAction.ChooseArrangement -> when {
+            !planning -> "Choices are locked after broadcast"
+            action.id !in content.arrangements -> "Unknown arrangement"
+            else -> null
+        }
+        is RunAction.ChooseMember -> when {
+            !planning -> "Choices are locked after broadcast"
+            action.id !in content.members -> "Unknown member"
+            else -> null
+        }
+        is RunAction.ChooseConcept -> when {
+            !planning -> "Choices are locked after broadcast"
+            action.id !in content.concepts -> "Unknown concept"
+            else -> null
+        }
         is RunAction.SetPreparation -> when {
             !planning -> "Preparation is locked after broadcast"
             action.preparation.researched != state.preparation.researched ->
@@ -55,7 +76,18 @@ fun actionError(state: RunSnapshot, action: RunAction, content: BookingContent):
             action.preparation.used > 3 -> "Only three preparation slots are available"
             else -> null
         }
+        is RunAction.AdjustPreparation -> when {
+            !planning -> "Preparation is locked after broadcast"
+            action.delta !in -1..1 || action.delta == 0 -> "Adjust one preparation slot at a time"
+            adjustedPreparation(state.preparation, action.kind, action.delta).let {
+                it.rehearsals < 0 || it.refinements < 0 || it.rests < 0
+            } -> "Preparation counts cannot be negative"
+            adjustedPreparation(state.preparation, action.kind, action.delta).used > 3 ->
+                "Only three preparation slots are available"
+            else -> null
+        }
         RunAction.OpenPreparation -> if (state.phase == Phase.DESK) null else "Open the arrangement desk first"
+        RunAction.ReturnToDesk -> if (state.phase == Phase.PREPARATION) null else "Open preparation first"
         RunAction.PurchaseResearch -> when {
             !planning -> "Research is only available before broadcast"
             state.preparation.researched -> null
@@ -93,8 +125,13 @@ fun reduceRun(state: RunSnapshot, action: RunAction, content: BookingContent): R
     return when (action) {
         RunAction.OpenDesk -> state.copy(phase = Phase.DESK)
         is RunAction.Select -> state.copy(selection = action.selection)
+        is RunAction.ChooseArrangement -> state.copy(selection = state.selection.copy(arrangement = action.id))
+        is RunAction.ChooseMember -> state.copy(selection = state.selection.copy(member = action.id))
+        is RunAction.ChooseConcept -> state.copy(selection = state.selection.copy(concept = action.id))
         is RunAction.SetPreparation -> state.copy(preparation = action.preparation)
+        is RunAction.AdjustPreparation -> state.copy(preparation = adjustedPreparation(state.preparation, action.kind, action.delta))
         RunAction.OpenPreparation -> state.copy(phase = Phase.PREPARATION)
+        RunAction.ReturnToDesk -> state.copy(phase = Phase.DESK)
         RunAction.PurchaseResearch -> if (state.preparation.researched) {
             state
         } else {
@@ -115,4 +152,10 @@ fun reduceRun(state: RunSnapshot, action: RunAction, content: BookingContent): R
             viewingCompleted = state.viewingCompleted,
         )
     }
+}
+
+private fun adjustedPreparation(prep: Preparation, kind: PrepAction, delta: Int): Preparation = when (kind) {
+    PrepAction.REHEARSE -> prep.copy(rehearsals = prep.rehearsals + delta)
+    PrepAction.REFINE -> prep.copy(refinements = prep.refinements + delta)
+    PrepAction.REST -> prep.copy(rests = prep.rests + delta)
 }
