@@ -11,7 +11,7 @@ Regenerate with Blender 5.2 and FFmpeg on the path:
 '/Applications/Blender.app/Contents/MacOS/Blender' --background art/blender/demo/signal-room-demo.blend --python-exit-code 1 --python art/blender/render_demo.py -- loops
 ```
 
-The output is under `app/src/main/assets/demo/visual/`: three concept stills, four isolated member stills, one control-room still, and three silent concept loops. The stills are WebP. The loops are H.264, limited-range yuv420p MP4. Intermediate JPEG frames are ignored by Git.
+The Android output is under `app/src/main/assets/demo/visual/`: three concept stills, four isolated member stills, one control-room still, and three silent concept loops. The stills are WebP. The Android loops are H.264, limited-range yuv420p MP4. Each loop render also writes a 360 × 640 VP9/WebM preview alongside this README for `review.html`, because the in-app browser displays black frames when it plays these H.264 files. The page falls back to the Android MP4 if WebM is unsupported. Intermediate JPEG frames are ignored by Git.
 
 Verification on October 11, 2026: `verify_demo.py` passed the closure, beat-pulse, keyboard-orientation, tier-1 and hidden-audience checks. FFprobe reported 1080 × 1920 for all eight stills and 1080 × 1920, 24 fps, 96 frames, 4.000 seconds, H.264/yuv420p, video-only for all three loops. FFmpeg decoded all three without errors. The decoded first frame was visually checked against the frame-seven trough; the first beat retained its brighter rim/floor light. Frames 96 and 1 were visually checked for a clean repeat. Member stills were inspected for performer/instrument clearance at portrait size.
 

@@ -248,6 +248,16 @@ def render_loops(only_concept=None):
             str(target),
         ], check=True)
         print("RENDERED", target)
+        preview = OUT / f"loop-{concept_id}.webm"
+        subprocess.run([
+            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-i", str(target), "-frames:v", "96",
+            "-vf", "scale=360:640:flags=lanczos", "-an",
+            "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "32",
+            "-deadline", "good", "-cpu-used", "4",
+            str(preview),
+        ], check=True)
+        print("RENDERED", preview)
 
 
 def main():
