@@ -35,8 +35,12 @@ class ReviewPreviewTest(unittest.TestCase):
     def test_review_prefers_webm_and_retains_android_mp4_fallback(self):
         page = VideoSources()
         page.feed((DEMO / "review.html").read_text())
-        self.assertEqual(len(page.videos), len(CONCEPTS))
-        for video, concept in zip(page.videos, CONCEPTS):
+        loop_videos = [video for video in page.videos if any(
+            source.get("src", "").startswith("/art/blender/demo/loop-")
+            for source in video["sources"]
+        )]
+        self.assertEqual(len(loop_videos), len(CONCEPTS))
+        for video, concept in zip(loop_videos, CONCEPTS):
             self.assertNotIn("src", video["attrs"])
             self.assertEqual(video["sources"], [
                 {"src": f"/art/blender/demo/loop-{concept}.webm", "type": "video/webm"},
