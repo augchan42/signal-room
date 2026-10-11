@@ -101,6 +101,7 @@ class PreviewController(private val engine: AudioEngine) : AudioEngine.Listener 
         engine.cancelPendingLoad()
         commands.withLock {
             if (token != generation.get()) return@withLock
+            if (autoPlay) resumeAllowed = true
             engine.stop()
             mutableState.value = mutableState.value.copy(assetId = asset.id, positionMs = position,
                 status = PlaybackStatus.LOADING, errorAssetId = null)

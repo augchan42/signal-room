@@ -143,6 +143,37 @@ class PreviewControllerTest {
         controller.close()
     }
 
+    @Test
+    fun explicitBroadcastAfterEarlierBackgroundStartsPlaying() = runBlocking {
+        val engine = FakeAudioEngine()
+        val controller = PreviewController(engine)
+        controller.select(asset("sparse-frontman"))
+        controller.onBackground()
+
+        controller.startBroadcast(asset("sparse-frontman"), autoPlay = true)
+
+        assertEquals(PlaybackStatus.PLAYING, controller.state.value.status)
+        assertTrue(engine.playing)
+        controller.close()
+    }
+
+    @Test
+    fun backgroundDuringBroadcastLoadStillRequiresExplicitResume() = runBlocking {
+        val engine = FakeAudioEngine()
+        engine.blockNextLoad = true
+        val controller = PreviewController(engine)
+        val loading = async { controller.startBroadcast(asset("sparse-frontman"), autoPlay = true) }
+        yield()
+
+        controller.onBackground()
+        engine.completePendingLoad()
+        loading.await()
+
+        assertEquals(PlaybackStatus.PAUSED, controller.state.value.status)
+        assertFalse(engine.playing)
+        controller.close()
+    }
+
     private fun asset(id: String): AudioAsset {
         val arrangement = ArrangementId.valueOf(id.substringBefore('-').uppercase())
         val member = MemberId.valueOf(id.substringAfter('-').uppercase())
