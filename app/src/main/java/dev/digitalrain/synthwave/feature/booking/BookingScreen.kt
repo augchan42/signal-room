@@ -313,10 +313,17 @@ private fun Verdict(snapshot: RunSnapshot, content: BookingContent, onAction: (R
     }
     PanelCard {
         Text("WHY IT LANDED THIS WAY", color = MaterialTheme.colorScheme.primary)
-        result.coherence.contributions.filter { it.id != "concept-base" }.sortedByDescending { kotlin.math.abs(it.points) }
+        result.coherence.contributions.filter { it.id != "concept-base" && it.id != "clamp" }
+            .sortedByDescending { kotlin.math.abs(it.points) }
             .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}") }
-        result.execution.contributions.filter { it.id != "arrangement-base" }.sortedByDescending { kotlin.math.abs(it.points) }
+        result.execution.contributions.filter { it.id != "arrangement-base" && it.id != "clamp" }
+            .sortedByDescending { kotlin.math.abs(it.points) }
             .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}") }
+        listOf("Coherence" to result.coherence, "Execution" to result.execution).forEach { (label, dimension) ->
+            val overflow = dimension.contributions.firstOrNull { it.id == "clamp" }?.points ?: 0.0
+            if (overflow < 0) Text("$label reached the 100-point cap; " +
+                "${displayScore(-overflow)} extra points did not count.")
+        }
     }
     PanelCard {
         Text("FIVE AUDIENCES", color = MaterialTheme.colorScheme.primary)
