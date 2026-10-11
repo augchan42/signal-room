@@ -58,7 +58,30 @@ class BroadcastVisualTest {
                 .compress(Bitmap.CompressFormat.PNG, 100, it)
         }
         compose.onNodeWithContentDescription("Keyboardist fancam inset").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("KEYBOARDIST CAM").assertIsDisplayed()
         File(directory, "broadcast-keyboardist-electric-inset.png").outputStream().use {
+            InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
+                .compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
+    @Test fun warmFrontmanSelectionUsesMatchingCaptionAndInset() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val content = context.assets.open("content/late-night.json").bufferedReader().use { loadContent(it.readText()) }
+        val selection = Selection(ArrangementId.SPARSE, MemberId.FRONTMAN, ConceptId.WARM)
+        val prep = Preparation(1, 1, 1, false)
+        val store = MemoryStore()
+        runBlocking {
+            store.save(newRun(content).copy(phase = Phase.BROADCAST, selection = selection,
+                preparation = prep, result = scoreBooking(content, selection, prep)))
+        }
+        compose.setContent { SignalRoomApp(store) }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("broadcast-stage").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Sparse / Frontman / Warm transmission").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Frontman fancam inset").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("FRONTMAN CAM").assertIsDisplayed()
+        val output = File(requireNotNull(context.getExternalFilesDir(null)), "broadcast-frontman-warm.png")
+        output.outputStream().use {
             InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
                 .compress(Bitmap.CompressFormat.PNG, 100, it)
         }

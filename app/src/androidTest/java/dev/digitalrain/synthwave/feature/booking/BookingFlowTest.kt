@@ -22,7 +22,7 @@ class BookingFlowTest {
 
     @Test fun choosesPlanAndConfirmsBroadcast() {
         compose.setContent { SignalRoomApp(MemoryStore()) }
-        compose.onNodeWithTag("open-desk").performClick()
+        compose.onNodeWithTag("open-desk").performScrollTo().performClick()
         awaitTag("arrangement-driving")
         compose.onNodeWithTag("arrangement-driving").performScrollTo().performClick()
         awaitText("Driving • selected")

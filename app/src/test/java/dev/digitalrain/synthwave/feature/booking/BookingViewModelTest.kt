@@ -69,12 +69,16 @@ class BookingViewModelTest {
         holder.dispatch(RunAction.ConfirmBroadcast)
         val confirmed = holder.state.value
         assertNotNull(confirmed.result)
+        assertFalse(holder.restoredFromStore.value)
 
         holder.dispatch(RunAction.ConfirmBroadcast)
         assertEquals(confirmed, holder.state.value)
         val restored = BookingViewModel(content, store)
         restored.load()
         assertEquals(confirmed, restored.state.value)
+        assertTrue(restored.restoredFromStore.value)
+        restored.startNewDemo()
+        assertFalse(restored.restoredFromStore.value)
     }
 
     @Test fun incompatibleSaveRequiresExplicitReset() = runBlocking {

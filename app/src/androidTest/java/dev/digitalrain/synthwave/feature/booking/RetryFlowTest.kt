@@ -38,7 +38,7 @@ class RetryFlowTest {
 
     private fun bookThreeSlotPlan(store: MemoryStore) {
         waitTag("open-desk")
-        compose.onNodeWithTag("open-desk").performClick()
+        compose.onNodeWithTag("open-desk").performScrollTo().performClick()
         waitTag("open-preparation")
         compose.onNodeWithTag("open-preparation").performScrollTo().performClick()
         waitTag("prep-rehearse")

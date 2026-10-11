@@ -94,7 +94,7 @@ class PreviewController(private val engine: AudioEngine) : AudioEngine.Listener 
         }
     }
 
-    suspend fun startBroadcast(asset: AudioAsset, atMs: Long = 0L) {
+    suspend fun startBroadcast(asset: AudioAsset, atMs: Long = 0L, autoPlay: Boolean = true) {
         check(!closed)
         val position = atMs.coerceIn(0L, 20_000L)
         val token = generation.incrementAndGet()
@@ -108,7 +108,7 @@ class PreviewController(private val engine: AudioEngine) : AudioEngine.Listener 
                 engine.load(asset.path, position)
                 if (token != generation.get()) return@withLock
                 engine.volume = if (mutableState.value.muted) 0f else 1f
-                if (resumeAllowed) {
+                if (resumeAllowed && autoPlay) {
                     mutableState.value = mutableState.value.copy(status = if (engine.play()) PlaybackStatus.PLAYING else PlaybackStatus.PAUSED)
                 } else {
                     mutableState.value = mutableState.value.copy(status = PlaybackStatus.PAUSED)

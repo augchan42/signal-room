@@ -24,10 +24,12 @@ class BookingViewModel(
     private val _state = MutableStateFlow(newRun(content))
     private val _message = MutableStateFlow<String?>(null)
     private val _recoveryRequired = MutableStateFlow(false)
+    private val _restoredFromStore = MutableStateFlow(false)
 
     val state: StateFlow<RunSnapshot> = _state
     val message: StateFlow<String?> = _message
     val recoveryRequired: StateFlow<Boolean> = _recoveryRequired
+    val restoredFromStore: StateFlow<Boolean> = _restoredFromStore
 
     suspend fun load() {
         mutex.lock()
@@ -40,6 +42,7 @@ class BookingViewModel(
                         _recoveryRequired.value = true
                         _message.value = error
                     } else {
+                        _restoredFromStore.value = true
                         _state.value = saved
                         _recoveryRequired.value = false
                         _message.value = null
@@ -78,6 +81,7 @@ class BookingViewModel(
                 _message.value = "Could not save; action not applied."
                 return
             }
+            if (action == RunAction.ConfirmBroadcast) _restoredFromStore.value = false
             _state.value = next
             _message.value = null
         } finally {
@@ -95,6 +99,7 @@ class BookingViewModel(
                 _message.value = "Could not save; action not applied."
                 return
             }
+            _restoredFromStore.value = false
             _state.value = fresh
             _recoveryRequired.value = false
             _message.value = null

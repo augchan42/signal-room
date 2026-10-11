@@ -130,6 +130,19 @@ class PreviewControllerTest {
         controller.close()
     }
 
+    @Test
+    fun restoredBroadcastLoadsCheckpointButWaitsForExplicitResume() = runBlocking {
+        val engine = FakeAudioEngine()
+        val controller = PreviewController(engine)
+        controller.startBroadcast(asset("layered-keyboardist"), atMs = 8_250, autoPlay = false)
+        assertEquals(8_250, engine.loads.last().second)
+        assertEquals(PlaybackStatus.PAUSED, controller.state.value.status)
+        assertFalse(engine.playing)
+        controller.play()
+        assertTrue(engine.playing)
+        controller.close()
+    }
+
     private fun asset(id: String): AudioAsset {
         val arrangement = ArrangementId.valueOf(id.substringBefore('-').uppercase())
         val member = MemberId.valueOf(id.substringAfter('-').uppercase())

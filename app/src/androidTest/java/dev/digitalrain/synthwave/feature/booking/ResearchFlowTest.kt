@@ -17,7 +17,7 @@ class ResearchFlowTest {
 
     @Test fun researchCommitsOneSlotAndSurvivesMixChanges() {
         compose.setContent { SignalRoomApp(MemoryStore()) }
-        compose.onNodeWithTag("open-desk").performClick()
+        compose.onNodeWithTag("open-desk").performScrollTo().performClick()
         waitFor("Producer desk")
         compose.onNodeWithTag("open-preparation").performScrollTo().performClick()
         waitFor("Preparation")

@@ -44,6 +44,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     val snapshot by model.state.collectAsState()
     val message by model.message.collectAsState()
     val recoveryRequired by model.recoveryRequired.collectAsState()
+    val restoredFromStore by model.restoredFromStore.collectAsState()
     val playback by audio.state.collectAsState()
     val visual by video.state.collectAsState()
     val broadcastLoadedAttempt = remember { mutableIntStateOf(0) }
@@ -71,7 +72,8 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     LaunchedEffect(snapshot.phase, snapshot.attemptId) {
         if (snapshot.phase == Phase.BROADCAST) {
             val audioLoad = launch {
-                audio.startBroadcast(catalog.audio(snapshot.selection), snapshot.broadcastPositionMs)
+                audio.startBroadcast(catalog.audio(snapshot.selection), snapshot.broadcastPositionMs,
+                    autoPlay = !restoredFromStore)
                 broadcastLoadedAttempt.intValue = snapshot.attemptId
             }
             launch { video.load(snapshot.selection.concept) }

@@ -267,9 +267,12 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         if (visual.status == VideoStatus.FALLBACK) {
             Text("Still image: video unavailable", Modifier.align(Alignment.TopStart).background(Panel).padding(6.dp))
         }
-        Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(84.dp, 112.dp).background(Panel)) {
+        Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(100.dp, 134.dp).background(Panel)) {
             SceneBackdrop("demo/${catalog.member(snapshot.selection.member).stillPath}",
                 "${content.members.getValue(snapshot.selection.member).displayName} fancam inset", Modifier.fillMaxSize())
+            Text("${content.members.getValue(snapshot.selection.member).displayName.uppercase()} CAM",
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Panel).padding(3.dp),
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
         }
     }
     PanelCard {
