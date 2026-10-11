@@ -10,3 +10,5 @@ art/blender/mvp/frames/
 art/blender/mvp/mask-frames/
 art/blender/mvp/raw-*.png
 __pycache__/
+art/audio/.venv/
+art/audio/masters/
