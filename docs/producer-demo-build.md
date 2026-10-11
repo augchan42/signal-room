@@ -16,13 +16,16 @@ Set `ANDROID_HOME` or create an untracked `local.properties` containing the Andr
 ## Verification
 
 ```sh
+python3 -m unittest discover -s art/audio/tests -v
 python3 -m unittest discover -s tools/tests -v
 python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report build/reports/demo-assets.json
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-./gradlew :app:connectedDebugAndroidTest
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s emulator-5554 shell am instrument -w -r dev.digitalrain.synthwave.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
-The application is offline. Its merged manifest must not contain the `INTERNET` permission.
+Replace `emulator-5554` with the intended emulator serial. `connectedDebugAndroidTest` selects every connected device, so do not use it when a phone is also attached. The application is offline; its merged manifest contains neither `INTERNET` nor `ACCESS_NETWORK_STATE`.
 `assembleDebug` and `assembleRelease` run `validateDemoAssets` before merging assets. The validator checks the exact 23-file manifest, SHA-256, full decoding, decoded audio duration/loudness/peak, WebP dimensions, and silent 96-frame H.264 loops. It fails if Python or FFmpeg is unavailable. JVM unit tests do not need either tool. Only when intentionally replacing media, run the validator with `--write-hashes`; it checks every file before atomically refreshing hashes, then reruns read-only validation. Ordinary builds never repair the manifest.
 
 ## Scoring regression fixtures
@@ -50,6 +53,6 @@ These figures are prototype balance evidence, not claims about later bookings.
 
 ## Runtime visual bridge
 
-The booking shell loads `app/src/main/assets/demo/visual/control-room.webp` from the Blender demo scene. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The manifest now includes three concept stills, four member stills, and three silent loops; `AssetCatalog` resolves each ID and maps video failures to the matching concept still. The full producer flow will use the catalog in its screens.
+The booking shell loads `app/src/main/assets/demo/visual/control-room.webp` from the Blender demo scene. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The manifest includes three concept stills, four member stills, and three silent loops; `AssetCatalog` resolves each ID and maps video failures to the matching concept still. The producer flow uses these assets in its screens.
 
 Display text uses the bundled Oxanium variable font from the official Google Fonts repository. Its SIL Open Font License is packaged at `app/src/main/assets/licenses/oxanium-ofl.txt`. Body text continues to use the platform sans-serif for readability.
