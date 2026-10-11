@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Original Signal Room A-minor instrumental theme and Blender stage, authored for this offline demo; no third-party recordings or likenesses.",
+  "audio": [
+    {
+      "id": "sparse-frontman",
+      "path": "audio/sparse-frontman.m4a",
+      "arrangement": "SPARSE",
+      "member": "FRONTMAN",
+      "sha256": "c04adde20f4a41a372e28fe6ae1b2837b62ed7fffcfd2a6821e9ad7d3622fcd0"
+    },
+    {
+      "id": "sparse-keyboardist",
+      "path": "audio/sparse-keyboardist.m4a",
+      "arrangement": "SPARSE",
+      "member": "KEYBOARDIST",
+      "sha256": "192e380c65df5f211f18bfd42766aa9a437d921d53743c26ecdc606f656276e5"
+    },
+    {
+      "id": "sparse-keytar",
+      "path": "audio/sparse-keytar.m4a",
+      "arrangement": "SPARSE",
+      "member": "KEYTAR",
+      "sha256": "e22dd5d998bc7b9ebb66ec61b155475d67d46649958cfc13590c1f022413ea1d"
+    },
+    {
+      "id": "sparse-drummer",
+      "path": "audio/sparse-drummer.m4a",
+      "arrangement": "SPARSE",
+      "member": "DRUMMER",
+      "sha256": "1cbd063b89957a420283b95c102a983c4d5ec05d2fdeb9f4b691a9aff0ed1f3e"
+    },
+    {
+      "id": "driving-frontman",
+      "path": "audio/driving-frontman.m4a",
+      "arrangement": "DRIVING",
+      "member": "FRONTMAN",
+      "sha256": "25ac3d2354a4e5aae573d722b536d39100e48420650f9d5fe18cbe6e25a50819"
+    },
+    {
+      "id": "driving-keyboardist",
+      "path": "audio/driving-keyboardist.m4a",
+      "arrangement": "DRIVING",
+      "member": "KEYBOARDIST",
+      "sha256": "c543f983a758ed1420487fd426d055905b4c6a1b7d2a383a258a4fb01947b207"
+    },
+    {
+      "id": "driving-keytar",
+      "path": "audio/driving-keytar.m4a",
+      "arrangement": "DRIVING",
+      "member": "KEYTAR",
+      "sha256": "18927b0efd59d034233e3c78e49021c8e394b868bd84ebf80b787a72024d8dd7"
+    },
+    {
+      "id": "driving-drummer",
+      "path": "audio/driving-drummer.m4a",
+      "arrangement": "DRIVING",
+      "member": "DRUMMER",
+      "sha256": "86ed53335055344e8f9a9ba92c143b15aefeafc0c3d5c20a59eb6cac9859785f"
+    },
+    {
+      "id": "layered-frontman",
+      "path": "audio/layered-frontman.m4a",
+      "arrangement": "LAYERED",
+      "member": "FRONTMAN",
+      "sha256": "1f0eabdba9f3088147e691900882d36813f7a880494ad13ff59e90f168c8e77e"
+    },
+    {
+      "id": "layered-keyboardist",
+      "path": "audio/layered-keyboardist.m4a",
+      "arrangement": "LAYERED",
+      "member": "KEYBOARDIST",
+      "sha256": "a141bf6d4f482c550864d9726871dce0a05dec762a7c909bc10ad3ec17c6aace"
+    },
+    {
+      "id": "layered-keytar",
+      "path": "audio/layered-keytar.m4a",
+      "arrangement": "LAYERED",
+      "member": "KEYTAR",
+      "sha256": "bee4c33da526993f375a8f7534cac04e18b619c9dfe8e6f273feefba8cda789f"
+    },
+    {
+      "id": "layered-drummer",
+      "path": "audio/layered-drummer.m4a",
+      "arrangement": "LAYERED",
+      "member": "DRUMMER",
+      "sha256": "f894524ca4f330e01adc57a194e9b317a1bf9d6a5e55a40c71b6832427097e05"
+    }
+  ],
+  "concepts": [
+    {
+      "concept": "MONOCHROME",
+      "stillPath": "visual/concept-monochrome.webp",
+      "stillSha256": "8d7a32ac7f3445b9d55181574957c4e0bc5a905f5101fef9d3af5b41ef76b502",
+      "loopPath": "visual/loop-monochrome.mp4",
+      "loopSha256": "2d09b073149d0d142007b5e87692975be050d4f9306f70886deffeb3ecd33b16"
+    },
+    {
+      "concept": "WARM",
+      "stillPath": "visual/concept-warm.webp",
+      "stillSha256": "e699ef693cba797d95dfe92c48548269d8e0e3fd8c368785e476dd3a5af0d23a",
+      "loopPath": "visual/loop-warm.mp4",
+      "loopSha256": "1a1c19718e7ae35e25b9366c8d0ee19546d99b425951f94a131be33461d1b958"
+    },
+    {
+      "concept": "ELECTRIC",
+      "stillPath": "visual/concept-electric.webp",
+      "stillSha256": "558e7d00b86c1957e858875fb13a5eb8fe89dc3d9232176f5a219f9a01816b77",
+      "loopPath": "visual/loop-electric.mp4",
+      "loopSha256": "986b66dc6184ab374be070ef08a0485a82b1434c4dda0182b3732e52fb054ccc"
+    }
+  ],
+  "members": [
+    {
+      "member": "FRONTMAN",
+      "stillPath": "visual/member-frontman.webp",
+      "sha256": "13645012f522b12a9128755692312895c3b4c83e7e498a014d2497620a8caa79"
+    },
+    {
+      "member": "KEYBOARDIST",
+      "stillPath": "visual/member-keyboardist.webp",
+      "sha256": "ecaee3485ec6431cabfe1c593b6581bec019e25a4539fb037ccadefeb1c108cd"
+    },
+    {
+      "member": "KEYTAR",
+      "stillPath": "visual/member-keytar.webp",
+      "sha256": "c72a42b29837769c8bd9abf6f84ea1ca7bd1bd4b584354e011013e3e913a4d29"
+    },
+    {
+      "member": "DRUMMER",
+      "stillPath": "visual/member-drummer.webp",
+      "sha256": "d9302f699b35f775ae5498ad144e1908c38106ba99472faef306a4902158409a"
+    }
+  ],
+  "controlRoomPath": "visual/control-room.webp",
+  "controlRoomSha256": "d87673e6f96bad195ada7b74de222f4340ce297a7bd25c074311832e4a0c61ad"
+}

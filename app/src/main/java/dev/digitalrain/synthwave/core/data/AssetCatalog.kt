@@ -1,0 +1,104 @@
+package dev.digitalrain.synthwave.core.data
+
+import dev.digitalrain.synthwave.core.model.ArrangementId
+import dev.digitalrain.synthwave.core.model.AssetManifest
+import dev.digitalrain.synthwave.core.model.AudioAsset
+import dev.digitalrain.synthwave.core.model.ConceptAssets
+import dev.digitalrain.synthwave.core.model.ConceptId
+import dev.digitalrain.synthwave.core.model.MemberAsset
+import dev.digitalrain.synthwave.core.model.MemberId
+import dev.digitalrain.synthwave.core.model.Selection
+import kotlinx.serialization.json.Json
+
+private val assetJson = Json { ignoreUnknownKeys = false }
+
+fun loadAssetManifest(json: String): AssetManifest = assetJson.decodeFromString(json)
+
+fun interface AssetOpener {
+    /** Must attempt to open and read the bundled asset, not merely trust its manifest entry. */
+    fun canOpen(path: String): Boolean
+}
+
+class AssetProblem(
+    val assetId: String,
+    val kind: Kind,
+    reason: String,
+) : IllegalStateException("$assetId: $reason") {
+    enum class Kind { AUDIO, VIDEO, STILL }
+}
+
+sealed interface VisualPlayback {
+    data class Loop(val path: String) : VisualPlayback
+    data class Still(val path: String) : VisualPlayback
+}
+
+sealed interface AssetRecovery {
+    data class BlockBooking(val assetId: String) : AssetRecovery
+    data class UseStill(val assetId: String, val stillPath: String) : AssetRecovery
+}
+
+class AssetCatalog(
+    private val manifest: AssetManifest,
+    private val opener: AssetOpener,
+) {
+    init {
+        require(manifest.schemaVersion == 1) { "Unsupported asset manifest version" }
+    }
+
+    fun audio(selection: Selection): AudioAsset {
+        val id = audioId(selection.arrangement, selection.member)
+        val asset = manifest.audio.singleOrNull {
+            it.arrangement == selection.arrangement && it.member == selection.member && it.id == id
+        } ?: throw AssetProblem(id, AssetProblem.Kind.AUDIO, "not in manifest")
+        checkOpen(asset.path, id, AssetProblem.Kind.AUDIO)
+        return asset
+    }
+
+    fun concept(id: ConceptId): ConceptAssets {
+        val asset = manifest.concepts.singleOrNull { it.concept == id }
+            ?: throw AssetProblem("concept-${id.name.lowercase()}", AssetProblem.Kind.STILL, "not in manifest")
+        checkOpen(asset.stillPath, "concept-${id.name.lowercase()}", AssetProblem.Kind.STILL)
+        return asset
+    }
+
+    fun member(id: MemberId): MemberAsset {
+        val asset = manifest.members.singleOrNull { it.member == id }
+            ?: throw AssetProblem("member-${id.name.lowercase()}", AssetProblem.Kind.STILL, "not in manifest")
+        checkOpen(asset.stillPath, "member-${id.name.lowercase()}", AssetProblem.Kind.STILL)
+        return asset
+    }
+
+    fun controlRoom(): String {
+        checkOpen(manifest.controlRoomPath, "control-room", AssetProblem.Kind.STILL)
+        return manifest.controlRoomPath
+    }
+
+    fun visualPlayback(id: ConceptId): VisualPlayback {
+        val asset = concept(id)
+        return if (opener.canOpen(asset.loopPath)) VisualPlayback.Loop(asset.loopPath)
+        else VisualPlayback.Still(asset.stillPath)
+    }
+
+    fun recoveryForDecoderError(path: String): AssetRecovery {
+        manifest.audio.singleOrNull { it.path == path }?.let { return AssetRecovery.BlockBooking(it.id) }
+        manifest.concepts.singleOrNull { it.loopPath == path }?.let { concept ->
+            checkOpen(concept.stillPath, "concept-${concept.concept.name.lowercase()}", AssetProblem.Kind.STILL)
+            return AssetRecovery.UseStill("loop-${concept.concept.name.lowercase()}", concept.stillPath)
+        }
+        manifest.concepts.singleOrNull { it.stillPath == path }?.let {
+            return AssetRecovery.BlockBooking("concept-${it.concept.name.lowercase()}")
+        }
+        manifest.members.singleOrNull { it.stillPath == path }?.let {
+            return AssetRecovery.BlockBooking("member-${it.member.name.lowercase()}")
+        }
+        if (manifest.controlRoomPath == path) return AssetRecovery.BlockBooking("control-room")
+        throw IllegalArgumentException("Decoder path not in asset manifest: $path")
+    }
+
+    private fun checkOpen(path: String, id: String, kind: AssetProblem.Kind) {
+        if (!opener.canOpen(path)) throw AssetProblem(id, kind, "bundled asset cannot be opened: $path")
+    }
+
+    private fun audioId(arrangement: ArrangementId, member: MemberId): String =
+        "${arrangement.name.lowercase()}-${member.name.lowercase()}"
+}
