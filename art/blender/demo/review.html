@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Room · first-booking visual review</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #101824; color: #f4ecdc; }
+    * { box-sizing: border-box; }
+    body { margin: 0 auto; max-width: 1100px; padding: 24px; }
+    h1, h2 { margin: 0 0 12px; font-weight: 650; }
+    p { color: #c6d0d8; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0 40px; }
+    figure { margin: 0; padding: 10px; border: 1px solid #435361; border-radius: 12px; background: #1a2632; }
+    img, video { width: 100%; aspect-ratio: 9 / 16; object-fit: contain; display: block; background: #0a1018; border-radius: 6px; }
+    figcaption { padding: 10px 2px 2px; font-size: .95rem; }
+    a { color: #7bd8ed; }
+  </style>
+</head>
+<body>
+  <h1>First-booking visual review</h1>
+  <p>One tier-1 stage, four performers, three material-and-light treatments. Each silent loop is four seconds at 1080 × 1920 and repeats behind the 20-second music mix. The keyboardist view shows the corrected BORG stack orientation.</p>
+  <h2>Concept stills</h2>
+  <div class="grid">
+    <figure><img src="/app/src/main/assets/demo/visual/concept-monochrome.webp" alt="Restrained monochrome concept"><figcaption>Monochrome</figcaption></figure>
+    <figure><img src="/app/src/main/assets/demo/visual/concept-warm.webp" alt="Warm intimate concept"><figcaption>Warm intimate</figcaption></figure>
+    <figure><img src="/app/src/main/assets/demo/visual/concept-electric.webp" alt="Bright electric concept"><figcaption>Bright electric</figcaption></figure>
+  </div>
+  <h2>Silent loops</h2>
+  <div class="grid">
+    <figure><video controls loop muted playsinline poster="/app/src/main/assets/demo/visual/concept-monochrome.webp" src="/app/src/main/assets/demo/visual/loop-monochrome.mp4"></video><figcaption>Monochrome loop</figcaption></figure>
+    <figure><video controls loop muted playsinline poster="/app/src/main/assets/demo/visual/concept-warm.webp" src="/app/src/main/assets/demo/visual/loop-warm.mp4"></video><figcaption>Warm loop</figcaption></figure>
+    <figure><video controls loop muted playsinline poster="/app/src/main/assets/demo/visual/concept-electric.webp" src="/app/src/main/assets/demo/visual/loop-electric.mp4"></video><figcaption>Electric loop</figcaption></figure>
+  </div>
+  <h2>Member emphasis and control room</h2>
+  <div class="grid">
+    <figure><img src="/app/src/main/assets/demo/visual/member-frontman.webp" alt="Frontman"><figcaption>Frontman</figcaption></figure>
+    <figure><img src="/app/src/main/assets/demo/visual/member-keyboardist.webp" alt="Keyboardist behind BORG stack"><figcaption>Keyboardist</figcaption></figure>
+    <figure><img src="/app/src/main/assets/demo/visual/member-keytar.webp" alt="Keytar player"><figcaption>Keytar</figcaption></figure>
+    <figure><img src="/app/src/main/assets/demo/visual/member-drummer.webp" alt="Drummer"><figcaption>Drummer</figcaption></figure>
+    <figure><img src="/app/src/main/assets/demo/visual/control-room.webp" alt="Control room desk with stage visible"><figcaption>Control room</figcaption></figure>
+  </div>
+  <p><a href="/art/audio/review.html">Listen to the 12 original music variants</a></p>
+</body>
+</html>

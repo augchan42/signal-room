@@ -9,6 +9,7 @@ art/blender/mvp/draft-*.png
 art/blender/mvp/frames/
 art/blender/mvp/mask-frames/
 art/blender/mvp/raw-*.png
+art/blender/demo/frames/
 __pycache__/
 art/audio/.venv/
 art/audio/masters/

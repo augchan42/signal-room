@@ -1,0 +1,17 @@
+{
+  "dimensions": [
+    1080,
+    1920
+  ],
+  "fps": 24,
+  "displayed_frames": 96,
+  "closure_frame": 97,
+  "beat_frames": [
+    1,
+    13
+  ],
+  "beat_peak_energy": 950.0,
+  "beat_trough_energy": 509.1406,
+  "keyboard_orientation": "toward performer",
+  "tier": 1
+}
