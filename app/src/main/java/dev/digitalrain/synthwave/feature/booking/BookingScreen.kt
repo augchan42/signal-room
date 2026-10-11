@@ -255,7 +255,7 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         "${content.members.getValue(snapshot.selection.member).displayName} / " +
         content.concepts.getValue(snapshot.selection.concept).displayName)
     Box(Modifier.fillMaxWidth().aspectRatio(9f / 16f).background(Color.Black).testTag("broadcast-stage")) {
-        if (visual.status == VideoStatus.READY) {
+        if (visual.status == VideoStatus.READY && playback.status == PlaybackStatus.PLAYING) {
             AndroidView(factory = { context -> PlayerView(context).apply {
                 useController = false
                 player = videoPlayer
