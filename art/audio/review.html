@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signal Room — mix audition</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #08111d; color: #f3efe4; }
+    body { max-width: 780px; margin: auto; padding: 28px 20px 60px; }
+    h1 { font-size: clamp(2rem, 8vw, 4rem); letter-spacing: .04em; margin-bottom: .2em; }
+    p { line-height: 1.5; color: #c5c9cf; }
+    .panel { background: #142335; border: 1px solid #3a5364; border-radius: 16px; padding: 20px; margin: 22px 0; }
+    .label { text-transform: uppercase; font-size: .8rem; font-weight: 800; letter-spacing: .16em; color: #81e9ef; }
+    .choices { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    button { appearance: none; border: 1px solid #7790a0; border-radius: 9px; background: #203549; color: #f3efe4; padding: 12px 16px; font: inherit; cursor: pointer; }
+    button[aria-pressed="true"] { background: #89e8eb; border-color: #89e8eb; color: #092330; font-weight: 800; }
+    button:focus-visible { outline: 3px solid #ff8d78; outline-offset: 3px; }
+    audio { display: block; width: 100%; margin: 18px 0; }
+    #description { min-height: 3em; }
+    .note { border-left: 3px solid #ff927a; padding-left: 14px; }
+  </style>
+</head>
+<body>
+  <p class="label">Signal Room / music review</p>
+  <h1>Hear the producer choices</h1>
+  <p>One original 20-second instrumental theme. Switch a choice while it plays to compare the same musical position. The first four seconds are the intro; use “Jump to phrase” to hear the main hook.</p>
+  <section class="panel">
+    <div class="label">Arrangement</div>
+    <div class="choices" id="arrangements"></div>
+    <p class="label">Featured member</p>
+    <div class="choices" id="members"></div>
+    <audio id="player" controls preload="auto"></audio>
+    <button id="jump">Jump to phrase (0:04)</button>
+    <p id="description"></p>
+  </section>
+  <p class="note">Review question: Can you hear Sparse’s exposed lead, Driving’s active drums and bass, and Layered’s counterline? Can you tell which member is featured? A technically distinct file is not enough if the difference is hard to hear.</p>
+  <script>
+    const arrangements = ['sparse', 'driving', 'layered'];
+    const members = ['frontman', 'keyboardist', 'keytar', 'drummer'];
+    const descriptions = {
+      sparse: 'Open bass and pad leave the melody exposed.',
+      driving: 'Four-on-floor kick, active bass, and bright hats push the phrase.',
+      layered: 'Wider chords and a moving arpeggio surround the lead.'
+    };
+    const player = document.getElementById('player');
+    const current = { arrangement: 'sparse', member: 'frontman' };
+    const source = () => `../../app/src/main/assets/demo/audio/${current.arrangement}-${current.member}.m4a`;
+    function renderButtons(group, values, key) {
+      const host = document.getElementById(group);
+      host.replaceChildren(...values.map(value => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = value[0].toUpperCase() + value.slice(1);
+        button.setAttribute('aria-pressed', String(current[key] === value));
+        button.onclick = () => select(key, value);
+        return button;
+      }));
+    }
+    function select(key, value) {
+      if (current[key] === value) return;
+      const position = player.currentTime;
+      const wasPlaying = !player.paused;
+      current[key] = value;
+      player.src = source();
+      player.addEventListener('loadedmetadata', () => {
+        player.currentTime = Math.min(position, player.duration || position);
+        if (wasPlaying) player.play();
+      }, { once: true });
+      update();
+    }
+    function update() {
+      renderButtons('arrangements', arrangements, 'arrangement');
+      renderButtons('members', members, 'member');
+      document.getElementById('description').textContent =
+        `${descriptions[current.arrangement]} Featured: ${current.member}.`;
+    }
+    document.getElementById('jump').onclick = () => { player.currentTime = 4; player.play(); };
+    player.src = source();
+    update();
+  </script>
+</body>
+</html>

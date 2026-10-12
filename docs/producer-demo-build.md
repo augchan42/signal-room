@@ -7,6 +7,7 @@
 - Gradle 8.13
 - Kotlin 2.1.0 with the Compose Compiler Gradle plugin
 - compile/target SDK 36; minimum SDK 28
+- Python 3.9 or newer and FFmpeg/FFprobe with `loudnorm`, on `PATH` for APK builds
 
 AGP 8.13 supports API 36.1, requires Gradle 8.13 and JDK 17. Kotlin 2.x uses the Compose Compiler Gradle plugin. See the official [AGP compatibility notes](https://developer.android.com/build/releases/agp-8-13-0-release-notes) and [Compose compatibility guidance](https://developer.android.com/jetpack/androidx/releases/compose-kotlin).
 
@@ -15,11 +16,17 @@ Set `ANDROID_HOME` or create an untracked `local.properties` containing the Andr
 ## Verification
 
 ```sh
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-./gradlew :app:connectedDebugAndroidTest
+python3 -m unittest discover -s art/audio/tests -v
+python3 -m unittest discover -s tools/tests -v
+python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report build/reports/demo-assets.json
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+adb -s emulator-5554 install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5554 install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb -s emulator-5554 shell am instrument -w -r dev.digitalrain.synthwave.test/androidx.test.runner.AndroidJUnitRunner
 ```
 
-The application is offline. Its merged manifest must not contain the `INTERNET` permission.
+Replace `emulator-5554` with the intended emulator serial. `connectedDebugAndroidTest` selects every connected device, so do not use it when a phone is also attached. The application is offline; its merged manifest contains neither `INTERNET` nor `ACCESS_NETWORK_STATE`.
+`assembleDebug` and `assembleRelease` run `validateDemoAssets` before merging assets. The validator checks the exact 23-file manifest, SHA-256, full decoding, decoded audio duration/loudness/peak, WebP dimensions, and silent 96-frame H.264 loops. It fails if Python or FFmpeg is unavailable. JVM unit tests do not need either tool. Only when intentionally replacing media, run the validator with `--write-hashes`; it checks every file before atomically refreshing hashes, then reruns read-only validation. Ordinary builds never repair the manifest.
 
 ## Scoring regression fixtures
 
@@ -46,6 +53,6 @@ These figures are prototype balance evidence, not claims about later bookings.
 
 ## Runtime visual bridge
 
-The booking shell loads `app/src/main/assets/demo/visual/control-room.webp`, derived from the 1080 × 1920 Blender render `art/blender/mvp/control-1.png`. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The later concept stills and member stills will use the same asset path contract before `AssetCatalog` selects them dynamically.
+The booking shell loads `app/src/main/assets/demo/visual/control-room.webp` from the Blender demo scene. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The manifest includes three concept stills, four member stills, and three silent loops; `AssetCatalog` resolves each ID and maps video failures to the matching concept still. The producer flow uses these assets in its screens.
 
 Display text uses the bundled Oxanium variable font from the official Google Fonts repository. Its SIL Open Font License is packaged at `app/src/main/assets/licenses/oxanium-ofl.txt`. Body text continues to use the platform sans-serif for readability.

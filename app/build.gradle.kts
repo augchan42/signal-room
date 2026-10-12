@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.Exec
 
 plugins {
     alias(libs.plugins.android.application)
@@ -9,6 +10,25 @@ plugins {
 
 tasks.withType<Test>().configureEach {
     workingDir(rootProject.projectDir)
+}
+
+val demoAssetsDir = layout.projectDirectory.dir("src/main/assets/demo")
+val demoAssetReport = layout.buildDirectory.file("reports/demo-assets.json")
+val validateDemoAssets by tasks.registering(Exec::class) {
+    description = "Decode and validate every bundled demo media file before APK packaging"
+    group = "verification"
+    inputs.files(fileTree(demoAssetsDir))
+    inputs.file(rootProject.file("tools/validate_demo_assets.py"))
+    outputs.file(demoAssetReport)
+    commandLine(
+        "python3", rootProject.file("tools/validate_demo_assets.py").absolutePath,
+        "--root", demoAssetsDir.asFile.absolutePath,
+        "--report", demoAssetReport.get().asFile.absolutePath,
+    )
+}
+
+tasks.matching { it.name == "mergeDebugAssets" || it.name == "mergeReleaseAssets" }.configureEach {
+    dependsOn(validateDemoAssets)
 }
 
 android {
@@ -52,6 +72,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
