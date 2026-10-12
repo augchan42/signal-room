@@ -8,15 +8,17 @@ The source .blend and Android assets are not modified.
 """
 
 import bpy
+import math
 import sys
 from pathlib import Path
-from mathutils import Vector
+from mathutils import Matrix, Vector
 from bpy_extras.anim_utils import animdata_get_channelbag_for_assigned_slot
 
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from performance_cues import DISPLAYED_FRAMES, beat_frame, cue_at  # noqa: E402
+import performance_motion  # noqa: E402
 
 
 scene = bpy.context.scene
@@ -40,8 +42,13 @@ def _cycle(data):
 
 
 for obj in bpy.data.objects:
-    if obj.name.startswith(("PERFORMER", "HEAD TURN", "CAM |")):
+    if obj.name.startswith(("HEAD TURN", "CAM |")):
         _cycle(obj)
+# The four-second demo swayed each whole figure, feet included. Here the feet stay planted and
+# the sway moves to a hip pivot (see performance_motion.py).
+for obj in bpy.data.objects:
+    if obj.name.startswith("PERFORMER"):
+        obj.animation_data_clear()
 for name in ("Signal coral", "Electric cyan", "REAR SCREEN | replaceable feed"):
     _cycle(bpy.data.materials[name].node_tree)
 
@@ -57,7 +64,15 @@ def _joint_position(upper_arm, end):
     return upper_arm.matrix_world @ Vector((0, 0, min(zs) if end == "shoulder" else max(zs)))
 
 
-def _arm(prefix, suffix, strength, phase, shoulder_axis="x", elbow_axis="x", stick=None):
+def _wrist_position(forearm, elbow):
+    """The forearm's far end: its vertices furthest from the elbow pivot."""
+    points = [forearm.matrix_world @ vertex.co for vertex in forearm.data.vertices]
+    far = max((point - elbow.location).length for point in points)
+    end = [point for point in points if (point - elbow.location).length > far - 0.02]
+    return sum(end, Vector()) / len(end)
+
+
+def _arm(prefix, suffix, stick=None, wrist=False):
     upper = bpy.data.objects[prefix + " upper arm" + suffix]
     forearm = bpy.data.objects[prefix + " forearm" + suffix]
     hand = bpy.data.objects[prefix + " hand" + suffix]
@@ -73,27 +88,137 @@ def _arm(prefix, suffix, strength, phase, shoulder_axis="x", elbow_axis="x", sti
     _parent_keep(elbow, shoulder)
     _parent_keep(upper, shoulder)
     _parent_keep(forearm, elbow)
-    _parent_keep(hand, elbow)
+    end = elbow
+    if wrist:  # a wrist snap carries ghost notes and absorbs chord weight (ADR 0001)
+        end = bpy.data.objects.new("PERFORMANCE | " + prefix + suffix + " wrist", None)
+        scene.collection.objects.link(end)
+        end.location = _wrist_position(forearm, elbow)
+        bpy.context.view_layer.update()
+        _parent_keep(end, elbow)
+    _parent_keep(hand, end)
     if stick:
-        _parent_keep(bpy.data.objects[stick], elbow)
-    for frame in range(1, DISPLAYED_FRAMES + 2, 6):
-        active = ((frame - 1 + phase) // 6) % 2
-        section_scale = 0.35 if frame < 97 else 1.0
-        shoulder.rotation_euler["xyz".index(shoulder_axis)] = strength * 0.46 * active * section_scale
-        elbow.rotation_euler["xyz".index(elbow_axis)] = -strength * active * section_scale
-        shoulder.keyframe_insert(data_path="rotation_euler", frame=frame)
-        elbow.keyframe_insert(data_path="rotation_euler", frame=frame)
+        _parent_keep(bpy.data.objects[stick], end)
     return shoulder, elbow
 
 
+def _torso(root, prefix, keep_on_legs=("boot", "trouser")):
+    """Hip pivot carrying everything above the belt; a neck pivot for nods carries the head."""
+    belt = bpy.data.objects[prefix + " belt"]
+    neck = bpy.data.objects[prefix + " neck"]
+    torso = bpy.data.objects.new("PERFORMANCE | " + prefix + " torso", None)
+    nod = bpy.data.objects.new("PERFORMANCE | " + prefix + " nod", None)
+    scene.collection.objects.link(torso)
+    scene.collection.objects.link(nod)
+    torso.location = belt.matrix_world.translation
+    neck_zs = [neck.matrix_world @ vertex.co for vertex in neck.data.vertices]
+    nod.location = max(neck_zs, key=lambda co: co.z)
+    bpy.context.view_layer.update()
+    _parent_keep(torso, root)
+    _parent_keep(nod, torso)
+    for child in list(root.children):
+        if child in (torso,) or any(word in child.name for word in keep_on_legs):
+            continue
+        _parent_keep(child, nod if child.name.startswith("HEAD TURN") else torso)
+    return torso
+
+
 # Minimal joint controls keep each upper arm, forearm, hand and drumstick together.
-_arm("01 Cropped jacket", "", 0.42, 0, shoulder_axis="z", elbow_axis="x")
-_arm("02 Long vest", "", 0.56, 0)
-_arm("02 Long vest", ".001", 0.48, 6)
-_arm("03 Oversized blazer", "", 0.42, 0, shoulder_axis="y", elbow_axis="z")
-_arm("03 Oversized blazer", ".001", 0.32, 6, shoulder_axis="y", elbow_axis="z")
-_arm("04 Sleeveless", "", 0.66, 0, stick="Drumstick left")
-_arm("04 Sleeveless", ".001", 0.62, 6, stick="Drumstick right")
+_arm("01 Cropped jacket", "")
+_arm("02 Long vest", "")
+_arm("02 Long vest", ".001", wrist=True)
+_arm("03 Oversized blazer", "")
+_arm("03 Oversized blazer", ".001")
+_arm("04 Sleeveless", "", stick="Drumstick left", wrist=True)
+_arm("04 Sleeveless", ".001", stick="Drumstick right", wrist=True)
+
+for number, prefix in enumerate(("01 Cropped jacket", "02 Long vest", "03 Oversized blazer", "04 Sleeveless"), 1):
+    torso = _torso(bpy.data.objects[f"PERFORMER {number} | {prefix}"], prefix)
+    if prefix == "03 Oversized blazer":
+        # the keytar hangs on its strap and moves with the player; it tilts about the keys hand
+        # so the neck can be raised without the keys leaving that hand
+        for obj in bpy.data.objects:  # higher and closer, so both hands play from the front
+            if obj.name.startswith("Keytar ") and obj.parent is None:
+                obj.location += Vector(performance_motion.KEYTAR_OFFSET)
+        tilt = bpy.data.objects.new("PERFORMANCE | Keytar tilt", None)
+        scene.collection.objects.link(tilt)
+        tilt.location = performance_motion.KEYTAR_KEYS_GRIP
+        bpy.context.view_layer.update()
+        _parent_keep(tilt, torso)
+        for obj in bpy.data.objects:
+            if obj.name.startswith("Keytar ") and obj.parent is None and obj.name != "Keytar shoulder strap":
+                _parent_keep(obj, tilt)
+            elif obj.name == "Keytar shoulder strap":
+                _parent_keep(obj, torso)
+
+# From the high front camera the upper BORG tier hid the main keys and both hands, and the backing
+# mic stood in front of the keytar neck. Both are left out of the performance.
+for obj in bpy.data.objects:
+    if obj.name.startswith(("BORG upper synthesizer", "Synth upper tier", "Backing vocal mic")):
+        obj.hide_render = obj.hide_viewport = True
+
+
+def _hair(prefix, head_turn, tufts=performance_motion.HAIR_TUFTS):
+    """A tall new-wave top: tufts rising from the crown, each a chain of segments on its own pivots.
+
+    The original hair cap stays as the short sides. performance_motion swings each chain with a lag.
+    """
+    head = bpy.data.objects[prefix + " head"]
+    cap = bpy.data.objects[prefix + " hair cap"]
+    centre = head.matrix_world.translation
+    crown = max((head.matrix_world @ v.co).z for v in head.data.vertices)
+    material = cap.data.materials[0] if cap.data.materials else None
+    fringe = bpy.data.objects[prefix + " swept fringe"]
+    fringe.hide_render = fringe.hide_viewport = True  # the top replaces the fringe
+    for tuft, (bx, by, side_lean, back_lean, size) in enumerate(tufts):
+        base = Vector((centre.x + bx, centre.y + by, crown - 0.03))
+        direction = (Matrix.Rotation(side_lean, 3, "Y") @ Matrix.Rotation(-back_lean, 3, "X")) @ Vector((0, 0, 1))
+        parent = head_turn
+        style = performance_motion.HAIR
+        width, thick = style["width"] * size, style["thick"] * size
+        for segment, length in enumerate(performance_motion.HAIR_SEGMENTS):
+            length *= size
+            pivot = bpy.data.objects.new(f"PERFORMANCE | {prefix} hair {tuft} {segment}", None)
+            scene.collection.objects.link(pivot)
+            pivot.location = base
+            bpy.context.view_layer.update()
+            _parent_keep(pivot, parent)
+            across = direction.cross(Vector((0, 1, 0))).normalized()
+            depth = direction.cross(across).normalized()
+            tip_w, tip_t = width * style["taper"], thick * style["taper"]
+            corners = []
+            for along, w, t in ((0.0, width, thick), (length, tip_w, tip_t)):
+                for a in (-0.5, 0.5):
+                    for d in (-0.5, 0.5):
+                        corners.append(tuple(base + direction * along + across * (w * a) + depth * (t * d)))
+            mesh = bpy.data.meshes.new(f"{prefix} hair tuft {tuft} {segment}")
+            faces = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 2, 6, 4), (1, 5, 7, 3), (0, 4, 5, 1), (2, 3, 7, 6)]
+            mesh.from_pydata(corners, [], faces)
+            mesh.update()
+            if material:
+                mesh.materials.append(material)
+            strip = bpy.data.objects.new(f"{prefix} hair tuft {tuft} {segment}", mesh)
+            scene.collection.objects.link(strip)
+            _parent_keep(strip, pivot)
+            base = base + direction * (length * 0.85)
+            direction = (Matrix.Rotation(-style["curl"], 3, "X") @ direction).normalized()  # each segment sweeps back
+            parent = pivot
+            width, thick = tip_w, tip_t
+
+
+_hair("01 Cropped jacket", bpy.data.objects["HEAD TURN 0"])
+
+# Joint angles follow the cue's drum hits, hook notes, bass notes and chord changes.
+for control, axes in performance_motion.channels().items():
+    obj = bpy.data.objects["PERFORMANCE | " + control]
+    rest = obj.rotation_euler.copy()
+    for axis, track in axes.items():
+        index = "xyz".index(axis)
+        for frame, angle in enumerate(track, 1):
+            obj.rotation_euler[index] = rest[index] + angle
+            obj.keyframe_insert(data_path="rotation_euler", index=index, frame=frame)
+    for curve in _fcurves(obj):
+        for key in curve.keyframe_points:
+            key.interpolation = "LINEAR"
 
 
 # The original 4-second rim pulse is replaced with a 20-second cue track.
