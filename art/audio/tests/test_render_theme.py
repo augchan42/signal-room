@@ -57,6 +57,31 @@ class RenderThemeTest(unittest.TestCase):
         self.assertGreater(float(np.max(np.abs(sparse_front - driving_front))), 0.01)
         self.assertGreater(float(np.max(np.abs(sparse_front - sparse_drums))), 0.01)
 
+    def test_borg_pad_opens_bright_then_filters_down(self):
+        voice = render_theme._voice(60, 0.5, 48000, "pad")
+        early = self._upper_harmonic_ratio(voice, 48000, 60, 0.08)
+        late = self._upper_harmonic_ratio(voice, 48000, 60, 0.34)
+        self.assertGreater(early, 0.10)
+        self.assertLess(late, early * 0.75)
+
+    def test_borg_arpeggio_has_bright_filter_attack(self):
+        voice = render_theme._voice(60, 0.25, 48000, "arp")
+        early = self._upper_harmonic_ratio(voice, 48000, 60, 0.015)
+        late = self._upper_harmonic_ratio(voice, 48000, 60, 0.14)
+        self.assertGreater(early, 0.10)
+        self.assertLess(late, early * 0.75)
+
+    @staticmethod
+    def _upper_harmonic_ratio(voice, sample_rate, note, start_seconds):
+        start = round(start_seconds * sample_rate)
+        segment = voice[start:start + round(0.075 * sample_rate)]
+        spectrum = np.abs(np.fft.rfft(segment * np.hanning(segment.size))) ** 2
+        frequencies = np.fft.rfftfreq(segment.size, 1 / sample_rate)
+        fundamental = render_theme.midi_hz(note)
+        lower = spectrum[(frequencies > 0.7 * fundamental) & (frequencies < 2.5 * fundamental)].sum()
+        upper = spectrum[(frequencies > 2.5 * fundamental) & (frequencies < 9 * fundamental)].sum()
+        return float(np.sqrt(upper / max(lower, 1e-20)))
+
     def _short_fixture(self):
         fixture = copy.deepcopy(self.theme)
         fixture["chords"] = [fixture["chords"][0]]

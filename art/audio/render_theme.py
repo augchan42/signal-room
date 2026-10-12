@@ -66,6 +66,20 @@ def _oscillator(freq: float, t: np.ndarray, harmonics: int, slope: float) -> np.
     return signal
 
 
+def _filtered_dual_saw(freq: float, t: np.ndarray, harmonics: int, filter_decay: float) -> np.ndarray:
+    """Two detuned, band-limited saw oscillators with a closing harmonic filter."""
+    signal = np.zeros(t.size, dtype=np.float64)
+    ceiling = min(harmonics, max(1, int((0.46 / (t[1] - t[0])) // (freq * 1.006))))
+    brightness = 0.18 + 0.82 * np.exp(-t * filter_decay)
+    for harmonic in range(1, ceiling + 1):
+        partial = brightness ** (harmonic - 1) / harmonic
+        signal += partial * (
+            0.65 * np.sin(2 * np.pi * freq * harmonic * t)
+            + 0.35 * np.sin(2 * np.pi * freq * 1.006 * harmonic * t + 0.17)
+        )
+    return signal
+
+
 def _voice(note: int, held_seconds: float, sample_rate: int, kind: str) -> np.ndarray:
     release = {"bass": 0.12, "pad": 0.30, "lead": 0.16, "arp": 0.10, "answer": 0.14}[kind]
     count = frame_count(held_seconds + release, sample_rate)
@@ -75,11 +89,7 @@ def _voice(note: int, held_seconds: float, sample_rate: int, kind: str) -> np.nd
         wave = 0.60 * _oscillator(freq, t, 8, 1.65) + 0.40 * np.sin(2 * np.pi * freq * t)
         env = _envelope(t, held_seconds, 0.006, release) * (0.68 + 0.32 * np.exp(-t * 7))
     elif kind == "pad":
-        wave = (
-            0.52 * np.sin(2 * np.pi * freq * t)
-            + 0.24 * np.sin(2 * np.pi * freq * 1.004 * t)
-            + 0.16 * np.sin(2 * np.pi * freq * 2 * t)
-        )
+        wave = 0.82 * _filtered_dual_saw(freq, t, 11, 3.0) + 0.18 * np.sin(2 * np.pi * freq * t)
         env = _envelope(t, held_seconds, 0.14, release)
     elif kind == "lead":
         vibrato = 1.0 + 0.0025 * np.sin(2 * np.pi * 5.3 * t)
@@ -87,7 +97,7 @@ def _voice(note: int, held_seconds: float, sample_rate: int, kind: str) -> np.nd
         wave = 0.70 * np.sin(phase) + 0.20 * np.sin(2 * phase) + 0.10 * np.sin(3 * phase)
         env = _envelope(t, held_seconds, 0.012, release)
     elif kind == "arp":
-        wave = _oscillator(freq, t, 7, 1.55)
+        wave = _filtered_dual_saw(freq, t, 11, 10.0)
         env = _envelope(t, held_seconds, 0.004, release) * np.exp(-t * 4.2)
     else:
         wave = _oscillator(freq, t, 5, 1.30)
