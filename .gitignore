@@ -12,4 +12,5 @@ art/blender/mvp/raw-*.png
 art/blender/demo/frames/
 __pycache__/
 art/audio/.venv/
+art/audio/.venv-surge/
 art/audio/masters/
