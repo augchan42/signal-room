@@ -7,6 +7,7 @@ synthesized here; no samples or reference audio. Writes a wet and a dry WAV.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import wave
 from pathlib import Path
@@ -632,43 +633,40 @@ def bass_part(dest: np.ndarray) -> None:
 
 # --- arrangement -----------------------------------------------------------
 
-def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
-    kicks: list[float] = []
-    k = kick()
+def drum_events() -> list[tuple[str, float, float]]:
+    """(kind, time, gain) for every drum hit, in the order drum_parts plays them.
+
+    Kinds: kick, snare, roll (bar 7 crescendo and bar 2 fill), ghost, tom, hat, open_hat.
+    Times are on the grid; drum_parts adds a few ms of humanising jitter to ghosts and hats.
+    """
+    events: list[tuple[str, float, float]] = []
     for bar in range(2, 11):
         if bar == 7:
             continue
         beats = range(4) if bar < 10 else (0, 1, 2)
         for b in beats:
-            when = at(bar, b * 4)
-            put(dry, k, when, .72 if bar > 2 else .55)
-            kicks.append(when)
+            events.append(("kick", at(bar, b * 4), .72 if bar > 2 else .55))
         if bar in (5, 9):  # extra push before the bar end
-            put(dry, k, at(bar, 14), .55)
-            kicks.append(at(bar, 14))
-
-    s = snare()
+            events.append(("kick", at(bar, 14), .55))
     for bar in range(3, 11):
         if bar == 10:
-            put(snare_bus, s, at(bar, 4), .8)
+            events.append(("snare", at(bar, 4), .8))
             break
         if bar == 7:
             for i in range(8):  # crescendo roll into re-entry
-                put(snare_bus, snare(), at(7, 8 + i), .2 + .07 * i)
+                events.append(("roll", at(7, 8 + i), .2 + .07 * i))
             continue
         for b in (1, 3):
-            put(snare_bus, s, at(bar, b * 4), .8)
+            events.append(("snare", at(bar, b * 4), .8))
         for ghost in (7, 15) if bar % 2 else (10,):
-            put(dry, snare(), at(bar, ghost) + RNG.normal(0, .003), .12)
+            events.append(("ghost", at(bar, ghost), .12))
     # bar 2 fill: snare 16ths then low tom
     for i, step in enumerate((12, 13, 14)):
-        put(snare_bus, snare(), at(2, step), .3 + .15 * i)
-    put(dry, tom(43), at(2, 15), .5, -.3)
+        events.append(("roll", at(2, step), .3 + .15 * i))
+    events.append(("tom", at(2, 15), .5))
     # tom fill at the end of bar 6
-    for step, note in ((12, 50), (13, 47), (14, 43), (15, 40)):
-        put(dry, tom(note), at(6, step), .45, .35 - .2 * (step - 12))
-
-    closed, opened = hat(.06), hat(.32)
+    for step in (12, 13, 14, 15):
+        events.append(("tom", at(6, step), .45))
     for bar in range(2, 11):
         for step in range(16):
             if bar == 2 and step % 2:
@@ -677,13 +675,44 @@ def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
                 continue
             if bar == 10 and step >= 8:
                 break
-            jitter = RNG.normal(0, .0035)
             accent = 1.0 if step % 4 == 2 else (.55 if step % 2 == 0 else .38)
-            vel = accent * (1 + .12 * RNG.standard_normal())
-            if step % 8 == 6 and bar not in (2, 7):
-                put(dry, opened, at(bar, step) + jitter, .26 * vel, .3)
+            opened = step % 8 == 6 and bar not in (2, 7)
+            events.append(("open_hat" if opened else "hat", at(bar, step), accent))
+    return events
+
+
+TOM_NOTES = {at(2, 15): 43, at(6, 12): 50, at(6, 13): 47, at(6, 14): 43, at(6, 15): 40}
+
+
+def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
+    kicks: list[float] = []
+    k = kick()
+    s = snare()
+    hats = None
+    for kind, when, gain in drum_events():
+        if kind == "kick":
+            put(dry, k, when, gain)
+            kicks.append(when)
+        elif kind == "snare":
+            put(snare_bus, s, when, gain)
+        elif kind == "roll":
+            put(snare_bus, snare(), when, gain)
+        elif kind == "ghost":
+            put(dry, snare(), when + RNG.normal(0, .003), gain)
+        elif kind == "tom":
+            step = round((when % BAR) / STEP)
+            pan = -.3 if when < at(3) else .35 - .2 * (step - 12)
+            put(dry, tom(TOM_NOTES[when]), when, gain, pan)
+        else:
+            if hats is None:
+                hats = hat(.06), hat(.32)
+            step = round((when % BAR) / STEP)
+            jitter = RNG.normal(0, .0035)
+            vel = gain * (1 + .12 * RNG.standard_normal())
+            if kind == "open_hat":
+                put(dry, hats[1], when + jitter, .26 * vel, .3)
             else:
-                put(dry, closed, at(bar, step) + jitter, .4 * vel, .3 if step % 2 else -.15)
+                put(dry, hats[0], when + jitter, .4 * vel, .3 if step % 2 else -.15)
     return kicks
 
 
@@ -779,6 +808,21 @@ def write(path: Path, audio: np.ndarray) -> None:
         out.writeframes(np.rint(np.clip(audio, -1, 1) * 32767).astype("<i2").tobytes())
 
 
+def performance_events() -> dict:
+    """Timings the Blender performance animates to (seconds from the start of the cue)."""
+    return {
+        "bpm": BPM,
+        "seconds": FRAMES / RATE,
+        "chords": [{"bar": bar, "time": at(bar), "chord": name} for bar, name in enumerate(CHORDS, 1)],
+        "drums": [{"kind": kind, "time": round(when, 4), "gain": round(gain, 3)} for kind, when, gain in drum_events()],
+        "crashes": [at(3), at(8), at(10, 8)],
+        "lead": [{"time": round(t, 4), "dur": round(d, 4), "note": n} for t, d, n in lead_events()],
+        "bass": [{"time": round(t, 4), "dur": round(d, 4), "note": n} for t, d, n in bass_events()],
+        "sections": {"intro": [1, 2], "drop": [3, 6], "breakdown": [7, 7], "reentry": [8, 9], "ending": [10, 10]},
+        "final_stab": at(10, 8),
+    }
+
+
 def main() -> None:
     global LEAD, POLISH, LEAD_WAV, PAD_WAV, PAD_MOTION, PAD_CLEAN
     parser = argparse.ArgumentParser()
@@ -789,9 +833,14 @@ def main() -> None:
     parser.add_argument("--pad-wav", type=Path, help="use pre-rendered pad chords instead of the in-house pad")
     parser.add_argument("--pad-motion", action="store_true", help="low-pass swell over each bar on a --pad-wav pad")
     parser.add_argument("--pad-clean", action="store_true", help="no kick pumping, low-mid cut, less reverb on the pad")
+    parser.add_argument("--events", type=Path, help="write performance timings as JSON and exit")
     parser.add_argument("--name", help="output file stem (default from the lead)")
     parser.add_argument("--polish", action="store_true", help="analog drift, accents, ladder, saturation, chorus, less fizz")
     args = parser.parse_args()
+    if args.events:
+        args.events.write_text(json.dumps(performance_events(), indent=1) + "\n")
+        print(args.events)
+        return
     LEAD = args.lead
     POLISH = args.polish
     LEAD_WAV = args.lead_wav

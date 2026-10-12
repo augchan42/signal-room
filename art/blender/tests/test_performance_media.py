@@ -11,7 +11,7 @@ import numpy as np
 
 MEDIA = Path(__file__).resolve().parents[1] / "demo" / "performance-monochrome.webm"
 REVIEW = MEDIA.parent / "review.html"
-AUDIO = MEDIA.parents[3] / "app" / "src" / "main" / "assets" / "demo" / "audio" / "driving-frontman.m4a"
+AUDIO = MEDIA.parents[1].parent / "audio" / "probe" / "final" / "bright-cue-candidate.mp3"
 
 
 class PerformanceSource(HTMLParser):
@@ -66,7 +66,7 @@ class PerformanceMediaTest(unittest.TestCase):
         # Opus/WebM may include a few milliseconds of encoder padding.
         self.assertLess(abs(float(data["format"]["duration"]) - 20.0), 0.05)
 
-    def test_review_clip_uses_the_current_driving_frontman_mix(self):
+    def test_review_clip_uses_the_approved_bright_cue(self):
         def decode(path):
             result = subprocess.run([
                 "ffmpeg", "-v", "error", "-i", str(path), "-map", "0:a:0",

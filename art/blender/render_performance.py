@@ -1,4 +1,4 @@
-"""Render the standalone monochrome performance preview with its original music."""
+"""Render the standalone monochrome performance preview with the approved bright cue."""
 
 import bpy
 import subprocess
@@ -11,7 +11,7 @@ OUT = ROOT / "demo"
 FRAMES = OUT / "frames" / "performance-monochrome"
 FRAMES.mkdir(parents=True, exist_ok=True)
 TARGET = OUT / "performance-monochrome.webm"
-AUDIO = ROOT.parent.parent / "app" / "src" / "main" / "assets" / "demo" / "audio" / "driving-frontman.m4a"
+AUDIO = ROOT.parent / "audio" / "probe" / "final" / "bright-cue-candidate.mp3"  # the approved bright cue
 scene = bpy.context.scene
 assert scene.frame_start == 1 and scene.frame_end == 480 and scene.render.fps == 24
 

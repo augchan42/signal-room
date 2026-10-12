@@ -19,7 +19,21 @@ Open `review.html` through a local HTTP server from the repository root to inspe
 
 ## 20-second performance test
 
-`signal-room-performance.blend` is a separate 480-frame scene derived from the four-second demo. It has four instrument gestures, two moving searchlights, and five lighting sections aligned to the 120 BPM Driving / Frontman audio mix. The original demo scene and Android assets are unchanged.
+`signal-room-performance.blend` is a separate 480-frame scene derived from the four-second demo. It has two moving searchlights and five lighting sections aligned to the approved 120 BPM bright cue (`art/audio/probe/final/bright-cue-candidate.mp3`). The original demo scene and Android assets are unchanged.
+
+The performers' movement follows the cue's actual timings, which `bright_cue.py --events` writes to `performance-events.json`. `performance_motion.py` turns those timings into joint angles for each frame. The timing rules come from [ADR 0001](../../../docs/adr/0001-performer-motion.md): each contact lands on the frame at or before its audio, strokes accelerate into contact and rebound out of it, and lift follows loudness.
+
+- **Drummer:** the left stick hits the snares and ghost notes, and the right stick plays the hi-hats. The two sticks alternate on rolls and tom fills. Both sticks hit the crashes at bars 3, 8 and 10. Ghost notes are mostly a wrist snap with little arm lift; snare accents and crashes use the whole arm. The snare shoulder and the upper body react to accents.
+- **Keyboard player:** the right hand waits above the keys in bar 2, presses on each hook note, slides across the keyboard with the pitch, rises between notes, and lifts off after the final stab. The left hand holds the chords, its wrist gives on each chord, and it goes up in the air at the re-entry (bar 8). The upper BORG tier is hidden in this scene, because from the camera it covered the keys and hands.
+- **Keytar player:** the keys hand plays the bass line, and the neck hand moves on chord changes. The keytar sits high on the chest with both hands playing from the front. It tilts about the keys hand so the neck goes up on the drop and the re-entry and stays up from the final stab, with the neck hand following. The backing-vocal mic is hidden.
+- **Singer:** the free arm points out on the drop, opens at bar 5, goes up in a fist at the re-entry, and holds the fist from the final stab. The singer tosses their head on the drop, the re-entry and the final stab. Their new-wave hair has short sides and a top swept up and over to one side (eight tufts of three segments). It swings after each toss and with the head, with the tips lagging the roots, and settles in the breakdown.
+- **Everyone:**
+  - A hip pivot carries the upper body, and a neck pivot carries the head. Upper bodies rock side to side and heads tilt and nod on the beat, scaled by section. Each performer's head moves with a different delay, so the band doesn't move in unison.
+  - Everyone is nearly still in the breakdown (bar 7) and holds a pose from the final stab.
+  - Feet stay planted. The four-second demo's whole-body sway, which slid the feet, is removed.
+  - The keytar moves with its player.
+
+Regenerate the events with `art/audio/.venv/bin/python art/audio/bright_cue.py --events art/blender/demo/performance-events.json`. `art/blender/tests/test_performance_motion.py` tests the motion without Blender.
 
 Regenerate the scene and preview with:
 
