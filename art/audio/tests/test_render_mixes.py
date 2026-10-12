@@ -42,6 +42,39 @@ class MixGainsTest(unittest.TestCase):
         self.assertEqual(0, render_mixes.mix_gains("sparse", "frontman")["counter"])
 
 
+class VariantTest(unittest.TestCase):
+    def test_default_events_are_the_approved_cue(self):
+        self.assertEqual(bright_cue.drum_events(), bright_cue.drum_events("full", False))
+        self.assertEqual(bright_cue.bass_events(), bright_cue.bass_events("full"))
+
+    def test_sparse_drums_drop_ghosts_and_half_the_kicks(self):
+        full, sparse = bright_cue.drum_events(), bright_cue.drum_events("sparse")
+        count = lambda events, kind: sum(1 for k, _, _ in events if k == kind)
+        self.assertEqual(0, count(sparse, "ghost"))
+        self.assertLess(count(sparse, "kick"), count(full, "kick") * .6)
+        self.assertLess(count(sparse, "hat"), count(full, "hat") * .5)
+
+    def test_drummer_fills_add_hits_in_bars_4_8_and_9(self):
+        extra = set(bright_cue.drum_events(fills=True)) - set(bright_cue.drum_events())
+        bars = {int(when // bright_cue.BAR) + 1 for _, when, _ in extra}
+        self.assertEqual({4, 8, 9}, bars)
+
+    def test_bass_styles_change_the_line(self):
+        full = bright_cue.bass_events()
+        self.assertLess(len(bright_cue.bass_events("sparse")), len(full) / 2)
+        self.assertGreater(len(bright_cue.bass_events("driving")), len(full))
+        self.assertEqual(sorted(bright_cue.bass_events("driving")), bright_cue.bass_events("driving"))
+
+    def test_keytar_answers_start_only_where_the_hook_does_not(self):
+        hook_onsets = {round(start, 4) for start, _, _ in bright_cue.lead_events()}
+        for bar, step, _, _ in bright_cue.ANSWERS:
+            self.assertNotIn(round(bright_cue.at(bar, step), 4), hook_onsets)
+
+    def test_every_member_plays_something_of_their_own(self):
+        for member in render_mixes.MEMBERS:
+            self.assertTrue(render_mixes.MEMBER_VARIANTS[member])
+
+
 class LimiterTest(unittest.TestCase):
     def test_limit_holds_the_ceiling_and_leaves_quiet_audio_alone(self):
         audio = np.full((48000, 2), .1)

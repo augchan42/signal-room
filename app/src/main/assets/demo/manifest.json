@@ -7,84 +7,84 @@
       "path": "audio/sparse-frontman.m4a",
       "arrangement": "SPARSE",
       "member": "FRONTMAN",
-      "sha256": "5c9aebdf08af7bfff6e23bf7910f6b4de57364fcf5c653edb1c423da897847bf"
+      "sha256": "eda7fe1d1da20c7ab55f9395f410b2a3ba999403fb81a5fe06d4a865898244c0"
     },
     {
       "id": "sparse-keyboardist",
       "path": "audio/sparse-keyboardist.m4a",
       "arrangement": "SPARSE",
       "member": "KEYBOARDIST",
-      "sha256": "4d311365db2e4e2e039ff830c96cd36a90b5c3d8ba54d1cff3c8cd948ca5dde7"
+      "sha256": "b31f0010bee6c8b250bc675dbba191fe3e24f7232ca23bb29fea52b87779aa36"
     },
     {
       "id": "sparse-keytar",
       "path": "audio/sparse-keytar.m4a",
       "arrangement": "SPARSE",
       "member": "KEYTAR",
-      "sha256": "c9e3add001a43c83b8df248a549659351b338a1680e50444156c543ecad0cd8d"
+      "sha256": "b1920aa0cc50f6233d93e9ebb3364e1703e5fd7529df28f22ca07d3152b62aaf"
     },
     {
       "id": "sparse-drummer",
       "path": "audio/sparse-drummer.m4a",
       "arrangement": "SPARSE",
       "member": "DRUMMER",
-      "sha256": "d17c83ffdea6f464cad2b2239a7584de5376253b8994af4a3a411e6a345a24d2"
+      "sha256": "ec75772af41a050024da282187f0fc72c1cd9dcbe5b7c4dbfa380768e25f7cab"
     },
     {
       "id": "driving-frontman",
       "path": "audio/driving-frontman.m4a",
       "arrangement": "DRIVING",
       "member": "FRONTMAN",
-      "sha256": "45d03bc7c000b8deeb04984638bd91ed04485e1c341d6d7143de53b2b37465d7"
+      "sha256": "2cb124806832163beb1dd374748d0f41f833d5deff9772a493bc371ac52fdcea"
     },
     {
       "id": "driving-keyboardist",
       "path": "audio/driving-keyboardist.m4a",
       "arrangement": "DRIVING",
       "member": "KEYBOARDIST",
-      "sha256": "e9b72b8e1600236257402b9cf692f8f09e099c64bf115688ba3adff71fb14a65"
+      "sha256": "47aacea511b6f48d695dafe5784f68456ec74db57f4e8f941c8b87c8d67da4a8"
     },
     {
       "id": "driving-keytar",
       "path": "audio/driving-keytar.m4a",
       "arrangement": "DRIVING",
       "member": "KEYTAR",
-      "sha256": "2b52c6598afe4ef7fd22e841a0fcd1a14ae4ced6d9da51da968c6b6859b3dd0f"
+      "sha256": "1fd51046201da38f05d536a3ba5338f856d354488437e5055d9da7205ea3ca04"
     },
     {
       "id": "driving-drummer",
       "path": "audio/driving-drummer.m4a",
       "arrangement": "DRIVING",
       "member": "DRUMMER",
-      "sha256": "409320a1af0aadf0a0a43a1316c19a692f59380ffed42a227ccdb342af9a7d73"
+      "sha256": "2cd36d8ca91adb754007b02bcdfdf13e5d261895c8d48b7e08e14aad9639cff4"
     },
     {
       "id": "layered-frontman",
       "path": "audio/layered-frontman.m4a",
       "arrangement": "LAYERED",
       "member": "FRONTMAN",
-      "sha256": "5c218c0df334457f935bd1c556448dae3555d67382219fe296f6d0013b19c5b9"
+      "sha256": "c32079dd3525266ff9e0aec5fa1a0c8124136a64bd187f96ba647fc2d2548854"
     },
     {
       "id": "layered-keyboardist",
       "path": "audio/layered-keyboardist.m4a",
       "arrangement": "LAYERED",
       "member": "KEYBOARDIST",
-      "sha256": "2a7550fb986fb6ad0750a8512ccc593394acef7efd776c1721e09ad7fb8002c1"
+      "sha256": "926fdb8e9009e76f5178d189ea91e63cbdbab7712d8153f14d182fafc0ec2c3d"
     },
     {
       "id": "layered-keytar",
       "path": "audio/layered-keytar.m4a",
       "arrangement": "LAYERED",
       "member": "KEYTAR",
-      "sha256": "9f2cfe193540e667da62ca4f286d6ee48fc0dcf35c5438565095026eef84744b"
+      "sha256": "2dedddd16b8d4e6662124a25762e424d3b29c943732467c06c475dcb0fbc612e"
     },
     {
       "id": "layered-drummer",
       "path": "audio/layered-drummer.m4a",
       "arrangement": "LAYERED",
       "member": "DRUMMER",
-      "sha256": "e6c00eea03f589c43235c9111668de82df7b5dfdd2927ed0b592a64adeda66e0"
+      "sha256": "d12f1ba26cc8c1398b6db73d6795690d5b36d7d0b40dedbceabae760f09b91a5"
     }
   ],
   "concepts": [

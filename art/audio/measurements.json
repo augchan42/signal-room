@@ -1,122 +1,122 @@
 {
   "driving-drummer": {
-    "bytes": 509978,
+    "bytes": 511492,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.1,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.08
+    "truePeakDbtp": -1.99
   },
   "driving-frontman": {
-    "bytes": 501565,
+    "bytes": 501879,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.09,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.97
+    "truePeakDbtp": -2.99
   },
   "driving-keyboardist": {
-    "bytes": 504043,
+    "bytes": 507066,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
-    "integratedLufs": -14.09,
+    "integratedLufs": -14.1,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.28
+    "truePeakDbtp": -2.59
   },
   "driving-keytar": {
-    "bytes": 505911,
+    "bytes": 507377,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
-    "integratedLufs": -14.08,
+    "integratedLufs": -14.1,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.29
+    "truePeakDbtp": -3.01
   },
   "layered-drummer": {
-    "bytes": 500354,
+    "bytes": 504261,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.11,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.64
+    "truePeakDbtp": -2.21
   },
   "layered-frontman": {
-    "bytes": 494086,
+    "bytes": 493054,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.1,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.93
+    "truePeakDbtp": -2.45
   },
   "layered-keyboardist": {
-    "bytes": 497852,
+    "bytes": 501596,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.11,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.5
+  },
+  "layered-keytar": {
+    "bytes": 497167,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.1,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.41
+    "truePeakDbtp": -2.44
   },
-  "layered-keytar": {
-    "bytes": 497025,
+  "sparse-drummer": {
+    "bytes": 502620,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.12,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.66
+  },
+  "sparse-frontman": {
+    "bytes": 497718,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.11,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.79
+  },
+  "sparse-keyboardist": {
+    "bytes": 496775,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.1,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.88
+  },
+  "sparse-keytar": {
+    "bytes": 495024,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.09,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.48
-  },
-  "sparse-drummer": {
-    "bytes": 498317,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.7
-  },
-  "sparse-frontman": {
-    "bytes": 493484,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -3.0
-  },
-  "sparse-keyboardist": {
-    "bytes": 496553,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
     "truePeakDbtp": -3.05
-  },
-  "sparse-keytar": {
-    "bytes": 491451,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.08,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.35
   }
 }

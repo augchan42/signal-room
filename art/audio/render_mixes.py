@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Twelve app mixes from the approved bright cue: three arrangements x four featured members.
 
-Every mix uses the same parts, timing and effects as `probe/final/bright-cue-candidate.mp3`, so the
-Blender performance stays in sync. An arrangement sets each part's level; the featured member's
-parts are then raised. Writes 48 kHz stereo WAV masters to `masters/`; `finish_audio.py` encodes them.
+Every mix keeps the tempo, harmony, hook and effects of `probe/final/bright-cue-candidate.mp3`.
+An arrangement changes the drum and bass patterns and each part's level; the featured member adds
+their own playing (fills, answers, an octave double or an open arpeggio) and their parts are raised. Writes 48 kHz stereo WAV masters to `masters/`; `finish_audio.py` encodes them.
 """
 
 from __future__ import annotations
@@ -23,34 +23,51 @@ STEMS = HERE / "masters" / "stems"
 LEAD_WAV = STEMS / "lead-a7.wav"  # Surge XT JX-10 Double Brass + Anthemish 1 layer, see SOUND_DIRECTION_NOTES.md
 PAD_WAV = STEMS / "pad-juno60-open.wav"  # Surge XT Juno-60 Strings, open voicing
 
-# Part levels (1.0 = the approved cue). "verb" scales the plate return.
-ARRANGEMENT_GAINS = {
-    # exposed lead with space around it: light kit, thin keys, no pads to speak of, more room
-    "sparse": {"drums": .7, "hats": .35, "snares": .75, "bass": .8, "pads": .25, "arp": .45,
-               "lead": 1.15, "double": 0, "counter": 0, "fx": .6, "verb": 1.25},
-    # active rhythm: kit, hats, bass and arpeggio forward, pads pulled back
-    "driving": {"drums": 1.15, "hats": 1.25, "snares": 1.1, "bass": 1.3, "pads": .55, "arp": 1.15,
-                "lead": 1.0, "double": 1.0, "counter": 0, "fx": 1.0, "verb": .8},
-    # sustained chords and a counterline under the hook
-    "layered": {"drums": .9, "hats": .8, "snares": .9, "bass": 1.0, "pads": 1.6, "arp": 1.0,
-                "lead": 1.0, "double": 1.3, "counter": 1.0, "fx": 1.0, "verb": 1.3},
+# What each arrangement and featured member plays differently (see bright_cue.render_parts).
+ARRANGEMENT_VARIANTS = {
+    "sparse": {"drums": "sparse", "bass": "sparse", "arp_every": 2},
+    "driving": {"drums": "driving", "bass": "driving"},
+    "layered": {},
+}
+MEMBER_VARIANTS = {
+    "frontman": {"octave": True},  # the hook doubled an octave up on the re-entry
+    "keyboardist": {"arp_open": True},  # the arpeggio stays bright through the breakdown
+    "keytar": {"answers": True},  # short answer phrases in the gaps of the hook
+    "drummer": {"fills": True},  # snare and tom fills in bars 4, 8 and 9
 }
 
-# Parts each member plays on stage. The keytar player plays the bass line in the performance.
+# Part levels (1.0 = the approved cue). "verb" scales the plate return.
+ARRANGEMENT_GAINS = {
+    # exposed lead over open bass and a quiet pad, with more room
+    "sparse": {"drums": .85, "hats": .7, "snares": .8, "bass": .9, "pads": .45, "arp": .6,
+               "lead": 1.15, "double": 0, "counter": 0, "answers": 1.0, "octave": 1.0, "fx": .6, "verb": 1.25},
+    # active bass and drums, pads pulled back
+    "driving": {"drums": 1.15, "hats": 1.25, "snares": 1.1, "bass": 1.3, "pads": .55, "arp": 1.15,
+                "lead": 1.0, "double": 1.0, "counter": 0, "answers": 1.0, "octave": 1.0, "fx": 1.0, "verb": .8},
+    # pad and counterline around the lead
+    "layered": {"drums": .9, "hats": .8, "snares": .9, "bass": 1.0, "pads": 1.6, "arp": 1.0,
+                "lead": 1.0, "double": 1.3, "counter": 1.0, "answers": 1.0, "octave": 1.0, "fx": 1.0, "verb": 1.3},
+}
+
+# Parts raised for the featured member.
 MEMBER_PARTS = {
-    "frontman": ("lead", "double"),
-    "keyboardist": ("pads", "arp", "counter"),
-    "keytar": ("bass",),
+    "frontman": ("lead", "double", "octave"),
+    "keyboardist": ("arp", "counter"),
+    "keytar": ("answers",),
     "drummer": ("drums", "hats", "snares"),
 }
-FEATURE = 1.45  # about +3.2 dB on the featured member's parts
+FEATURE = 1.6  # about +4 dB on the featured member's parts
+
+
+def mix_variant(arrangement: str, member: str) -> dict:
+    return {**ARRANGEMENT_VARIANTS[arrangement], **MEMBER_VARIANTS[member]}
 
 
 def mix_gains(arrangement: str, member: str) -> dict[str, float]:
     gains = dict(ARRANGEMENT_GAINS[arrangement])
     for part in MEMBER_PARTS[member]:
         # a part the arrangement mutes stays muted, except the keyboardist's counterline
-        base = gains[part] or (.6 if part == "counter" else 0)
+        base = gains[part] or (.7 if part == "counter" else 0)
         gains[part] = base * FEATURE
     return gains
 
@@ -117,9 +134,9 @@ def main() -> None:
         parser.error("Use --all or --arrangement and --member")
     configure()
     start = time.time()
-    parts = bright_cue.render_parts()
     for arrangement, member in pairs:
         path = args.out / f"{arrangement}-{member}.wav"
+        parts = bright_cue.render_parts(mix_variant(arrangement, member))
         audio, reduction = fit_peaks(bright_cue.mix_parts(parts, True, mix_gains(arrangement, member)), path)
         bright_cue.write(path, audio)
         print(f"{path} (limited {reduction:.1f} dB)" if reduction else path)

@@ -525,15 +525,18 @@ def lead_part(dest: np.ndarray, doubling: np.ndarray) -> None:
 ARP_ORDER = [0, 1, 2, 3, 2, 1, 0, 2, 3, 2, 1, 3, 0, 1, 2, 3]
 
 
-def arp_part(dest: np.ndarray) -> None:
+def arp_part(dest: np.ndarray, every: int = 1, open_breakdown: bool = False) -> None:
+    """every=2 plays every other 16th; open_breakdown keeps the arpeggio bright through bar 7."""
     for bar, name in enumerate(CHORDS, 1):
         tones = PAD[name]
         for step in range(16):
+            if step % every:
+                continue
             when = at(bar, step)
             # intro opens from dark to bright over bars 1-2; breakdown thins it
             if bar <= 2:
                 bright = 1100 + 3400 * ((bar - 1) * 16 + step) / 32
-            elif bar == 7:
+            elif bar == 7 and not open_breakdown:
                 bright = 1600 if step < 8 else 1600 + 2800 * (step - 8) / 8
             else:
                 bright = 5200
@@ -591,7 +594,9 @@ def pad_part(dest: np.ndarray) -> None:
         put(dest, sound, at(bar), .34 if bar <= 2 else .3)
 
 
-def bass_events() -> list[tuple[float, float, int]]:
+def bass_events(style: str = "full") -> list[tuple[float, float, int]]:
+    """style: "full" (the approved cue), "sparse" (root and fifth on beats 1 and 3) or
+    "driving" (adds 16th octave pickups before beats 3 and 1)."""
     events: list[tuple[float, float, int]] = []
     for bar, name in enumerate(CHORDS, 1):
         root = ROOT[name]
@@ -600,17 +605,25 @@ def bass_events() -> list[tuple[float, float, int]]:
         if bar in (2, 7):  # held, swelling
             events.append((at(bar), BAR, root))
             continue
+        if style == "sparse":
+            events.append((at(bar), STEP * 7, root))
+            if bar < 10:
+                events.append((at(bar, 8), STEP * 7, root + 7))
+            continue
+        if style == "driving":
+            for step in (7, 15) if bar not in (6, 9, 10) else (7,):
+                events.append((at(bar, step), STEP * .8, root + 12))
         for step in range(0, 16, 2):
             note = root + (12 if step % 4 == 2 else 0)
             events.append((at(bar, step), STEP * (1.6 if step % 4 == 0 else 1.2), note))
         if bar in (6, 9):  # push into next bar
             events[-1] = (at(bar, 14), STEP, root + 12)
             events.append((at(bar, 15), STEP, root + 10 if bar == 6 else root + 14))
-    return events
+    return sorted(events)
 
 
-def bass_part(dest: np.ndarray) -> None:
-    events = bass_events()
+def bass_part(dest: np.ndarray, style: str = "full") -> None:
+    events = bass_events(style)
     total = len(dest)
     freq, _ = mono_line(events, total, glide=.012)
     gate = np.zeros(total)
@@ -633,11 +646,14 @@ def bass_part(dest: np.ndarray) -> None:
 
 # --- arrangement -----------------------------------------------------------
 
-def drum_events() -> list[tuple[str, float, float]]:
+def drum_events(style: str = "full", fills: bool = False) -> list[tuple[str, float, float]]:
     """(kind, time, gain) for every drum hit, in the order drum_parts plays them.
 
     Kinds: kick, snare, roll (bar 7 crescendo and bar 2 fill), ghost, tom, hat, open_hat.
     Times are on the grid; drum_parts adds a few ms of humanising jitter to ghosts and hats.
+    style: "full" (the approved cue), "sparse" (kick on beats 1 and 3, offbeat hats only, no ghosts)
+    or "driving" (16th hats in the intro too). fills adds snare and tom fills in bars 4, 8 and 9
+    and open hats in the sparse style.
     """
     events: list[tuple[str, float, float]] = []
     for bar in range(2, 11):
@@ -645,8 +661,10 @@ def drum_events() -> list[tuple[str, float, float]]:
             continue
         beats = range(4) if bar < 10 else (0, 1, 2)
         for b in beats:
+            if style == "sparse" and b % 2:
+                continue
             events.append(("kick", at(bar, b * 4), .72 if bar > 2 else .55))
-        if bar in (5, 9):  # extra push before the bar end
+        if bar in (5, 9) and style != "sparse":  # extra push before the bar end
             events.append(("kick", at(bar, 14), .55))
     for bar in range(3, 11):
         if bar == 10:
@@ -658,6 +676,8 @@ def drum_events() -> list[tuple[str, float, float]]:
             continue
         for b in (1, 3):
             events.append(("snare", at(bar, b * 4), .8))
+        if style == "sparse":
+            continue
         for ghost in (7, 15) if bar % 2 else (10,):
             events.append(("ghost", at(bar, ghost), .12))
     # bar 2 fill: snare 16ths then low tom
@@ -667,30 +687,42 @@ def drum_events() -> list[tuple[str, float, float]]:
     # tom fill at the end of bar 6
     for step in (12, 13, 14, 15):
         events.append(("tom", at(6, step), .45))
+    if fills:
+        for i, step in enumerate((12, 13, 14, 15)):  # snare run into bar 5
+            events.append(("roll", at(4, step), .35 + .1 * i))
+        for step in (12, 13, 14, 15):  # toms into bar 9
+            events.append(("tom", at(8, step), .5))
+        for i, step in enumerate(range(8, 16)):  # snare and toms into the ending
+            events.append(("tom" if step % 2 else "roll", at(9, step), .4 + .05 * i))
     for bar in range(2, 11):
         for step in range(16):
-            if bar == 2 and step % 2:
+            if style == "sparse" and step % 4 != 2:
+                continue
+            if bar == 2 and step % 2 and style != "driving":
                 continue
             if bar == 7 and step % 4 != 2:
                 continue
             if bar == 10 and step >= 8:
                 break
             accent = 1.0 if step % 4 == 2 else (.55 if step % 2 == 0 else .38)
-            opened = step % 8 == 6 and bar not in (2, 7)
+            opened = step % 8 == 6 and bar not in (2, 7) and (style != "sparse" or fills)
             events.append(("open_hat" if opened else "hat", at(bar, step), accent))
     return events
 
 
-TOM_NOTES = {at(2, 15): 43, at(6, 12): 50, at(6, 13): 47, at(6, 14): 43, at(6, 15): 40}
+TOM_NOTES = {at(2, 15): 43, at(6, 12): 50, at(6, 13): 47, at(6, 14): 43, at(6, 15): 40,
+             at(8, 12): 50, at(8, 13): 47, at(8, 14): 43, at(8, 15): 40,
+             at(9, 9): 50, at(9, 11): 47, at(9, 13): 43, at(9, 15): 40}
 
 
-def drum_parts(dry: np.ndarray, snare_bus: np.ndarray, hat_bus: np.ndarray | None = None) -> list[float]:
+def drum_parts(dry: np.ndarray, snare_bus: np.ndarray, hat_bus: np.ndarray | None = None,
+               style: str = "full", fills: bool = False) -> list[float]:
     hat_bus = dry if hat_bus is None else hat_bus
     kicks: list[float] = []
     k = kick()
     s = snare()
     hats = None
-    for kind, when, gain in drum_events():
+    for kind, when, gain in drum_events(style, fills):
         if kind == "kick":
             put(dry, k, when, gain)
             kicks.append(when)
@@ -702,7 +734,7 @@ def drum_parts(dry: np.ndarray, snare_bus: np.ndarray, hat_bus: np.ndarray | Non
             put(dry, snare(), when + RNG.normal(0, .003), gain)
         elif kind == "tom":
             step = round((when % BAR) / STEP)
-            pan = -.3 if when < at(3) else .35 - .2 * (step - 12)
+            pan = -.3 if when < at(3) else float(np.clip(.35 - .2 * (step - 12), -.5, .5))
             put(dry, tom(TOM_NOTES[when]), when, gain, pan)
         else:
             if hats is None:
@@ -730,16 +762,48 @@ def counter_part(dest: np.ndarray) -> None:
             put(dest, np.stack([low(left, 2200), low(right, 2200)], 1) * env[:, None], at(bar, half), .35)
 
 
-PARTS = ("drums", "hats", "snares", "bass", "pads", "arp", "lead", "double", "counter", "fx")
+# Keytar answers: short phrases in the gaps of the hook (bar 2 pickup, held notes in bars 6 and 7).
+ANSWERS = [(2, 8, 2, 72), (2, 10, 2, 77), (2, 12, 2, 81), (2, 14, 2, 84),
+           (6, 10, 1, 83), (6, 11, 1, 86), (6, 12, 2, 83), (6, 14, 2, 81),
+           (7, 10, 2, 76), (7, 12, 2, 79), (7, 14, 2, 81)]
 
 
-def render_parts() -> dict[str, np.ndarray]:
-    """Every part on its own bus, before effects. The counterline is silent in the approved cue."""
+def answers_part(dest: np.ndarray) -> None:
+    """Hollow pulse voice, panned right, a little under the lead's level."""
+    events = [(at(bar, step), length * STEP, note) for bar, step, length, note in ANSWERS]
+    voice = lead_square(events, len(dest))
+    active = np.abs(voice).max(1) > 1e-4
+    voice *= 10 ** (-18 / 20) / np.sqrt(np.mean(voice[active] ** 2))
+    dest += voice * np.array([.6, 1.0])
+
+
+def octave_part(dest: np.ndarray) -> None:
+    """Thin supersaw an octave above the hook on the re-entry (bars 8-9)."""
+    for start, dur, note in lead_events():
+        if at(8) <= start < at(10):
+            n = int((dur + .2) * RATE)
+            env = adsr(n, .008, .3, .7, .1, dur)
+            left, right = supersaw(np.full(n, hz(note + 12)), voices=3, cents=7)
+            put(dest, np.stack([low(left, 6000), low(right, 6000)], 1) * env[:, None], start, .22)
+
+
+PARTS = ("drums", "hats", "snares", "bass", "pads", "arp", "lead", "double", "counter", "answers", "octave", "fx")
+
+
+def render_parts(variant: dict | None = None) -> dict[str, np.ndarray]:
+    """Every part on its own bus, before effects.
+
+    variant changes what is played: "drums" and "bass" styles, "fills", "arp_every", "arp_open",
+    "answers" and "octave". With no variant this is the approved cue; the counterline, answers and
+    octave parts are then silent or absent.
+    """
     global RNG
     RNG = np.random.default_rng(2026)
+    v = variant or {}
     parts = {name: bus() for name in PARTS}
 
-    parts["kicks"] = np.array(drum_parts(parts["drums"], parts["snares"], parts["hats"]))
+    parts["kicks"] = np.array(drum_parts(parts["drums"], parts["snares"], parts["hats"],
+                                         v.get("drums", "full"), v.get("fills", False)))
     fx = parts["fx"]
     for bar in (3, 8):
         put(fx, crash(), at(bar), .55)
@@ -749,9 +813,9 @@ def render_parts() -> dict[str, np.ndarray]:
     put(fx, riser(BAR * .75), at(2, 4), .55)
     put(fx, riser(BAR / 2), at(7, 8), .6)
 
-    bass_part(parts["bass"])
+    bass_part(parts["bass"], v.get("bass", "full"))
     pad_part(parts["pads"])
-    arp_part(parts["arp"])
+    arp_part(parts["arp"], v.get("arp_every", 1), v.get("arp_open", False))
     lead_part(parts["lead"], parts["double"])
     # final stab on bar 10 beat 3: whole band hits the A minor chord
     stab_n = int(1.2 * RATE)
@@ -765,6 +829,10 @@ def render_parts() -> dict[str, np.ndarray]:
     stab = np.stack([vlow(stab_l, 800 + 5000 * np.exp(-k / .25), 1), vlow(stab_r, 800 + 5000 * np.exp(-k / .25), 1)], 1)
     put(parts["lead"], stab * np.exp(-k / .5)[:, None], at(10, 8), .12)
     counter_part(parts["counter"])
+    if v.get("answers"):
+        answers_part(parts["answers"])
+    if v.get("octave"):
+        octave_part(parts["octave"])
     return parts
 
 
@@ -774,6 +842,7 @@ def mix_parts(parts: dict[str, np.ndarray], wet: bool, gains: dict[str, float] |
     g = {name: parts[name] * gains.get(name, 1.0) for name in PARTS}
     drums = g["drums"] + g["hats"]
     snares, bass, pads, arp, lead, double, fx = (g[name] for name in ("snares", "bass", "pads", "arp", "lead", "double", "fx"))
+    lead = lead + g["answers"] + g["octave"]
     kicks = list(parts["kicks"])
     ducked = duck_curve(kicks, .55)
     light_duck = duck_curve(kicks, .3)

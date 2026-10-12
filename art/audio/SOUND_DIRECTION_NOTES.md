@@ -255,4 +255,10 @@ The user said to go ahead and "redo the crappy music we have". The twelve app mi
 - Measured after AAC encoding: 960,000 frames each, −14.11 to −14.08 LUFS, −3.05 to −2.08 dBTP. Over seconds 4–12, the smallest difference between two mixes that the tests compare is 26% of the signal level (driving-frontman vs driving-keyboardist).
 - Comparison clips (untracked): `probe/mixes/compare-arrangements-frontman.mp3` (sparse, driving, layered) and `probe/mixes/compare-members-driving.mp3` (frontman, keyboardist, keytar, drummer), each 8 seconds per mix. MP3 copies of all twelve are in `probe/mixes/`.
 
+The user said the mixes "sound pretty similar" ("over[all] i like"). They asked to revisit the game's premise: the player picks an arrangement, a featured member, a concept and preparation for a booking, and can audition all twelve mixes before choosing. The spec requires that "Every mix must differ audibly in the way its label describes". The level-only mixes did not: the in-game descriptions promise keytar "short melodic answers" and drummer "percussion variation", which the mixes did not have. The user approved changing what is played ("yes please").
+
+Second version: each arrangement changes the drum and bass patterns, and each featured member plays something of their own (README lists them). The featured boost went back to about 4 dB. Measured after encoding: −14.12 to −14.09 LUFS, −3.05 to −1.99 dBTP. Differences between mixes, as a share of the signal level: over seconds 4–12, smallest 28% and median 52% (first version: smallest 26%); over the whole 20 seconds, smallest 33% and median 64%. Limiting is again heaviest on driving-drummer (6.5 dB at its deepest).
+
+Comparison clips: `compare-arrangements-frontman.mp3` (seconds 4–12 of sparse, driving, layered) and `compare-members-driving.mp3` (seconds 10.5–19.5 of driving with each featured member, which covers the keytar answers, the open breakdown arpeggio, the octave re-entry and the drum fills).
+
 Status: awaiting the user's listening approval.
