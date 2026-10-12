@@ -1,90 +1,90 @@
 {
   "schemaVersion": 1,
-  "provenance": "Original Signal Room A-minor instrumental theme and Blender stage, authored for this offline demo; no third-party recordings or likenesses.",
+  "provenance": "Original Signal Room bright cue (120 BPM, A minor), synthesized for this offline demo with in-house voices and Surge XT factory patches, and the Blender stage; no third-party recordings or likenesses.",
   "audio": [
     {
       "id": "sparse-frontman",
       "path": "audio/sparse-frontman.m4a",
       "arrangement": "SPARSE",
       "member": "FRONTMAN",
-      "sha256": "98858c02cea2efdbbbd9110ddc2f9f9f7cd41d715696f677497f5af1bfbbe2c2"
+      "sha256": "5c9aebdf08af7bfff6e23bf7910f6b4de57364fcf5c653edb1c423da897847bf"
     },
     {
       "id": "sparse-keyboardist",
       "path": "audio/sparse-keyboardist.m4a",
       "arrangement": "SPARSE",
       "member": "KEYBOARDIST",
-      "sha256": "006f98ca56f698c5a0f4c4d8e51de79fe0ab43649a9c6873667df508542537ad"
+      "sha256": "4d311365db2e4e2e039ff830c96cd36a90b5c3d8ba54d1cff3c8cd948ca5dde7"
     },
     {
       "id": "sparse-keytar",
       "path": "audio/sparse-keytar.m4a",
       "arrangement": "SPARSE",
       "member": "KEYTAR",
-      "sha256": "92d437d4ac358ba7408057c9eb358020938fb5b09b2c22d016e6371d5d21932d"
+      "sha256": "c9e3add001a43c83b8df248a549659351b338a1680e50444156c543ecad0cd8d"
     },
     {
       "id": "sparse-drummer",
       "path": "audio/sparse-drummer.m4a",
       "arrangement": "SPARSE",
       "member": "DRUMMER",
-      "sha256": "01d2ce84aece609eae4cdb778755cd90f1e3f912d015d00bda59fdac36933d42"
+      "sha256": "d17c83ffdea6f464cad2b2239a7584de5376253b8994af4a3a411e6a345a24d2"
     },
     {
       "id": "driving-frontman",
       "path": "audio/driving-frontman.m4a",
       "arrangement": "DRIVING",
       "member": "FRONTMAN",
-      "sha256": "d4d4761a3469c2b2e903c7b8d4153b68aa0c3c94357836fc81806e30dc0f205e"
+      "sha256": "45d03bc7c000b8deeb04984638bd91ed04485e1c341d6d7143de53b2b37465d7"
     },
     {
       "id": "driving-keyboardist",
       "path": "audio/driving-keyboardist.m4a",
       "arrangement": "DRIVING",
       "member": "KEYBOARDIST",
-      "sha256": "a6bc8f698c45ea91d0283ead73c7e24f128a8ecb44159a99e38cf7920e308fe6"
+      "sha256": "e9b72b8e1600236257402b9cf692f8f09e099c64bf115688ba3adff71fb14a65"
     },
     {
       "id": "driving-keytar",
       "path": "audio/driving-keytar.m4a",
       "arrangement": "DRIVING",
       "member": "KEYTAR",
-      "sha256": "723bac870b9c3d0d860577ed4fb88bd5efe007f6dba0ae71f0d8e795e2ad9290"
+      "sha256": "2b52c6598afe4ef7fd22e841a0fcd1a14ae4ced6d9da51da968c6b6859b3dd0f"
     },
     {
       "id": "driving-drummer",
       "path": "audio/driving-drummer.m4a",
       "arrangement": "DRIVING",
       "member": "DRUMMER",
-      "sha256": "50515d667e7d331e4b5479dccb59b28e45f3e97c36ea520a27dc8876ffc89ad4"
+      "sha256": "409320a1af0aadf0a0a43a1316c19a692f59380ffed42a227ccdb342af9a7d73"
     },
     {
       "id": "layered-frontman",
       "path": "audio/layered-frontman.m4a",
       "arrangement": "LAYERED",
       "member": "FRONTMAN",
-      "sha256": "48af8e2dc22c9ffb0eef97432b28ff560503676c0414c7305c9eeeff09d6f04a"
+      "sha256": "5c218c0df334457f935bd1c556448dae3555d67382219fe296f6d0013b19c5b9"
     },
     {
       "id": "layered-keyboardist",
       "path": "audio/layered-keyboardist.m4a",
       "arrangement": "LAYERED",
       "member": "KEYBOARDIST",
-      "sha256": "6983946a1747d16338f58e4517ccc9325fb67fbf979042bb22b72e74951de242"
+      "sha256": "2a7550fb986fb6ad0750a8512ccc593394acef7efd776c1721e09ad7fb8002c1"
     },
     {
       "id": "layered-keytar",
       "path": "audio/layered-keytar.m4a",
       "arrangement": "LAYERED",
       "member": "KEYTAR",
-      "sha256": "3b5532d6c121afded7e30935dba6b66c55965ccbc1b439334b0f6b6ebd992bfa"
+      "sha256": "9f2cfe193540e667da62ca4f286d6ee48fc0dcf35c5438565095026eef84744b"
     },
     {
       "id": "layered-drummer",
       "path": "audio/layered-drummer.m4a",
       "arrangement": "LAYERED",
       "member": "DRUMMER",
-      "sha256": "49d2d5a239951600c045ade7680fbdf3c18a0e30d913e7c2e0bc91783d353079"
+      "sha256": "e6c00eea03f589c43235c9111668de82df7b5dfdd2927ed0b592a64adeda66e0"
     }
   ],
   "concepts": [

@@ -684,7 +684,8 @@ def drum_events() -> list[tuple[str, float, float]]:
 TOM_NOTES = {at(2, 15): 43, at(6, 12): 50, at(6, 13): 47, at(6, 14): 43, at(6, 15): 40}
 
 
-def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
+def drum_parts(dry: np.ndarray, snare_bus: np.ndarray, hat_bus: np.ndarray | None = None) -> list[float]:
+    hat_bus = dry if hat_bus is None else hat_bus
     kicks: list[float] = []
     k = kick()
     s = snare()
@@ -710,18 +711,36 @@ def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
             jitter = RNG.normal(0, .0035)
             vel = gain * (1 + .12 * RNG.standard_normal())
             if kind == "open_hat":
-                put(dry, hats[1], when + jitter, .26 * vel, .3)
+                put(hat_bus, hats[1], when + jitter, .26 * vel, .3)
             else:
-                put(dry, hats[0], when + jitter, .4 * vel, .3 if step % 2 else -.15)
+                put(hat_bus, hats[0], when + jitter, .4 * vel, .3 if step % 2 else -.15)
     return kicks
 
 
-def render(wet: bool) -> np.ndarray:
+def counter_part(dest: np.ndarray) -> None:
+    """Soft half-note counterline on chord tones under the hook, for the layered arrangement."""
+    for bar, name in enumerate(CHORDS, 1):
+        if bar < 3 or bar in (7, 10):
+            continue
+        for half, index in ((0, 2), (8, 1)):
+            note = PAD[name][index]
+            n = int((BAR / 2 + .3) * RATE)
+            env = adsr(n, .06, .4, .75, .25, BAR / 2 * .95)
+            left, right = supersaw(np.full(n, hz(note)), voices=3, cents=8)
+            put(dest, np.stack([low(left, 2200), low(right, 2200)], 1) * env[:, None], at(bar, half), .35)
+
+
+PARTS = ("drums", "hats", "snares", "bass", "pads", "arp", "lead", "double", "counter", "fx")
+
+
+def render_parts() -> dict[str, np.ndarray]:
+    """Every part on its own bus, before effects. The counterline is silent in the approved cue."""
     global RNG
     RNG = np.random.default_rng(2026)
-    drums, snares, bass, pads, arp, lead, double, fx = (bus() for _ in range(8))
+    parts = {name: bus() for name in PARTS}
 
-    kicks = drum_parts(drums, snares)
+    parts["kicks"] = np.array(drum_parts(parts["drums"], parts["snares"], parts["hats"]))
+    fx = parts["fx"]
     for bar in (3, 8):
         put(fx, crash(), at(bar), .55)
         put(fx, impact(), at(bar), .55)
@@ -730,10 +749,10 @@ def render(wet: bool) -> np.ndarray:
     put(fx, riser(BAR * .75), at(2, 4), .55)
     put(fx, riser(BAR / 2), at(7, 8), .6)
 
-    bass_part(bass)
-    pad_part(pads)
-    arp_part(arp)
-    lead_part(lead, double)
+    bass_part(parts["bass"])
+    pad_part(parts["pads"])
+    arp_part(parts["arp"])
+    lead_part(parts["lead"], parts["double"])
     # final stab on bar 10 beat 3: whole band hits the A minor chord
     stab_n = int(1.2 * RATE)
     k = np.arange(stab_n) / RATE
@@ -744,8 +763,18 @@ def render(wet: bool) -> np.ndarray:
         stab_l += l
         stab_r += r
     stab = np.stack([vlow(stab_l, 800 + 5000 * np.exp(-k / .25), 1), vlow(stab_r, 800 + 5000 * np.exp(-k / .25), 1)], 1)
-    put(lead, stab * np.exp(-k / .5)[:, None], at(10, 8), .12)
+    put(parts["lead"], stab * np.exp(-k / .5)[:, None], at(10, 8), .12)
+    counter_part(parts["counter"])
+    return parts
 
+
+def mix_parts(parts: dict[str, np.ndarray], wet: bool, gains: dict[str, float] | None = None) -> np.ndarray:
+    """Effects and master on scaled parts. gains: per-part level (default 1), plus "verb" for the plate return."""
+    gains = gains or {}
+    g = {name: parts[name] * gains.get(name, 1.0) for name in PARTS}
+    drums = g["drums"] + g["hats"]
+    snares, bass, pads, arp, lead, double, fx = (g[name] for name in ("snares", "bass", "pads", "arp", "lead", "double", "fx"))
+    kicks = list(parts["kicks"])
     ducked = duck_curve(kicks, .55)
     light_duck = duck_curve(kicks, .3)
 
@@ -756,6 +785,8 @@ def render(wet: bool) -> np.ndarray:
         pads = high(pads, 200) - .37 * band(pads, 250, 500) - .25 * band(pads, 2000, 5000)
         pad_duck, pad_send = light_duck, .22
     bass_stereo = bass * light_duck
+    if gains.get("counter", 0):
+        double = double + g["counter"]
     if not wet:
         mix = drums + snares + bass_stereo + pads * pad_duck + arp * ducked + lead + double * .5 + fx * .5
     else:
@@ -772,8 +803,12 @@ def render(wet: bool) -> np.ndarray:
                + (arp + .5 * arp_echo) * ducked
                + lead + .3 * lead_echo + double * .5
                + .5 * fx
-               + .38 * verb * ducked)
+               + .38 * gains.get("verb", 1.0) * verb * ducked)
     return master(mix)
+
+
+def render(wet: bool) -> np.ndarray:
+    return mix_parts(render_parts(), wet)
 
 
 def master(mix: np.ndarray) -> np.ndarray:
