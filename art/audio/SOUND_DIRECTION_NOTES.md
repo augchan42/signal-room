@@ -43,10 +43,19 @@ ffmpeg -i /private/tmp/signal-room-sound-probe.wav -af loudnorm=I=-14:TP=-1.5:LR
 ## Next audio pass
 
 1. Use the bright third palette as the starting point. Make one original, complete 20-second cue, not twelve variants yet.
-2. Improve musical arrangement and drum/bass interplay before another isolated oscillator tweak. Keep a recognizable hook; use accents, fills, and breakdown/re-entry rather than uniform activity.
-3. Compare the same phrase with and without effects, and review on phone speakers as well as headphones. Maintain audible bass/hook separation and avoid washing out the lead with delay.
-4. Get explicit listening approval for that one cue. Only then derive the sparse/driving/layered arrangements and member emphases, measure all twelve, and connect beat events to the Blender lighting/motion.
+2. Keep 120 BPM for this pass. The app currently ends playback at 20 seconds, and the existing 480-frame Blender performance is timed to the 120 BPM mix. Its 2-bar intro plus 8-bar phrase already fills 20 seconds. A change to 96 or 100 BPM would require a separate audio/video timing decision; seamless audio looping is not currently a requirement.
+3. Improve musical arrangement and drum/bass interplay before another isolated oscillator tweak. Keep a recognizable hook; use accents, fills, and breakdown/re-entry rather than uniform activity.
+4. Add an effects architecture to the single cue: overlapping pad releases and stereo chorus, a short gated snare room, filtered plate/delay returns on melodic parts, and moderate kick-triggered ducking. Compare dry and wet renders; avoid masking the hook with the effects.
+5. Make the bass audible on phone speakers with upper harmonics while keeping the low end centered. Vary hat accents and non-kick timing slightly, but keep kick/snare timing stable.
+6. Review level-matched excerpts on phone speaker, earbuds, and headphones. Check the loop seam only if the game is changed to loop audio. Check mono compatibility and true peak as well as the existing duration/loudness gates.
+7. Get explicit listening approval for that one cue. Only then produce stems, derive sparse/driving/layered arrangements and member emphases, measure all twelve, and connect beat events to the Blender lighting/motion.
 
-## External review status
+## User-supplied Claude review
 
-The user requested advice from Opus 5.5. A direct `claude --model claude-opus-5-5` request was attempted on 2026-10-12, but Claude Code returned `Not logged in` before sending it (zero input/output tokens). No Opus review has occurred. Retry after the user signs in to Claude Code or provides another authorized Opus 5.5 connection; do not attribute the recommendations above to Opus.
+The user pasted a Claude production review on 2026-10-12. The review explicitly says Claude had not heard the references, shipped cue, or palette probe; its diagnosis is based on our description and general DSP knowledge. The actionable recommendations incorporated above are: prioritize space between hits, gated snare reverb, overlapping chorus pads, delay/plate returns, sidechain movement, low-mid and phone-audible bass, groove variation, level-matched listening, and approving one cue before scaling to twelve mixes.
+
+Treat these as hypotheses to audition, not established causes. In particular, the claim that aliasing makes the current oscillator sound poor is unverified: `render_theme.py` uses harmonic synthesis with a frequency-dependent harmonic ceiling rather than a naive unbandlimited saw. PolyBLEP, oversampling, a more advanced reverb, commercial plugins, and licensed one-shots are possible later experiments, not prerequisites for the next cue. Verify software capabilities and asset licenses before adopting them.
+
+The Claude review also proposed 96 BPM for an eight-bar seamless 20-second loop, or 100 BPM for 19.2 seconds. Those are musically coherent options but conflict with the current 120 BPM audio/video timing and one-shot playback, so neither is accepted for the immediate pass.
+
+The user originally asked for an Opus 5.5 CLI consultation. A direct `claude --model claude-opus-5-5` CLI request returned `Not logged in` before sending it (zero input/output tokens). The pasted review is user-supplied Claude text, not a successful CLI response. Retry the CLI only after its authentication is available.
