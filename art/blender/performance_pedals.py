@@ -4,11 +4,18 @@
 def pedal_tracks(events):
     import performance_motion as motion
     kicks = [(d["time"], .09, 1) for d in events["drums"] if d["kind"] == "kick"]
-    opens = [(d["time"], .18, 1) for d in events["drums"] if d["kind"] == "open_hat"]
     sustain = [(c["time"], 1.8, 1) for c in events["chords"]]
+    hat_states = sorted((motion.contact(d["time"]), -.22 if d["kind"] == "open_hat" else -.10)
+                        for d in events["drums"] if d["kind"] in ("hat", "open_hat"))
+    hat_keys = [(-1, -.10)]
+    for when, angle in hat_states:
+        if when-.08 > hat_keys[-1][0]:
+            hat_keys.append((when-.08, hat_keys[-1][1]))
+        if when > hat_keys[-1][0]:
+            hat_keys.append((when, angle))
     return {
         "kick": [-.22 + .12*p for p in motion.presses(kicks, 1)],
-        "hi-hat": [-.10 - .12*p for p in motion.presses(opens, 1)],
+        "hi-hat": motion.sample(hat_keys),
         "sustain": [-.22 + .12*p for p in motion.presses(sustain, 1)],
     }
 

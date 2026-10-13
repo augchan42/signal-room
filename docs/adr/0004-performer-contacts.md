@@ -30,8 +30,10 @@ guards, not research claims.
 ## Verification and current assets
 
 The geometry test checks the actual transformed stick tip against the assigned pad at every hit
-for all twelve motions. All 1,504 physical strikes pass, with a maximum measured contact gap under
-1 mm. Three rendered stills were inspected, and one warm/driving/drummer review video was rendered
+for all twelve motions. All 1,504 physical strikes pass, with a maximum measured target-fit error
+under 1 mm. The target is deliberately 1 mm above the pad face, so the measured physical surface
+clearance can be up to 2 mm; this is not a claim of sub-millimetre surface contact.
+Three rendered stills were inspected, and one warm/driving/drummer review video was rendered
 separately from the app assets.
 
 ```sh
@@ -52,13 +54,19 @@ independent piano fingering or a full chord fingering system.
 The BORG right hand follows the hook and featured arpeggio. Its left hand plays chord roots,
 with no playing contact during the raised-hand gesture. That gesture now returns by 16 seconds,
 before the bar-9 chord; the original 16.3-second return caused an abrupt corrective arm movement.
-Contact correction fades in and out around playing, preserving the authored idle poses.
+Contact correction fades in and out around playing, preserving the authored idle poses. The
+finger holds the current key, then lifts and glides to the next one. Contiguous phrases release
+for the last two displayed frames before the next note, with at least one displayed frame held.
+Synth audio tails can continue after finger release; the audio files are not shortened.
 
 The keytar's smaller key range folds high notes down by octaves while retaining pitch class.
 Its keys hand follows bass/answer events, and its neck hand stays on the touch strip. The keytar
 moves 12 cm toward the keys hand so its highest keys are reachable. This changes staging, not audio.
 
+The targets are the actual key mesh faces (BORG top Z, keytar front Y), not an offset from them.
 All 1,541 key-note contacts across the twelve motions pass with measured gaps under 1 mm.
+The verifier also checks 12,866 held-key frames, 5,760 neck-grip frames and the corrected
+raised-hand pose in each motion. A separate pure test covers continuity at the travel/lift boundary.
 The same five-axis joint fit is shared with drums in `rigid_joint_fit.py`. It checks the target
 error and frame-to-frame angular change before export. `verify_key_contacts.py` checks the actual
 transformed fingertip at every assigned note, rather than checking only joint-angle peaks.
@@ -69,7 +77,9 @@ transformed fingertip at every assigned note, rather than checking only joint-an
 keyboardist's sustain foot. It hides the old sustain pedal, which was in front of the boot.
 Each boot and its trim rotate about a fixed heel; its sole stays on the hinged plate.
 
-Kick presses and hi-hat openings follow the mix's actual `kick` and `open_hat` events. Sustain
+Kick presses and hi-hat openings follow the mix's actual `kick` and `open_hat` events. Each closed
+`hat` event returns the pedal to its closed position by that strike, rather than using a fixed
+open duration. Sustain
 holds follow the chord events. Presses use the same floored audio frame as hand contacts and
 release between events. `verify_pedal_contacts.py` checks heel position and sole/plate contact
 on all 480 frames of all twelve motions, requires movement where there are events, and checks

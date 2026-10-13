@@ -52,6 +52,10 @@ for mix in renderer.MIXES:
         pivot = bpy.data.objects["PERFORMANCE | hi-hat heel"]
         assert pivot.rotation_euler.x < -.20, f"{mix} hi-hat pedal not open at {hit}"
         opens_checked += 1
+    for hit in (d for d in events["drums"] if d["kind"] == "hat"):
+        scene.frame_set(math.floor(hit["time"] * 24 + 1e-6) + 1)
+        pivot = bpy.data.objects["PERFORMANCE | hi-hat heel"]
+        assert abs(pivot.rotation_euler.x + .10) < .001, f"{mix} hi-hat not closed at {hit}"
     for kind in ("kick", "hi-hat", "sustain"):
         angles = []
         for frame in range(1, 481):

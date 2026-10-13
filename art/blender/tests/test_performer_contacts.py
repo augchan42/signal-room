@@ -39,6 +39,29 @@ class PerformerContactTest(unittest.TestCase):
         self.assertGreater(tracks["sustain"][24], -.13)
         self.assertAlmostEqual(tracks["sustain"][72], -.22)
 
+    def test_hi_hat_closes_on_the_next_closed_hat_strike(self):
+        events = dict(drums=[dict(time=1, kind="open_hat"), dict(time=1.125, kind="hat")], chords=[])
+        track = pedals.pedal_tracks(events)["hi-hat"]
+        self.assertAlmostEqual(track[24], -.22)
+        self.assertAlmostEqual(track[27], -.10)
+
+    def test_finger_holds_then_lifts_before_travelling_to_the_next_key(self):
+        notes = [dict(time=4, dur=.375, note=76), dict(time=4.375, dur=.25, note=72)]
+        # Hold E5 at 4.25, lift during the last two frames, arrive on C5 at 4.375.
+        self.assertEqual(hands.note_pose(4.25, notes), (0,0,0,0))
+        old, new, blend, lift = hands.note_pose(4+8/24, notes)
+        self.assertEqual((old,new), (0,1))
+        self.assertGreater(blend, 0)
+        self.assertLess(blend, 1)
+        self.assertGreater(lift, .01)
+        self.assertEqual(hands.note_pose(4.375, notes), (1,1,0,0))
+
+    def test_short_gap_does_not_jump_finger_height_when_travel_begins(self):
+        notes = [dict(time=3.75, dur=.25, note=84), dict(time=4.125, dur=.1, note=45)]
+        before = hands.note_pose(4.005-.00001, notes)[3]
+        after = hands.note_pose(4.005+.00001, notes)[3]
+        self.assertLess(abs(after-before), .0002)
+
 
 if __name__ == "__main__":
     unittest.main()

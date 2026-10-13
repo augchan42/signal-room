@@ -95,6 +95,36 @@ def _weight(t, notes):
     return max(0, value)
 
 
+def note_pose(t, notes):
+    """Hold a key, release for travel, and arrive at the next floored note frame.
+
+    Synth tails may continue after the finger releases. A contiguous phrase gives
+    the hand its last two frames to lift/travel, but every note is held for at
+    least one displayed frame. Longer gaps preserve the authored idle movement.
+    Returns previous/next note indices, travel blend, and normal lift in metres.
+    """
+    contacts = [math.floor(n["time"] * 24 + 1e-6) / 24 for n in notes]
+    current = max((i for i, when in enumerate(contacts) if when <= t), default=0)
+    when = contacts[current]
+    end = when + notes[current]["dur"]
+    if t < when:
+        return current, current, 0, .028
+    if current == len(notes)-1:
+        return current, current, 0, 0 if t <= end else .028 * min(1, (t-end)/.06)
+    following = contacts[current+1]
+    release = min(end, max(when + 1/24, following - 2/24))
+    if t <= release:
+        return current, current, 0, 0
+    start = max(release, following-.12)
+    if t < start:
+        return current, current, 0, .028 * min(1, (t-release)/.06)
+    progress = min(1, max(0, (t-start)/(following-start)))
+    blend = progress*progress*(3-2*progress)
+    initial_lift = .028 * min(1, (start-release)/.06)
+    lift = initial_lift*(1-blend) + (.028-initial_lift)*math.sin(math.pi*progress)
+    return current, current+1, blend, lift
+
+
 def correct_keys(events):
     import bpy
     from mathutils import Vector
@@ -162,21 +192,20 @@ def correct_keys(events):
             notes = entry["notes"]
             if notes is None:
                 key = bpy.data.objects["Keytar touch strip"]
-                local = Vector((0, -.011, 0))
+                local = Vector((0, min(v.co.y for v in key.data.vertices), 0))
                 weight, height = 1, 0
+                target = key.matrix_world @ local
             else:
-                # Pick the active or next note, arriving before the floored impact frame.
-                candidates = [n for n in notes if n["time"] <= t + .12]
-                note = candidates[-1] if candidates else notes[0]
-                key = bpy.data.objects[key_for_note(note["note"], name.startswith("03"))]
-                local = Vector((0, -.012 if name.startswith("03") else 0,
-                                0 if name.startswith("03") else max(v.co.z for v in key.data.vertices)))
+                previous, following, blend, height = note_pose(t, notes)
+                points, normals = [], []
+                for index in (previous, following):
+                    key = bpy.data.objects[key_for_note(notes[index]["note"], name.startswith("03"))]
+                    local = Vector((0, min(v.co.y for v in key.data.vertices) if name.startswith("03") else 0,
+                                    0 if name.startswith("03") else max(v.co.z for v in key.data.vertices)))
+                    points.append(key.matrix_world @ local)
+                    normals.append(key.matrix_world.to_3x3() @ Vector((0,-1,0) if name.startswith("03") else (0,0,1)))
+                target = points[0].lerp(points[1], blend) + normals[0].lerp(normals[1], blend).normalized() * height
                 weight = _weight(t, notes)
-                # The finger lifts between notes; impact and sustained notes stay on the key face.
-                active = any(motion.contact(n["time"]) <= t <= n["time"]+n["dur"] for n in notes)
-                height = 0 if active else .028
-            normal = key.matrix_world.to_3x3() @ Vector((0,-1,0) if name.startswith("03") else (0,0,1))
-            target = key.matrix_world @ local + normal * height
             goal = original.lerp(target, weight)
             entry["records"].append((chain[0].parent.matrix_world.copy(), [list(o.rotation_euler) for o in chain], local_tip))
             entry["goals"].append(goal)
