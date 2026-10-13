@@ -4,7 +4,7 @@ This is a local debug APK for one offline booking. The 20-second instrumental cu
 
 ## Build and device
 
-- APK: `/Users/auchan/projects/signal-room/app/build/outputs/apk/debug/app-debug.apk` (92,231,610 bytes; 88.0 MiB, rebuilt 2026-10-13 from merged main `d984f1d`).
+- APK: `/Users/auchan/projects/signal-room/app/build/outputs/apk/debug/app-debug.apk` (92,292,728 bytes; 88.0 MiB, rebuilt 2026-10-13 from `e2e13ea` on `codex/performer-contacts`, including PR #6 diagnostics and all 36 contact-corrected videos).
 - Build host: JDK 17.0.18, Python 3.14.7, FFmpeg 9.0.1, Gradle 8.13, Android Gradle Plugin 8.13.2, Kotlin 2.1.0.
 - Current test device: attached Pixel 7 Pro, Android 16 / API 36. Earlier layout and full-suite checks used the `Medium_Phone_API_36.1` emulator with a 1080×1920 portrait override and font scale 1.0.
 - The production manifest lists 59 media assets: 12 AAC mixes, 36 silent 20-second performance videos (three concepts × three arrangements × four featured members), three concept stills, three silent four-second fallback loops, four member stills, and a control-room still. The APK contains no Blender project or PCM master. Debug-only sync calibration media are also packaged in this debug build.
@@ -12,12 +12,13 @@ This is a local debug APK for one offline booking. The 20-second instrumental cu
 
 ## Current verification (2026-10-13)
 
-- GitHub confirms PR #4 merged as `348eca0` and PR #5 as `d984f1d`; no PRs were open at this check. Local `main` was advanced to `d984f1d` before building.
+- At the start of continuation, GitHub confirmed PR #4 merged as `348eca0` and PR #5 as `d984f1d`, with no open PRs then. Main remains `d984f1d`; current diagnostics/contact work is in draft PRs #6/#7.
 - Full asset validation passed for all 59 media assets without refreshing hashes. Report: `/Users/auchan/projects/signal-room/app/build/reports/demo-assets.json`.
 - Asset-validator tests: 12 passed. Music-driven motion tests: 22 passed.
 - Debug APK build and all 54 JVM unit tests passed (zero failures, errors, or skipped tests).
 - The current debug app and test APK were installed on the Pixel 7 Pro. `MediaPlaybackTest` and `OfflineDemoTest` passed all four tests. The app was then launched and its opening “Late-night debut / Attempt 1” screen was checked.
-- Two additional device tests restore the last second of a real performance, resume it, enter the recap, and exercise retry/reset with a durable test save. All six targeted device tests pass in the debug timing build. The latest run reached the brief in 99 ms for retry and 120 ms for reset; the action callbacks completed in 7 ms and 8 ms. An earlier test timeout coincided with the phone entering sleep and is not evidence of an app stall.
+- Two additional device tests restore the last second of a real performance, resume it, enter the recap, and exercise retry/reset with a durable test save. All eight targeted device tests pass in the contact-corrected build (53.946 seconds total), including two complete first-view/retry outcome paths. The latest durable run reached the brief in 131 ms for retry and 103 ms for reset. An earlier test timeout coincided with the phone entering sleep and is not evidence of an app stall.
+- The replacement videos were exported sequentially, decoded before promotion, and all 59 assets passed validation before and after hash authoring. The APK build revalidated the bundle. All 54 JVM tests, 37 Blender tests, 20 audio tests and 12 validator tests pass. The app/test APKs were installed with replacement installs, preserving the real save; the real opening brief was checked afterward.
 - This verifies packaging and program behavior. It does not complete the user's uncoached playtest or establish physical audio/video output sync.
 
 ## Earlier automated evidence
@@ -42,7 +43,7 @@ This is a local debug APK for one offline booking. The 20-second instrumental cu
 
 - First-beat audio/light output alignment to within 50 ms is **not verified**. Position and seek tests pass, but the headless emulator's device-audio screen recording produced irregular timestamps even for a premuxed calibration clip. An audio-enabled emulator retry caused a System UI recorder hang. Do not infer physical output alignment from `currentPosition`.
 - The user approved the revised mixes by ear and the review performance clip. Whether an uncoached player understands the producer decisions and verdicts is still untested.
-- The app now plays mix-specific 20-second performances with music-driven arm/wrist motion, torso and head movement, singer hair motion, and moving searchlights. Exact hand-to-key and stick-to-pad geometry on every hit, pedal feet, and fingers remain unfinished (ADR 0001).
+- The app now plays mix-specific 20-second performances with music-driven arm/wrist motion, torso and head movement, singer hair motion, and moving searchlights. Assigned drum contacts, held key/fingertip contacts, keytar grip, articulated playing fingers and heel-down pedals are now verified and included in all 36 videos (ADR 0004). This is stylized playing, not independent full chord fingering or detailed facial performance.
 - The user's uncoached playtest is pending. Automated tests are not a substitute for deciding whether choices and verdicts are understandable.
 - There is only one booking. No later-week progression, vocals, choreography, audience voting, or monetization is claimed.
 
@@ -63,8 +64,14 @@ Record the user's answers here before calling the playtest complete. Tuning is l
 
 In progress. The user reported on 2026-10-13 that both “Retry booking” and “Reset demo” waited a few seconds, then the next screen appeared without further input. No Android ANR was recorded. The delay was not reproduced in the awake device tests above and is not marked fixed. The debug app now logs action request/completion times under `SignalRoomActions` so a recurrence can be measured. The four gameplay-understanding answers are still pending.
 
-### Performer contact inspection (2026-10-13)
+### Initial performer contact inspection (2026-10-13)
 
-A separate background Blender process inspected stick tips at the hit frames for all twelve mix motions, without rendering or saving the scene. It measured the nearest surface of any drum pad, so this is a lower bound on the gap, not confirmation that a stick reaches the intended pad. Of 1,575 contacts, 1,503 were more than 5 cm from every pad; median gaps per mix ranged from 8.76 to 10.86 cm. Exact contact work remains necessary before pedal feet or fingers.
+A separate background Blender process inspected stick tips at the hit frames for all twelve mix motions, without rendering or saving the scene. It measured the nearest surface of any drum pad, so this is a lower bound on the gap, not confirmation that a stick reaches the intended pad. Of 1,575 contacts, 1,503 were more than 5 cm from every pad; median gaps per mix ranged from 8.76 to 10.86 cm. This established the need for the corrective pass recorded below.
 
 Local report: `/Users/auchan/projects/signal-room/app/build/reports/performer-contact-audit.json`. The initial sandboxed background process crashed at startup; rerunning outside the sandbox completed. The Android app does not use live Blender.
+
+The corrective pass is now complete for the MVP: 1,504 assigned drum strikes (under 1 mm target
+error with a deliberate 1 mm face clearance), 1,541 key onsets, 12,866 held-key frames, 5,760 neck
+grip frames, raised BORG gestures, and 17,280 heel/sole frames. The source blend and approved audio
+are unchanged. Code review also caught early key travel and late hi-hat closing; regression tests
+now cover both. Main is still `d984f1d`; draft PR #7 is stacked on draft PR #6.

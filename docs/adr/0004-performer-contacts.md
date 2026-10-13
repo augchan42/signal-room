@@ -1,6 +1,6 @@
 # ADR 0004: Fit playing joints to instrument surfaces
 
-- Status: in progress (source and all replacement media verified; APK/device check remains)
+- Status: implemented and verified for the MVP
 - Date: 2026-10-13
 - Scope: performance export in `art/blender/render_mix_performances.py`
 
@@ -43,7 +43,9 @@ separately from the app assets.
 All 36 bundled videos were regenerated one at a time. Each staged MP4 was checked for format,
 dimensions, frame count and duration, fully decoded, then atomically moved to its app asset path.
 Full validation passed all 59 media assets before the manifest hashes were refreshed, followed by
-validation against those hashes. APK build and device checks are pending. Main remains `d984f1d`;
+validation against those hashes. The APK build, all 54 JVM tests and eight focused phone tests pass.
+The updated app and test APKs are installed on the Pixel 7 Pro without clearing its saved game.
+Main remains `d984f1d`;
 playtest diagnostics are in draft PR #6, and this work is in stacked draft PR #7.
 
 ## Keyboard and keytar hands
@@ -94,3 +96,10 @@ The pedal geometry run checked 17,280 sole/heel frame combinations and 104 open-
 The first geometry test failed because the kick pedal was missing; a separate event test caught
 the incorrect `openhat` spelling before export. The corrected test also covers sparse mixes with
 no open-hi-hat events instead of requiring movement for notes that are not played.
+
+Final verification also passed 37 ordinary Blender tests, 20 audio tests and 12 asset-validator
+tests. Phone coverage includes real media loading/seeking, offline assets and save recovery,
+durable retry/reset, complete first viewing, invitation outcomes and skippable retry. The reported
+few-second retry/reset delay was not reproduced (131/103 ms in the latest durable transition run)
+and is not marked fixed. Debug timing stays enabled. Uncoached gameplay feedback and physical
+audio/video output-sync measurement remain separate open checks.

@@ -79,10 +79,19 @@ The keytar is moved 12 cm toward its keys hand to make the full range reachable.
 release visually for the last two frames before the next onset; audio tails are not shortened.
 See `docs/adr/0004-performer-contacts.md` for the mapping and verification commands.
 
-Replacement media export is in progress, strictly one Blender child at a time. Each MP4 is staged,
-checked for its video format/duration/frame count, fully decoded, then atomically promoted to the
-existing app asset path. Do not build/install or refresh manifest hashes until all 36 replacements
-are complete and full validation passes. The installed phone app still has the prior media.
+All 36 replacements are complete, exported strictly one Blender child at a time. Each MP4 was
+staged, checked for video format/duration/frame count, fully decoded, then atomically promoted to
+its existing app asset path. Warm checkpoint `e6b5bfd`, electric checkpoint `71422e9`, final
+monochrome set and validated hashes `e2e13ea`. Full validation passes all 59 assets, the APK build
+and all 54 JVM tests pass, and eight focused phone tests pass (53.946 seconds). The updated app and
+test APKs are installed on the Pixel 7 Pro with the real saved game preserved. The real brief was
+opened and checked afterward. Latest durable retry/reset timings were 131/103 ms; the reported
+few-second delay remains unreproduced, not fixed.
+
+APK: `/Users/auchan/projects/signal-room/app/build/outputs/apk/debug/app-debug.apk`
+(92,292,728 bytes). Media report: `/Users/auchan/projects/signal-room/app/build/reports/demo-assets.json`.
+No further Blender contact work is required for this MVP pass. Next: the four uncoached playtest
+answers, recurrence timing if the delay returns, and a separate physical output-sync measurement.
 
 The new combined review clip is intentionally untracked:
 `/Users/auchan/projects/signal-room/art/blender/demo/performer-contact-review.mp4`.
