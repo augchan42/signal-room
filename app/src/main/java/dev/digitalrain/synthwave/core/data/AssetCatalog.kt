@@ -28,6 +28,7 @@ class AssetProblem(
 }
 
 sealed interface VisualPlayback {
+    data class Performance(val path: String) : VisualPlayback
     data class Loop(val path: String) : VisualPlayback
     data class Still(val path: String) : VisualPlayback
 }
@@ -42,7 +43,7 @@ class AssetCatalog(
     private val opener: AssetOpener,
 ) {
     init {
-        require(manifest.schemaVersion == 1) { "Unsupported asset manifest version" }
+        require(manifest.schemaVersion == 2) { "Unsupported asset manifest version" }
     }
 
     fun audio(selection: Selection): AudioAsset {
@@ -73,10 +74,17 @@ class AssetCatalog(
         return manifest.controlRoomPath
     }
 
-    fun visualPlayback(id: ConceptId): VisualPlayback {
-        val asset = concept(id)
-        return if (opener.canOpen(asset.loopPath)) VisualPlayback.Loop(asset.loopPath)
-        else VisualPlayback.Still(asset.stillPath)
+    /** The band playing the selected mix in the selected concept; else the concept's loop; else its still. */
+    fun visualPlayback(selection: Selection): VisualPlayback {
+        val asset = concept(selection.concept)
+        val performance = manifest.performances.singleOrNull {
+            it.arrangement == selection.arrangement && it.member == selection.member && it.concept == selection.concept
+        }
+        return when {
+            performance != null && opener.canOpen(performance.path) -> VisualPlayback.Performance(performance.path)
+            opener.canOpen(asset.loopPath) -> VisualPlayback.Loop(asset.loopPath)
+            else -> VisualPlayback.Still(asset.stillPath)
+        }
     }
 
     fun recoveryForDecoderError(path: String): AssetRecovery {
@@ -84,6 +92,10 @@ class AssetCatalog(
         manifest.concepts.singleOrNull { it.loopPath == path }?.let { concept ->
             checkOpen(concept.stillPath, "concept-${concept.concept.name.lowercase()}", AssetProblem.Kind.STILL)
             return AssetRecovery.UseStill("loop-${concept.concept.name.lowercase()}", concept.stillPath)
+        }
+        manifest.performances.singleOrNull { it.path == path }?.let { performance ->
+            val concept = concept(performance.concept)
+            return AssetRecovery.UseStill(path.substringAfterLast('/').removeSuffix(".mp4"), concept.stillPath)
         }
         manifest.concepts.singleOrNull { it.stillPath == path }?.let {
             return AssetRecovery.BlockBooking("concept-${it.concept.name.lowercase()}")

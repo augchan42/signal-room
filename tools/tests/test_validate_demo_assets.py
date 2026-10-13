@@ -13,6 +13,7 @@ from validate_demo_assets import (  # noqa: E402
     audio_metric_failures,
     inspect_audio,
     inspect_video,
+    performance_metric_failures,
     validate_file,
     validate_manifest,
     validate_manifest_structure,
@@ -95,19 +96,31 @@ class DemoAssetValidationTest(unittest.TestCase):
 
     def test_manifest_structure_rejects_unsafe_and_duplicate_paths(self):
         manifest = {
-            "schemaVersion": 1,
+            "schemaVersion": 2,
             "audio": [{"id": "sparse-frontman", "path": "../escape.m4a", "arrangement": "SPARSE", "member": "FRONTMAN", "sha256": ""}] * 12,
-            "concepts": [], "members": [], "controlRoomPath": "visual/control-room.webp", "controlRoomSha256": "",
+            "concepts": [], "performances": [], "members": [], "controlRoomPath": "visual/control-room.webp", "controlRoomSha256": "",
         }
         failures = validate_manifest_structure(manifest, self.root)
         self.assertTrue(any("unsafe" in failure for failure in failures))
         self.assertTrue(any("duplicate" in failure for failure in failures))
         self.assertTrue(any("3 concepts" in failure for failure in failures))
+        self.assertTrue(any("36 performances" in failure for failure in failures))
+
+    def test_performance_must_be_twenty_seconds_at_540_by_960(self):
+        path = self.root / "performance.mp4"
+        self.ffmpeg("-f", "lavfi", "-i", "color=c=black:s=540x960:r=24", "-frames:v", "96", "-c:v", "libx264", "-pix_fmt", "yuv420p", path)
+        failures = performance_metric_failures(inspect_video(path))
+        self.assertTrue(any("480 frames" in failure for failure in failures))
+        self.assertFalse(any("540 x 960" in failure for failure in failures))
+        good = {"codec": "h264", "pixelFormat": "yuv420p", "colorRange": "tv", "width": 540, "height": 960,
+                "fps": 24, "frames": 480, "duration": 20.0, "audioStreams": 0}
+        self.assertEqual([], performance_metric_failures(good))
+        self.assertTrue(any("540 x 960" in f for f in performance_metric_failures({**good, "width": 1080, "height": 1920})))
 
     def test_failed_validation_never_repairs_manifest(self):
         manifest_path = self.root / "manifest.json"
         original = json.dumps({
-            "schemaVersion": 1, "audio": [], "concepts": [], "members": [],
+            "schemaVersion": 2, "audio": [], "concepts": [], "performances": [], "members": [],
             "controlRoomPath": "visual/control-room.webp", "controlRoomSha256": "",
         })
         manifest_path.write_text(original)

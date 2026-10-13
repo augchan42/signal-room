@@ -119,5 +119,68 @@ class PerformanceMotionTest(unittest.TestCase):
             self.assertGreater(max(map(abs, tail)), 0.05, control)
 
 
+class MixMotionTest(unittest.TestCase):
+    """Each app mix's own notes drive the band (art/blender/demo/mix-events, from render_mixes.py --events)."""
+
+    @classmethod
+    def setUpClass(cls):
+        folder = Path(motion.__file__).resolve().parent / "demo" / "mix-events"
+        cls.mixes = {path.stem: motion.load_events(path) for path in sorted(folder.glob("*.json"))}
+        cls.channels = {mix: motion.channels(ev) for mix, ev in cls.mixes.items()}
+
+    def test_all_twelve_mixes_have_events(self):
+        self.assertEqual(12, len(self.mixes))
+
+    def test_tracks_stay_plausible_without_jumps(self):
+        poses = {("01 Cropped jacket shoulder", "y"): 2.6, ("02 Long vest.001 shoulder", "x"): 2.3}
+        for mix, channels in self.channels.items():
+            for control, axes in channels.items():
+                for axis, track in axes.items():
+                    self.assertEqual(len(track), motion.FRAMES)
+                    self.assertLess(max(map(abs, track)), poses.get((control, axis), 1.3), (mix, control, axis))
+                    limit = 0.7 if control.startswith("04 ") and ("elbow" in control or "wrist" in control) else 0.35
+                    biggest = max(abs(b - a) for a, b in zip(track, track[1:]))
+                    self.assertLess(biggest, limit, (mix, control, axis))
+
+    def test_snare_hand_lands_on_every_snare(self):
+        for mix, ev in self.mixes.items():
+            elbow = self.channels[mix]["04 Sleeveless elbow"]["x"]
+            for snare in (d["time"] for d in ev["drums"] if d["kind"] == "snare"):
+                self.assertGreater(elbow[round(snare * motion.FPS)], 0.2, (mix, snare))
+
+    def test_keytar_keys_hand_is_down_on_the_answer_notes(self):
+        for mix in (m for m in self.mixes if m.endswith("keytar")):
+            elbow = self.channels[mix]["03 Oversized blazer elbow"]["x"]
+            rest = motion.KEYTAR_KEYS_POSE["elbow"]["x"]
+            for note in self.mixes[mix]["answers"]:
+                self.assertGreater(elbow[motion.round_frame(note["time"])] - rest, 0.04, (mix, note))
+
+    def test_keyboard_hand_plays_the_arpeggio_when_featured(self):
+        for mix in (m for m in self.mixes if m.endswith("keyboardist")):
+            arp = self.mixes[mix]["arp"]
+            self.assertEqual(16, len(arp))
+            reach = self.channels[mix]["02 Long vest shoulder"]["z"]
+            bar7 = reach[motion.round_frame(motion.at(7)):motion.round_frame(motion.at(8))]
+            self.assertGreater(max(bar7) - min(bar7), 0.2, mix)
+
+    def test_featured_member_moves_in_the_breakdown_and_the_others_do_not(self):
+        nods = {"frontman": "01 Cropped jacket nod", "keyboardist": "02 Long vest nod",
+                "keytar": "03 Oversized blazer nod"}
+        bar7 = slice(motion.round_frame(motion.at(7, 2)), motion.round_frame(motion.at(8)))
+        for mix, channels in self.channels.items():
+            featured = mix.split("-")[1]
+            for member, control in nods.items():
+                motion_in_bar7 = max(map(abs, channels[control]["x"][bar7]))
+                if member == featured:
+                    self.assertGreater(motion_in_bar7, 0.04, (mix, member))
+                else:
+                    self.assertLess(motion_in_bar7, 0.02, (mix, member))
+
+    def test_drummer_plays_a_break_in_bar_7_only_when_featured(self):
+        for mix, ev in self.mixes.items():
+            toms = [d for d in ev["drums"] if d["kind"] == "tom" and motion.at(7) <= d["time"] < motion.at(8)]
+            self.assertEqual(4 if mix.endswith("drummer") else 0, len(toms), mix)
+
+
 if __name__ == "__main__":
     unittest.main()

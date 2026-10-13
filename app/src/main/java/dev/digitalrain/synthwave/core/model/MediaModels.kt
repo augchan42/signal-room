@@ -20,6 +20,16 @@ data class ConceptAssets(
     val loopSha256: String,
 )
 
+/** The band playing one mix (arrangement and featured member) in one concept's lighting, 20 seconds. */
+@Serializable
+data class PerformanceAsset(
+    val arrangement: ArrangementId,
+    val member: MemberId,
+    val concept: ConceptId,
+    val path: String,
+    val sha256: String,
+)
+
 @Serializable
 data class MemberAsset(val member: MemberId, val stillPath: String, val sha256: String)
 
@@ -29,6 +39,7 @@ data class AssetManifest(
     val provenance: String,
     val audio: List<AudioAsset>,
     val concepts: List<ConceptAssets>,
+    val performances: List<PerformanceAsset>,
     val members: List<MemberAsset>,
     val controlRoomPath: String,
     val controlRoomSha256: String,

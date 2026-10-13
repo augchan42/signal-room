@@ -60,6 +60,11 @@ def section(t):
     return "reentry" if t < at(10, 8) else "ending"
 
 
+def round_frame(t):
+    """Index into a per-frame track for time t."""
+    return round(t * FPS)
+
+
 def contact(t):
     """The frame time at or just before t: a picture slightly early reads as in sync, a late one does not."""
     return math.floor(t * FPS + 1e-6) / FPS
@@ -219,6 +224,14 @@ def sway(amount_by_section, period=2 * BAR, phase=0.0):
     return [amount_by_section.get(section(t), 0.0) * math.sin(2 * math.pi * (t / period + phase)) for t in times()]
 
 
+def spotlit(ev, member, levels):
+    """Section levels for a member: in a mix that features them, they keep moving in the breakdown
+    (bar 7), where the rest of the band is nearly still."""
+    if ev.get("featured") != member:
+        return levels
+    return {**levels, "breakdown": levels["drop"]}
+
+
 def final_hold(value, ramp=0.12):
     """0 until the final stab, then `value` held to the end."""
     stab = at(10, 8)
@@ -255,6 +268,8 @@ def drummer(ev):
     snares = [(d["time"], 1.0) for d in ev["drums"] if d["kind"] == "snare"]
     accents = snares + [(c, 2.0) for c in crashes]
     lean = add(pulses(kicks, 0.035, decay=0.12), pulses(accents, 0.03, decay=0.15), final_hold(0.09))
+    if ev.get("featured") == "drummer":  # the drum break in bar 7: the whole body drives it
+        lean = add(lean, pulses([(t, g) for t, g in kicks if at(7) <= t < at(8)], 0.03, decay=0.12))
     crash_reach = sample([k for c in crashes for k in ((c - 0.2, 0.0), (c - 0.04, -0.35), (c + 0.25, 0.0))])
     # the snare (left) hand's shoulder drops into each accent, and the body tips toward it
     snare_shoulder = add(crash_reach, pulses(snares, 0.06, decay=0.1, attack=0.08))
@@ -285,9 +300,15 @@ FLIPS = (at(3), at(8), at(10, 8))  # drop, re-entry, final stab: the big moments
 
 
 def keyboardist(ev):
-    lead = [(n["time"], n["dur"], 1.0 if n["dur"] >= 0.25 else 0.8) for n in ev["lead"]]
+    # in a mix that features the keyboardist, the right hand leaves the hook for the arpeggio in bar 7
+    arp = ev.get("arp") or []
+    hook = [n for n in ev["lead"] if not (arp and at(7) <= n["time"] < at(8))]
+    right = sorted(hook + arp, key=lambda n: n["time"])
+    lead = [(n["time"], n["dur"], 1.0 if n["dur"] >= 0.25 else 0.8) for n in right]
     # player's right hand (camera left, -x) plays the hook across the keyboard: high notes toward -x
-    reach = glide([(n["time"], -0.36 * (n["note"] - 76) / 8) for n in ev["lead"]] or [(0, 0)])
+    # the arpeggio stays in one hand position (around A4), the fingers covering most of its span
+    reach = glide([(n["time"], -0.36 * (n["note"] - 76) / 8) for n in hook]
+                  + [(n["time"], 0.3 - 0.12 * (n["note"] - 69) / 12) for n in arp] or [(0, 0)])
     # the right hand waits above the keys in the intro and comes down on the first hook note,
     # then leaves the keys with a lift on the final stab
     first = contact(ev["lead"][0]["time"]) if ev["lead"] else at(3)
@@ -300,7 +321,7 @@ def keyboardist(ev):
     chords = [c for c in chord_list if not raise_start - 0.6 <= c[0] < raise_end]
     held = sample([(raise_start - 0.5, 0.0), (raise_start, 1.0), (raise_end - 0.2, 1.0), (raise_end + 0.3, 0.0)])
     chord_root = {"Am": 0.0, "F": 0.08, "C": -0.05, "G": 0.04}
-    levels = {"intro": 0.4, "drop": 1.0, "breakdown": 0.0, "reentry": 1.2, "ending": 1.2}
+    levels = spotlit(ev, "keyboardist", {"intro": 0.4, "drop": 1.0, "breakdown": 0.0, "reentry": 1.2, "ending": 1.2})
     beats = section_beats(levels)
     lean = add(pulses(beats, 0.05), sway({"breakdown": 0.04, "intro": 0.02}, period=BAR), final_hold(0.1))
     give = shifted(pulses([(t, g) for t, _, g in chords], 0.1, decay=0.12, attack=0.04), 1)
@@ -342,12 +363,18 @@ def keytarist(ev):
                    (at(10, 8) - 0.3, 0.0), (at(10, 8), -0.45)])
     neck_pose = [_blend_pose(KEYTAR_NECK, t) for t in tilt]
     free = [1.0 - min(abs(t) / 0.4, 1.0) for t in tilt]  # the keys hand stays near the pivot while tilted
-    bass = [(n["time"], n["dur"], 1.0 if n["dur"] > 0.3 else 0.75) for n in ev["bass"]]
-    slide = glide([(n["time"], 0.3 * ((n["note"] % 12) - 5) / 6) for n in ev["bass"]] or [(0, 0)])
+    # the keys hand plays the bass line; in a mix that features the keytar it leaves the bass for the
+    # answer phrases (and the bar 7 run), sliding up the keys with their pitch
+    answers = ev.get("answers") or []
+    busy = [(n["time"] - 0.1, n["time"] + n["dur"] + 0.05) for n in answers]
+    playing = [n for n in ev["bass"] if not any(a <= n["time"] < b for a, b in busy)]
+    bass = [(n["time"], n["dur"], 1.0 if n["dur"] > 0.3 else 0.75) for n in playing + answers]
+    slide = glide([(n["time"], 0.3 * ((n["note"] % 12) - 5) / 6) for n in playing]
+                  + [(n["time"], -0.3 + 0.6 * (n["note"] - 69) / 19) for n in answers] or [(0, 0)])
     keys_z = [a * f for a, f in zip(slide, free)]
     neck = {"Am": 0.0, "F": -0.06, "C": 0.05, "G": 0.03}
     chord_slide = glide([(c["time"], neck[c["chord"]]) for c in ev["chords"]])
-    levels = {"intro": 0.3, "drop": 1.0, "breakdown": 0.0, "reentry": 1.3, "ending": 1.3}
+    levels = spotlit(ev, "keytar", {"intro": 0.3, "drop": 1.0, "breakdown": 0.0, "reentry": 1.3, "ending": 1.3})
     backbeat = section_beats(levels, every=2, offset=1)
     lean = add(pulses(backbeat, 0.07, decay=0.25), sway({"breakdown": 0.05}, period=BAR, phase=0.5), final_hold(0.12))
     return {
@@ -408,6 +435,10 @@ def singer(ev):
         (at(8), at(9, 12), "fist"),
         (at(10, 8), 20.5, "fist"),
     ]
+    flips = FLIPS
+    if ev.get("featured") == "frontman":  # the breakdown is theirs: arm out and a head toss
+        gestures.insert(2, (at(7), at(7, 12), "point"))
+        flips = tuple(sorted(FLIPS + (at(7),)))
     keys = {axis: [(-1.0, 0.0)] for axis in range(4)}
     for i, (start, end, name) in enumerate(gestures):
         ramp = 0.55 if name == "fist" else 0.3  # the overhead raise travels furthest
@@ -418,12 +449,12 @@ def singer(ev):
             keys[axis] += [(start, poses[name][axis]), (end, poses[name][axis])]
             if end + 0.5 < following - 0.6:  # drop the arm only if the next gesture is not close
                 keys[axis].append((end + 0.5, 0.0))
-    levels = {"intro": 0.3, "drop": 0.8, "breakdown": 0.0, "reentry": 1.0, "ending": 1.0}
+    levels = spotlit(ev, "frontman", {"intro": 0.3, "drop": 0.8, "breakdown": 0.0, "reentry": 1.0, "ending": 1.0})
     beats = section_beats(levels)
     lean = add(pulses(section_beats(levels, every=2), 0.04, decay=0.3), final_hold(-0.08))
     # a head toss lands on each big moment, alternating sides; the hair swings out after it
     toss_keys = []
-    for i, when in enumerate(FLIPS):
+    for i, when in enumerate(flips):
         side = 1 if i % 2 == 0 else -1
         toss_keys += [(when - 0.2, 0.0), (when, 0.22 * side, "in"), (when + 0.35, -0.06 * side, "out"), (when + 0.9, 0.0)]
     toss = sample(toss_keys)
@@ -439,7 +470,7 @@ def singer(ev):
     head_y, head_x = add(torso_y, nod_y), add(lean, nod_x)
     for lock in range(len(HAIR_TUFTS)):
         k = 100.0 * (1 + 0.12 * math.sin(lock * 1.7))  # locks differ a little so they fan out
-        kicks = [(when, (-3.0 if i % 2 == 0 else 3.0) * (1 + 0.15 * math.cos(lock))) for i, when in enumerate(FLIPS)]
+        kicks = [(when, (-3.0 if i % 2 == 0 else 3.0) * (1 + 0.15 * math.cos(lock))) for i, when in enumerate(flips)]
         side = hair_swing(head_y, kicks, stiffness=k, segments=len(HAIR_SEGMENTS))
         front = hair_swing(head_x, stiffness=k * 1.1, segments=len(HAIR_SEGMENTS))
         for segment in range(len(HAIR_SEGMENTS)):
