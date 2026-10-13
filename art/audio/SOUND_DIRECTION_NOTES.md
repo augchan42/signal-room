@@ -261,4 +261,16 @@ Second version: each arrangement changes the drum and bass patterns, and each fe
 
 Comparison clips: `compare-arrangements-frontman.mp3` (seconds 4–12 of sparse, driving, layered) and `compare-members-driving.mp3` (seconds 10.5–19.5 of driving with each featured member, which covers the keytar answers, the open breakdown arpeggio, the octave re-entry and the drum fills).
 
+The user listened and said they "still can't tell the difference".
+
+Third version: bigger changes in what is played (README lists them).
+- Sparse is half time with no hi-hats and no arpeggio, and the bass holds one note per bar.
+- Driving has a kick on every beat from bar 1, through the breakdown, and 16th-note root-octave bass.
+- Layered adds a harmony a scale third under the hook, and the pad and counterline are louder.
+- The featured boost is 6 dB, and the featured member takes the breakdown (bar 7) while every other part drops to 20%: the keytar plays a 16th-note run, the drummer a break, the keyboardist the bright arpeggio, the frontman the hook with the octave double.
+
+Measured after encoding: −14.14 to −14.05 LUFS, −3.26 to −1.06 dBTP (sparse-drummer is the highest; the limit is −1.0). Limiting is heaviest on driving-drummer (5.9 dB) and layered-drummer (5.1 dB).
+
+Comparison clips: `compare-arrangements-frontman.mp3` (seconds 2–10 of sparse, driving, layered; 8 s each) and `compare-members-driving.mp3` (seconds 10–16 of driving with each featured member; the breakdown starts 2 s into each clip).
+
 Status: awaiting the user's listening approval.

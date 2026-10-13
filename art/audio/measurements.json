@@ -1,122 +1,122 @@
 {
   "driving-drummer": {
-    "bytes": 511492,
+    "bytes": 523241,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
-    "integratedLufs": -14.1,
+    "integratedLufs": -14.08,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -1.99
+    "truePeakDbtp": -2.78
   },
   "driving-frontman": {
-    "bytes": 501879,
+    "bytes": 506216,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.09,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.99
+    "truePeakDbtp": -2.69
   },
   "driving-keyboardist": {
-    "bytes": 507066,
+    "bytes": 516392,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.59
-  },
-  "driving-keytar": {
-    "bytes": 507377,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -3.01
-  },
-  "layered-drummer": {
-    "bytes": 504261,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.11,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.21
-  },
-  "layered-frontman": {
-    "bytes": 493054,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.45
-  },
-  "layered-keyboardist": {
-    "bytes": 501596,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.11,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.5
-  },
-  "layered-keytar": {
-    "bytes": 497167,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.44
-  },
-  "sparse-drummer": {
-    "bytes": 502620,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.12,
+    "integratedLufs": -14.05,
     "profile": "LC",
     "sampleRate": 48000,
     "truePeakDbtp": -2.66
   },
-  "sparse-frontman": {
-    "bytes": 497718,
+  "driving-keytar": {
+    "bytes": 513187,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.08,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.59
+  },
+  "layered-drummer": {
+    "bytes": 502276,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.11,
     "profile": "LC",
     "sampleRate": 48000,
-    "truePeakDbtp": -2.79
+    "truePeakDbtp": -1.91
   },
-  "sparse-keyboardist": {
-    "bytes": 496775,
-    "channels": 2,
-    "codec": "aac",
-    "decodedFrames": 960000,
-    "integratedLufs": -14.1,
-    "profile": "LC",
-    "sampleRate": 48000,
-    "truePeakDbtp": -2.88
-  },
-  "sparse-keytar": {
-    "bytes": 495024,
+  "layered-frontman": {
+    "bytes": 488882,
     "channels": 2,
     "codec": "aac",
     "decodedFrames": 960000,
     "integratedLufs": -14.09,
     "profile": "LC",
     "sampleRate": 48000,
+    "truePeakDbtp": -2.64
+  },
+  "layered-keyboardist": {
+    "bytes": 496538,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.1,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -3.26
+  },
+  "layered-keytar": {
+    "bytes": 487879,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.09,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.65
+  },
+  "sparse-drummer": {
+    "bytes": 499942,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.14,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -1.06
+  },
+  "sparse-frontman": {
+    "bytes": 492104,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.08,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -3.17
+  },
+  "sparse-keyboardist": {
+    "bytes": 494701,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.08,
+    "profile": "LC",
+    "sampleRate": 48000,
     "truePeakDbtp": -3.05
+  },
+  "sparse-keytar": {
+    "bytes": 488078,
+    "channels": 2,
+    "codec": "aac",
+    "decodedFrames": 960000,
+    "integratedLufs": -14.08,
+    "profile": "LC",
+    "sampleRate": 48000,
+    "truePeakDbtp": -2.75
   }
 }

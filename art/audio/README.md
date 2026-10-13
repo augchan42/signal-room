@@ -4,14 +4,14 @@ The app's twelve mixes come from the approved bright cue (`probe/final/bright-cu
 
 `render_mixes.py` mixes the cue twelve ways: three arrangements × four featured performers. Each mix keeps the cue's tempo, chords, hook and length, and changes what the band plays around the hook, so each matches its description in `app/src/main/assets/content/late-night.json`.
 
-- **Sparse** (exposed lead over open bass and pad): kick on beats 1 and 3, hi-hat on offbeats only, no ghost notes; the bass plays the root and fifth on beats 1 and 3; the arpeggio plays every other 16th; the pad is quiet; the plate reverb is larger.
-- **Driving** (active bass and drums): the approved cue's drums with 16th hi-hats in the intro too, and the bass adds 16th octave pickups; kit, hats, bass and arpeggio are louder and the pad is pulled back.
-- **Layered** (pad and counterline around the lead): the approved cue's drums and bass, a louder pad and lower-octave doubling, and a soft half-note counterline on chord tones.
-- **Featured performer:** each one plays something of their own, and their parts are about 4 dB louder.
-  - Frontman: the lead, and the hook doubled an octave up on the re-entry (bars 8–9).
-  - Keyboardist: the arpeggio and the counterline (also in Sparse and Driving); the arpeggio stays bright through the breakdown (bar 7).
-  - Keytar: short answer phrases on a hollow pulse voice in the gaps of the hook (bar 2 pickup, end of bars 6 and 7).
-  - Drummer: a snare run in bar 4, tom fills in bars 8 and 9, and open hi-hats in Sparse.
+- **Sparse** (exposed lead over open bass and pad): half-time drums (kick on beat 1, snare on beat 3, no hi-hats or ghost notes); the bass holds one root per bar; no arpeggio; the pad is quiet; the plate reverb is larger.
+- **Driving** (active bass and drums): kick on every beat from bar 1 and through the breakdown, 16th hi-hats throughout, and 16th-note bass alternating root and octave from bar 2; kit, hats, bass and arpeggio are louder, the pad is pulled back and the reverb is smaller.
+- **Layered** (pad and counterline around the lead): a soft supersaw a scale third under the hook, a louder pad and lower-octave doubling, a half-note counterline on chord tones, softer drums and a larger reverb.
+- **Featured performer:** each one plays something of their own, their parts are 6 dB louder, and they take the breakdown (bar 7, 12–14 s): every other part drops to 20% (the pad to 50%).
+  - Frontman: the lead, and the hook doubled an octave up from the breakdown to the end of bar 9.
+  - Keyboardist: the arpeggio and the counterline (also in Sparse, which otherwise has neither); the arpeggio stays bright through the breakdown.
+  - Keytar: short answer phrases on a hollow pulse voice in the gaps of the hook (bar 2 pickup, end of bar 6), and a 16th-note A minor pentatonic run in the breakdown.
+  - Drummer: a snare run in bar 4, a drum break in bar 7 (kick and snare, four toms, a short roll), and tom fills in bars 8 and 9.
 
 With no variation and every level at 1, `bright_cue.py` still renders the approved cue bit for bit, and `--events` still writes the same `performance-events.json`.
 
