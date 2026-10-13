@@ -26,6 +26,7 @@ from bpy_extras.anim_utils import animdata_get_channelbag_for_assigned_slot
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 import performance_motion  # noqa: E402
+import performance_contacts  # noqa: E402
 
 EVENTS = ROOT / "demo" / "mix-events"
 FRAMES = ROOT / "demo" / "frames" / "mixes"
@@ -83,6 +84,9 @@ def apply_motion(mix):
                 point.handle_left.y += delta
                 point.handle_right.y += delta
             curve.update()
+
+
+    performance_contacts.correct_drums(performance_motion.load_events(EVENTS / f"{mix}.json"))
 
 
 def _screen_nodes():
