@@ -46,7 +46,11 @@ class OfflineDemoTest {
         }
         for (concept in ConceptId.entries) {
             assertNotNull(catalog.concept(concept))
-            assertNotNull(catalog.visualPlayback(concept))
+            for (arrangement in ArrangementId.entries) for (member in MemberId.entries) {
+                val selection = dev.digitalrain.synthwave.core.model.Selection(arrangement, member, concept)
+                assertTrue(catalog.visualPlayback(selection) is
+                    dev.digitalrain.synthwave.core.data.VisualPlayback.Performance)
+            }
         }
         for (member in MemberId.entries) assertNotNull(catalog.member(member))
         assertTrue(catalog.controlRoom().endsWith(".webp"))

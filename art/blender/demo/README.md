@@ -43,4 +43,23 @@ Regenerate the scene and preview with:
 '/Applications/Blender.app/Contents/MacOS/Blender' --background art/blender/demo/signal-room-performance.blend --python-exit-code 1 --python art/blender/render_performance.py -- render
 ```
 
-The render writes `performance-monochrome.webm` at 540 × 960, 24 fps with Opus audio. `review.html` plays it above the older four-second silent loops. This is a review render, not an Android asset or a final performance cut. Intermediate JPEG frames are ignored by Git.
+The render writes `performance-monochrome.webm` at 540 × 960, 24 fps with Opus audio. `review.html` plays it above the older four-second silent loops. This is a review render of the cue, not an Android asset. Intermediate JPEG frames are ignored by Git.
+
+## App performance videos
+
+The app plays one 20-second performance per mix and concept: 36 silent MP4s in `app/src/main/assets/demo/visual/performance/<concept>-<arrangement>-<member>.mp4`. The app starts each one with the mix's audio and plays it once; it falls back to the concept's four-second loop, then to the concept still.
+
+Each video uses the mix's own motion. `render_mixes.py --events` writes the mix's timings to `mix-events/<arrangement>-<member>.json`, and `render_mix_performances.py` moves every motion key in the performance scene by the difference between that mix's motion and the cue's. It then sets the concept's suits, screen, light colours and light levels, renders 480 frames with EEVEE at 16 samples and encodes H.264 (CRF 23, limited range, no audio). In each mix:
+
+- The motion follows that mix's drum pattern, bass and hook (sparse, driving or layered).
+- The featured member keeps playing in the bar-7 breakdown while the others go still: the keyboardist's right hand plays the arpeggio, the keytar's keys hand plays the answers and the bar-7 run, the drummer leans into the break, and the singer points and tosses their head.
+
+Render one at a time; each takes about two minutes on this Mac:
+
+```sh
+art/audio/.venv/bin/python art/audio/render_mixes.py --all --events art/blender/demo/mix-events
+'/Applications/Blender.app/Contents/MacOS/Blender' --background art/blender/demo/signal-room-performance.blend --python-exit-code 1 --python art/blender/render_mix_performances.py -- driving-keytar warm
+python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report app/build/reports/demo-assets.json --write-hashes
+```
+
+Frames go to the ignored `frames/mixes/<concept>-<mix>/`.

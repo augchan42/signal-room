@@ -944,19 +944,43 @@ def write(path: Path, audio: np.ndarray) -> None:
         out.writeframes(np.rint(np.clip(audio, -1, 1) * 32767).astype("<i2").tobytes())
 
 
-def performance_events() -> dict:
-    """Timings the Blender performance animates to (seconds from the start of the cue)."""
-    return {
+def arp_events(every: int = 1) -> list[tuple[float, float, int]]:
+    """(time, length, note) of every arpeggio note, as arp_part plays them."""
+    return [(at(bar, step), STEP * 1.6, PAD[name][ARP_ORDER[step]] + (12 if ARP_ORDER[step] < 2 and step % 4 == 2 else 0))
+            for bar, name in enumerate(CHORDS, 1) for step in range(0, 16, every)]
+
+
+def performance_events(variant: dict | None = None, featured: str | None = None) -> dict:
+    """Timings the Blender performance animates to (seconds from the start of the cue).
+
+    With a variant (see render_parts) the drums and bass are that mix's, and the mix's own parts are
+    added: "answers" (keytar), "arp" (keyboard arpeggio in the breakdown when it is featured),
+    "featured" and "spotlight_bar".
+    """
+    v = variant or {}
+    events = {
         "bpm": BPM,
         "seconds": FRAMES / RATE,
         "chords": [{"bar": bar, "time": at(bar), "chord": name} for bar, name in enumerate(CHORDS, 1)],
-        "drums": [{"kind": kind, "time": round(when, 4), "gain": round(gain, 3)} for kind, when, gain in drum_events()],
+        "drums": [{"kind": kind, "time": round(when, 4), "gain": round(gain, 3)}
+                  for kind, when, gain in drum_events(v.get("drums", "full"), v.get("fills", False))],
         "crashes": [at(3), at(8), at(10, 8)],
         "lead": [{"time": round(t, 4), "dur": round(d, 4), "note": n} for t, d, n in lead_events()],
-        "bass": [{"time": round(t, 4), "dur": round(d, 4), "note": n} for t, d, n in bass_events()],
+        "bass": [{"time": round(t, 4), "dur": round(d, 4), "note": n} for t, d, n in bass_events(v.get("bass", "full"))],
         "sections": {"intro": [1, 2], "drop": [3, 6], "breakdown": [7, 7], "reentry": [8, 9], "ending": [10, 10]},
         "final_stab": at(10, 8),
     }
+    if variant is None:
+        return events
+    note = lambda t, d, n: {"time": round(t, 4), "dur": round(d, 4), "note": n}
+    answers = []
+    if v.get("answers"):
+        table = [a for a in ANSWERS if a[0] != 7] + ANSWERS_SOLO if v.get("answers_solo") else ANSWERS
+        answers = [note(at(bar, step), length * STEP, n) for bar, step, length, n in table]
+    arp = [note(*a) for a in arp_events() if at(7) <= a[0] < at(8)] if v.get("arp_open") else []
+    events.update(answers=answers, arp=arp, featured=featured, spotlight_bar=7 if featured else None,
+                  octave_from=v.get("octave_from") if v.get("octave") else None)
+    return events
 
 
 def main() -> None:

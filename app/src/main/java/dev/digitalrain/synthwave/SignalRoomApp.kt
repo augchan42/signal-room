@@ -76,7 +76,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
                     autoPlay = !restoredFromStore)
                 broadcastLoadedAttempt.intValue = snapshot.attemptId
             }
-            launch { video.load(snapshot.selection.concept) }
+            launch { video.load(snapshot.selection) }
             audioLoad.join()
         } else if (snapshot.phase == Phase.VERDICT || snapshot.phase == Phase.RECAP) {
             audio.pause()

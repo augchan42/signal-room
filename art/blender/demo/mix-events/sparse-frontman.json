@@ -1,0 +1,490 @@
+{
+ "bpm": 120,
+ "seconds": 20.0,
+ "chords": [
+  {
+   "bar": 1,
+   "time": 0.0,
+   "chord": "Am"
+  },
+  {
+   "bar": 2,
+   "time": 2.0,
+   "chord": "F"
+  },
+  {
+   "bar": 3,
+   "time": 4.0,
+   "chord": "Am"
+  },
+  {
+   "bar": 4,
+   "time": 6.0,
+   "chord": "F"
+  },
+  {
+   "bar": 5,
+   "time": 8.0,
+   "chord": "C"
+  },
+  {
+   "bar": 6,
+   "time": 10.0,
+   "chord": "G"
+  },
+  {
+   "bar": 7,
+   "time": 12.0,
+   "chord": "Am"
+  },
+  {
+   "bar": 8,
+   "time": 14.0,
+   "chord": "F"
+  },
+  {
+   "bar": 9,
+   "time": 16.0,
+   "chord": "G"
+  },
+  {
+   "bar": 10,
+   "time": 18.0,
+   "chord": "Am"
+  }
+ ],
+ "drums": [
+  {
+   "kind": "kick",
+   "time": 2.0,
+   "gain": 0.55
+  },
+  {
+   "kind": "kick",
+   "time": 4.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "kick",
+   "time": 6.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "kick",
+   "time": 8.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "kick",
+   "time": 10.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "kick",
+   "time": 14.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "kick",
+   "time": 16.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "kick",
+   "time": 18.0,
+   "gain": 0.72
+  },
+  {
+   "kind": "snare",
+   "time": 5.0,
+   "gain": 0.8
+  },
+  {
+   "kind": "snare",
+   "time": 7.0,
+   "gain": 0.8
+  },
+  {
+   "kind": "snare",
+   "time": 9.0,
+   "gain": 0.8
+  },
+  {
+   "kind": "snare",
+   "time": 11.0,
+   "gain": 0.8
+  },
+  {
+   "kind": "roll",
+   "time": 13.0,
+   "gain": 0.2
+  },
+  {
+   "kind": "roll",
+   "time": 13.125,
+   "gain": 0.27
+  },
+  {
+   "kind": "roll",
+   "time": 13.25,
+   "gain": 0.34
+  },
+  {
+   "kind": "roll",
+   "time": 13.375,
+   "gain": 0.41
+  },
+  {
+   "kind": "roll",
+   "time": 13.5,
+   "gain": 0.48
+  },
+  {
+   "kind": "roll",
+   "time": 13.625,
+   "gain": 0.55
+  },
+  {
+   "kind": "roll",
+   "time": 13.75,
+   "gain": 0.62
+  },
+  {
+   "kind": "roll",
+   "time": 13.875,
+   "gain": 0.69
+  },
+  {
+   "kind": "snare",
+   "time": 15.0,
+   "gain": 0.8
+  },
+  {
+   "kind": "snare",
+   "time": 17.0,
+   "gain": 0.8
+  },
+  {
+   "kind": "snare",
+   "time": 18.5,
+   "gain": 0.8
+  },
+  {
+   "kind": "roll",
+   "time": 3.5,
+   "gain": 0.3
+  },
+  {
+   "kind": "roll",
+   "time": 3.625,
+   "gain": 0.45
+  },
+  {
+   "kind": "roll",
+   "time": 3.75,
+   "gain": 0.6
+  },
+  {
+   "kind": "tom",
+   "time": 3.875,
+   "gain": 0.5
+  },
+  {
+   "kind": "tom",
+   "time": 11.5,
+   "gain": 0.45
+  },
+  {
+   "kind": "tom",
+   "time": 11.625,
+   "gain": 0.45
+  },
+  {
+   "kind": "tom",
+   "time": 11.75,
+   "gain": 0.45
+  },
+  {
+   "kind": "tom",
+   "time": 11.875,
+   "gain": 0.45
+  }
+ ],
+ "crashes": [
+  4.0,
+  14.0,
+  19.0
+ ],
+ "lead": [
+  {
+   "time": 4.0,
+   "dur": 0.375,
+   "note": 76
+  },
+  {
+   "time": 4.375,
+   "dur": 0.375,
+   "note": 72
+  },
+  {
+   "time": 4.75,
+   "dur": 0.25,
+   "note": 74
+  },
+  {
+   "time": 5.0,
+   "dur": 0.5,
+   "note": 76
+  },
+  {
+   "time": 5.5,
+   "dur": 0.25,
+   "note": 79
+  },
+  {
+   "time": 5.75,
+   "dur": 0.25,
+   "note": 76
+  },
+  {
+   "time": 6.0,
+   "dur": 0.375,
+   "note": 77
+  },
+  {
+   "time": 6.375,
+   "dur": 0.375,
+   "note": 76
+  },
+  {
+   "time": 6.75,
+   "dur": 0.25,
+   "note": 72
+  },
+  {
+   "time": 7.0,
+   "dur": 0.5,
+   "note": 69
+  },
+  {
+   "time": 7.5,
+   "dur": 0.25,
+   "note": 72
+  },
+  {
+   "time": 7.75,
+   "dur": 0.25,
+   "note": 74
+  },
+  {
+   "time": 8.0,
+   "dur": 0.375,
+   "note": 79
+  },
+  {
+   "time": 8.375,
+   "dur": 0.375,
+   "note": 76
+  },
+  {
+   "time": 8.75,
+   "dur": 0.25,
+   "note": 74
+  },
+  {
+   "time": 9.0,
+   "dur": 0.5,
+   "note": 72
+  },
+  {
+   "time": 9.5,
+   "dur": 0.25,
+   "note": 74
+  },
+  {
+   "time": 9.75,
+   "dur": 0.25,
+   "note": 76
+  },
+  {
+   "time": 10.0,
+   "dur": 0.375,
+   "note": 74
+  },
+  {
+   "time": 10.375,
+   "dur": 0.375,
+   "note": 71
+  },
+  {
+   "time": 10.75,
+   "dur": 0.25,
+   "note": 74
+  },
+  {
+   "time": 11.0,
+   "dur": 1.0,
+   "note": 79
+  },
+  {
+   "time": 12.0,
+   "dur": 0.75,
+   "note": 76
+  },
+  {
+   "time": 12.75,
+   "dur": 0.25,
+   "note": 74
+  },
+  {
+   "time": 13.0,
+   "dur": 1.0,
+   "note": 72
+  },
+  {
+   "time": 14.0,
+   "dur": 0.375,
+   "note": 81
+  },
+  {
+   "time": 14.375,
+   "dur": 0.375,
+   "note": 77
+  },
+  {
+   "time": 14.75,
+   "dur": 0.25,
+   "note": 79
+  },
+  {
+   "time": 15.0,
+   "dur": 0.5,
+   "note": 81
+  },
+  {
+   "time": 15.5,
+   "dur": 0.25,
+   "note": 84
+  },
+  {
+   "time": 15.75,
+   "dur": 0.25,
+   "note": 81
+  },
+  {
+   "time": 16.0,
+   "dur": 0.375,
+   "note": 79
+  },
+  {
+   "time": 16.375,
+   "dur": 0.375,
+   "note": 74
+  },
+  {
+   "time": 16.75,
+   "dur": 0.25,
+   "note": 79
+  },
+  {
+   "time": 17.0,
+   "dur": 0.5,
+   "note": 83
+  },
+  {
+   "time": 17.5,
+   "dur": 0.25,
+   "note": 81
+  },
+  {
+   "time": 17.75,
+   "dur": 0.25,
+   "note": 79
+  },
+  {
+   "time": 18.0,
+   "dur": 1.0,
+   "note": 81
+  },
+  {
+   "time": 19.0,
+   "dur": 0.5,
+   "note": 81
+  }
+ ],
+ "bass": [
+  {
+   "time": 2.0,
+   "dur": 2.0,
+   "note": 29
+  },
+  {
+   "time": 4.0,
+   "dur": 2.0,
+   "note": 33
+  },
+  {
+   "time": 6.0,
+   "dur": 2.0,
+   "note": 29
+  },
+  {
+   "time": 8.0,
+   "dur": 2.0,
+   "note": 36
+  },
+  {
+   "time": 10.0,
+   "dur": 2.0,
+   "note": 31
+  },
+  {
+   "time": 12.0,
+   "dur": 2.0,
+   "note": 33
+  },
+  {
+   "time": 14.0,
+   "dur": 2.0,
+   "note": 29
+  },
+  {
+   "time": 16.0,
+   "dur": 2.0,
+   "note": 31
+  },
+  {
+   "time": 18.0,
+   "dur": 2.0,
+   "note": 33
+  }
+ ],
+ "sections": {
+  "intro": [
+   1,
+   2
+  ],
+  "drop": [
+   3,
+   6
+  ],
+  "breakdown": [
+   7,
+   7
+  ],
+  "reentry": [
+   8,
+   9
+  ],
+  "ending": [
+   10,
+   10
+  ]
+ },
+ "final_stab": 19.0,
+ "answers": [],
+ "arp": [],
+ "featured": "frontman",
+ "spotlight_bar": 7,
+ "octave_from": 7
+}

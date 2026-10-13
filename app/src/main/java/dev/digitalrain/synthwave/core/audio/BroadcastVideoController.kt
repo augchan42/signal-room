@@ -9,6 +9,7 @@ import dev.digitalrain.synthwave.core.data.AssetCatalog
 import dev.digitalrain.synthwave.core.data.AssetRecovery
 import dev.digitalrain.synthwave.core.data.VisualPlayback
 import dev.digitalrain.synthwave.core.model.ConceptId
+import dev.digitalrain.synthwave.core.model.Selection
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CancellationException
@@ -24,9 +25,15 @@ data class VideoState(
     val status: VideoStatus = VideoStatus.IDLE,
     val stillPath: String? = null,
     val loopPath: String? = null,
+    /** True for the four-second concept loop, false for the 20-second performance of the mix. */
+    val loops: Boolean = true,
 )
 
-/** Muted four-second loop. Audio position is authoritative; this player never outputs sound. */
+/**
+ * Muted video of the band: the mix's 20-second performance, played once, or the concept's
+ * four-second loop if the performance cannot be opened. Audio position is authoritative; this
+ * player never outputs sound.
+ */
 class BroadcastVideoController(
     context: Context,
     private val catalog: AssetCatalog,
@@ -59,38 +66,45 @@ class BroadcastVideoController(
 
     init { player.addListener(listener) }
 
-    suspend fun load(id: ConceptId) {
+    suspend fun load(selection: Selection) {
         check(!released)
         pending?.cancel(CancellationException("video load superseded"))
         pending = null
         player.stop()
-        when (val media = catalog.visualPlayback(id)) {
+        val id = selection.concept
+        val media = catalog.visualPlayback(selection)
+        val video = when (media) {
             is VisualPlayback.Still -> {
                 mutableState.value = VideoState(id, VideoStatus.FALLBACK, stillPath = media.path)
+                null
             }
-            is VisualPlayback.Loop -> {
-                mutableState.value = VideoState(id, VideoStatus.LOADING,
-                    stillPath = catalog.concept(id).stillPath, loopPath = media.path)
-                suspendCancellableCoroutine<Unit> { continuation ->
-                    pending = continuation
-                    continuation.invokeOnCancellation {
-                        if (pending === continuation) pending = null
-                    }
-                    try {
-                        player.setMediaItem(MediaItem.fromUri("asset:///demo/${media.path}"), 0)
-                        player.prepare()
-                    } catch (_: Exception) {
-                        useMatchingStill()
-                    }
-                }
+            is VisualPlayback.Performance -> media.path
+            is VisualPlayback.Loop -> media.path
+        }
+        if (video == null) return
+        val loops = media is VisualPlayback.Loop
+        player.repeatMode = if (loops) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+        mutableState.value = VideoState(id, VideoStatus.LOADING,
+            stillPath = catalog.concept(id).stillPath, loopPath = video, loops = loops)
+        suspendCancellableCoroutine<Unit> { continuation ->
+            pending = continuation
+            continuation.invokeOnCancellation {
+                if (pending === continuation) pending = null
+            }
+            try {
+                player.setMediaItem(MediaItem.fromUri("asset:///demo/$video"), 0)
+                player.prepare()
+            } catch (_: Exception) {
+                useMatchingStill()
             }
         }
     }
 
     fun sync(audioPositionMs: Long, audioStatus: PlaybackStatus) {
         if (released || mutableState.value.status != VideoStatus.READY) return
-        val expected = BroadcastClock.visualPosition(audioPositionMs)
-        if (BroadcastClock.needsCorrection(audioPositionMs, player.currentPosition)) {
+        val loops = mutableState.value.loops
+        val expected = BroadcastClock.visualPosition(audioPositionMs, loops)
+        if (BroadcastClock.needsCorrection(audioPositionMs, player.currentPosition, loops)) {
             player.seekTo(expected)
         }
         if (audioStatus == PlaybackStatus.PLAYING) player.play() else player.pause()

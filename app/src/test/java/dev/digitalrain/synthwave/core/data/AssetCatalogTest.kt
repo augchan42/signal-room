@@ -43,19 +43,35 @@ class AssetCatalogTest {
     }
 
     @Test
-    fun missingOrFailedVideoUsesOnlyItsMatchingStill() {
-        val catalog = AssetCatalog(manifest, AssetOpener { it != "visual/loop-warm.mp4" })
-        assertEquals(
-            VisualPlayback.Still("visual/concept-warm.webp"),
-            catalog.visualPlayback(ConceptId.WARM),
-        )
+    fun everyMixHasAPerformanceInEveryConcept() {
+        val catalog = AssetCatalog(manifest, AssetOpener { true })
+        for (arrangement in ArrangementId.entries) {
+            for (member in MemberId.entries) {
+                for (concept in ConceptId.entries) {
+                    val id = "${concept.name.lowercase()}-${arrangement.name.lowercase()}-${member.name.lowercase()}"
+                    assertEquals(
+                        VisualPlayback.Performance("visual/performance/$id.mp4"),
+                        catalog.visualPlayback(Selection(arrangement, member, concept)),
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun missingOrFailedVideoFallsBackToTheLoopThenItsMatchingStill() {
+        val warmKeytar = Selection(ArrangementId.DRIVING, MemberId.KEYTAR, ConceptId.WARM)
+        val noPerformance = AssetCatalog(manifest, AssetOpener { !it.startsWith("visual/performance/") })
+        assertEquals(VisualPlayback.Loop("visual/loop-warm.mp4"), noPerformance.visualPlayback(warmKeytar))
+        val noVideo = AssetCatalog(manifest, AssetOpener { it.endsWith(".webp") || it.endsWith(".m4a") })
+        assertEquals(VisualPlayback.Still("visual/concept-warm.webp"), noVideo.visualPlayback(warmKeytar))
         assertEquals(
             AssetRecovery.UseStill("loop-warm", "visual/concept-warm.webp"),
-            catalog.recoveryForDecoderError("visual/loop-warm.mp4"),
+            noVideo.recoveryForDecoderError("visual/loop-warm.mp4"),
         )
         assertEquals(
-            VisualPlayback.Loop("visual/loop-electric.mp4"),
-            catalog.visualPlayback(ConceptId.ELECTRIC),
+            AssetRecovery.UseStill("warm-driving-keytar", "visual/concept-warm.webp"),
+            noVideo.recoveryForDecoderError("visual/performance/warm-driving-keytar.mp4"),
         )
     }
 
@@ -71,7 +87,9 @@ class AssetCatalogTest {
     @Test
     fun missingStillAndUnknownIdsFailExplicitly() {
         val missingStill = AssetCatalog(manifest, AssetOpener { it != "visual/concept-warm.webp" })
-        val error = expectAssetProblem { missingStill.visualPlayback(ConceptId.WARM) }
+        val error = expectAssetProblem {
+            missingStill.visualPlayback(Selection(ArrangementId.SPARSE, MemberId.FRONTMAN, ConceptId.WARM))
+        }
         assertEquals("concept-warm", error.assetId)
         assertEquals(AssetProblem.Kind.STILL, error.kind)
 

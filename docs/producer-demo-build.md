@@ -26,7 +26,7 @@ adb -s emulator-5554 shell am instrument -w -r dev.digitalrain.synthwave.test/an
 ```
 
 Replace `emulator-5554` with the intended emulator serial. `connectedDebugAndroidTest` selects every connected device, so do not use it when a phone is also attached. The application is offline; its merged manifest contains neither `INTERNET` nor `ACCESS_NETWORK_STATE`.
-`assembleDebug` and `assembleRelease` run `validateDemoAssets` before merging assets. The validator checks the exact 23-file manifest, SHA-256, full decoding, decoded audio duration/loudness/peak, WebP dimensions, and silent 96-frame H.264 loops. It fails if Python or FFmpeg is unavailable. JVM unit tests do not need either tool. Only when intentionally replacing media, run the validator with `--write-hashes`; it checks every file before atomically refreshing hashes, then reruns read-only validation. Ordinary builds never repair the manifest.
+`assembleDebug` and `assembleRelease` run `validateDemoAssets` before merging assets. The validator checks the exact 59-file manifest, SHA-256, full decoding, decoded audio duration/loudness/peak, WebP dimensions, silent 96-frame H.264 loops, and the 36 silent 480-frame, 540 × 960 H.264 performances (one per mix and concept). It fails if Python or FFmpeg is unavailable. JVM unit tests do not need either tool. Only when intentionally replacing media, run the validator with `--write-hashes`; it checks every file before atomically refreshing hashes, then reruns read-only validation. Ordinary builds never repair the manifest.
 
 ## Scoring regression fixtures
 
@@ -53,6 +53,6 @@ These figures are prototype balance evidence, not claims about later bookings.
 
 ## Runtime visual bridge
 
-The booking shell loads `app/src/main/assets/demo/visual/control-room.webp` from the Blender demo scene. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The manifest includes three concept stills, four member stills, and three silent loops; `AssetCatalog` resolves each ID and maps video failures to the matching concept still. The producer flow uses these assets in its screens.
+The booking shell loads `app/src/main/assets/demo/visual/control-room.webp` from the Blender demo scene. `SceneBackdrop` decodes packaged portrait assets without a network or Blender runtime. The manifest includes three concept stills, four member stills, three silent loops and 36 performances; `AssetCatalog` picks the performance for the selected mix and concept, and maps video failures to the matching concept still. The producer flow uses these assets in its screens.
 
 Display text uses the bundled Oxanium variable font from the official Google Fonts repository. Its SIL Open Font License is packaged at `app/src/main/assets/licenses/oxanium-ofl.txt`. Body text continues to use the platform sans-serif for readability.

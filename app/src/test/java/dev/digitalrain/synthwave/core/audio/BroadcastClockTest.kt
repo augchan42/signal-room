@@ -14,6 +14,16 @@ class BroadcastClockTest {
     }
 
     @Test
+    fun performancePlaysOnceAlongsideTheAudio() {
+        assertEquals(9250L, BroadcastClock.visualPosition(9250L, loop = false))
+        assertEquals(20_000L, BroadcastClock.visualPosition(25_000L, loop = false))
+        assertEquals(0L, BroadcastClock.visualPosition(-1L, loop = false))
+        assertEquals(4000L, BroadcastClock.driftMs(9250L, 5250L, loop = false))
+        assertFalse(BroadcastClock.needsCorrection(9250L, 9210L, loop = false))
+        assertTrue(BroadcastClock.needsCorrection(9250L, 1250L, loop = false))
+    }
+
+    @Test
     fun completionIsSeparateFromLoopPosition() {
         assertFalse(BroadcastClock.isComplete(19_999L))
         assertTrue(BroadcastClock.isComplete(20_000L))

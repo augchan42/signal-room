@@ -11,6 +11,7 @@ masters to `masters/`; `finish_audio.py` encodes them.
 from __future__ import annotations
 
 import argparse
+import json
 import time
 from pathlib import Path
 
@@ -151,6 +152,7 @@ def main() -> None:
     parser.add_argument("--arrangement", choices=ARRANGEMENTS)
     parser.add_argument("--member", choices=MEMBERS)
     parser.add_argument("--out", type=Path, default=HERE / "masters")
+    parser.add_argument("--events", type=Path, help="write each mix's performance timings as <mix>.json here and exit")
     args = parser.parse_args()
     if args.all:
         pairs = [(a, m) for a in ARRANGEMENTS for m in MEMBERS]
@@ -158,6 +160,14 @@ def main() -> None:
         pairs = [(args.arrangement, args.member)]
     else:
         parser.error("Use --all or --arrangement and --member")
+    if args.events:
+        for arrangement, member in pairs:
+            path = args.events / f"{arrangement}-{member}.json"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            events = bright_cue.performance_events(mix_variant(arrangement, member), member)
+            path.write_text(json.dumps(events, indent=1) + "\n")
+            print(path)
+        return
     configure()
     start = time.time()
     for arrangement, member in pairs:

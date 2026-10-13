@@ -37,7 +37,9 @@ art/audio/.venv/bin/python art/audio/finish_audio.py --all
 python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report app/build/reports/demo-assets.json --write-hashes
 ```
 
-`render_mixes.py` takes about 2.5 minutes for all twelve, because each mix renders its own parts. The finish step applies two-pass FFmpeg `loudnorm`, encodes AAC-LC and remeasures the decoded output. It fails when decoded duration differs from 20.000 seconds by more than 50 ms, loudness differs from −14 LUFS by more than 1 LU, or true peak exceeds −1 dBTP. Per-file measurements are in `measurements.json`. On this render all twelve decoded files measured exactly 960,000 frames, −14.12 to −14.09 LUFS, and −3.05 to −1.99 dBTP.
+`render_mixes.py --all --events art/blender/demo/mix-events` writes each mix's performance timings (its hook, answers, arpeggio, featured member and bar-7 spotlight) as `<arrangement>-<member>.json` without rendering audio. `art/blender/render_mix_performances.py` reads them.
+
+`render_mixes.py` takes about 2.5 minutes for all twelve, because each mix renders its own parts. The finish step applies two-pass FFmpeg `loudnorm`, encodes AAC-LC and remeasures the decoded output. It fails when decoded duration differs from 20.000 seconds by more than 50 ms, loudness differs from −14 LUFS by more than 1 LU, or true peak exceeds −1 dBTP. Per-file measurements are in `measurements.json`. On this render all twelve decoded files measured exactly 960,000 frames, −14.14 to −14.05 LUFS, and −3.26 to −1.06 dBTP. Sparse-drummer is the closest to the −1 dBTP limit.
 
 ## Audition gate
 
