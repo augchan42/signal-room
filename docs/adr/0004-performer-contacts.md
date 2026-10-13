@@ -1,6 +1,6 @@
 # ADR 0004: Fit playing joints to instrument surfaces
 
-- Status: in progress (contact corrections implemented; video export and device check remain)
+- Status: in progress (source and all replacement media verified; APK/device check remains)
 - Date: 2026-10-13
 - Scope: performance export in `art/blender/render_mix_performances.py`
 
@@ -40,9 +40,11 @@ separately from the app assets.
 /Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_drum_contacts.py
 ```
 
-The bundled 36 videos have not yet been regenerated. After the remaining contact details are
-checked, regenerate them one at a time, validate all media before writing manifest hashes, then
-build and test the APK. Main remains `d984f1d`; playtest diagnostics are in draft PR #6.
+All 36 bundled videos were regenerated one at a time. Each staged MP4 was checked for format,
+dimensions, frame count and duration, fully decoded, then atomically moved to its app asset path.
+Full validation passed all 59 media assets before the manifest hashes were refreshed, followed by
+validation against those hashes. APK build and device checks are pending. Main remains `d984f1d`;
+playtest diagnostics are in draft PR #6, and this work is in stacked draft PR #7.
 
 ## Keyboard and keytar hands
 
