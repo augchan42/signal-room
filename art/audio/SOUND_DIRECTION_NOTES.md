@@ -244,3 +244,33 @@ Command:
       --pad-wav pad_juno60_open.wav --pad-motion --pad-clean --name bright-cue-candidate
 
 The twelve app mixes (3 arrangements x 4 members) have not been made. App audio in `app/src/main/assets/demo/audio/` is unchanged.
+
+## Twelve app mixes from the approved cue (2026-10-13)
+
+The user said to go ahead and "redo the crappy music we have". The twelve app mixes in `app/src/main/assets/demo/audio/` now come from the approved bright cue instead of the old `render_theme.py` theme, which is removed along with `theme.json` and its tests.
+
+- `bright_cue.py` now renders each part on its own bus (`render_parts()`) and mixes them with per-part levels (`mix_parts()`). With every level at 1 the output is bit-identical to the approved cue (checked with `cmp` on the WAV).
+- `render_mixes.py` sets the levels for each arrangement and raises the featured member's parts by about 3.2 dB. Layered and the keyboardist's mixes add a soft half-note counterline on chord tones; it is silent in the approved cue. The README lists the levels.
+- A peak limiter brings each mix to −3 dBTP at −14 LUFS before encoding. It reduces gain at its deepest by 4.2–6.8 dB on peaks, and for more than 1 dB of reduction 13% of the time in driving-drummer (the most) and 5% in driving-keyboardist.
+- Measured after AAC encoding: 960,000 frames each, −14.11 to −14.08 LUFS, −3.05 to −2.08 dBTP. Over seconds 4–12, the smallest difference between two mixes that the tests compare is 26% of the signal level (driving-frontman vs driving-keyboardist).
+- Comparison clips (untracked): `probe/mixes/compare-arrangements-frontman.mp3` (sparse, driving, layered) and `probe/mixes/compare-members-driving.mp3` (frontman, keyboardist, keytar, drummer), each 8 seconds per mix. MP3 copies of all twelve are in `probe/mixes/`.
+
+The user said the mixes "sound pretty similar" ("over[all] i like"). They asked to revisit the game's premise: the player picks an arrangement, a featured member, a concept and preparation for a booking, and can audition all twelve mixes before choosing. The spec requires that "Every mix must differ audibly in the way its label describes". The level-only mixes did not: the in-game descriptions promise keytar "short melodic answers" and drummer "percussion variation", which the mixes did not have. The user approved changing what is played ("yes please").
+
+Second version: each arrangement changes the drum and bass patterns, and each featured member plays something of their own (README lists them). The featured boost went back to about 4 dB. Measured after encoding: −14.12 to −14.09 LUFS, −3.05 to −1.99 dBTP. Differences between mixes, as a share of the signal level: over seconds 4–12, smallest 28% and median 52% (first version: smallest 26%); over the whole 20 seconds, smallest 33% and median 64%. Limiting is again heaviest on driving-drummer (6.5 dB at its deepest).
+
+Comparison clips: `compare-arrangements-frontman.mp3` (seconds 4–12 of sparse, driving, layered) and `compare-members-driving.mp3` (seconds 10.5–19.5 of driving with each featured member, which covers the keytar answers, the open breakdown arpeggio, the octave re-entry and the drum fills).
+
+The user listened and said they "still can't tell the difference".
+
+Third version: bigger changes in what is played (README lists them).
+- Sparse is half time with no hi-hats and no arpeggio, and the bass holds one note per bar.
+- Driving has a kick on every beat from bar 1, through the breakdown, and 16th-note root-octave bass.
+- Layered adds a harmony a scale third under the hook, and the pad and counterline are louder.
+- The featured boost is 6 dB, and the featured member takes the breakdown (bar 7) while every other part drops to 20%: the keytar plays a 16th-note run, the drummer a break, the keyboardist the bright arpeggio, the frontman the hook with the octave double.
+
+Measured after encoding: −14.14 to −14.05 LUFS, −3.26 to −1.06 dBTP (sparse-drummer is the highest; the limit is −1.0). Limiting is heaviest on driving-drummer (5.9 dB) and layered-drummer (5.1 dB).
+
+Comparison clips: `compare-arrangements-frontman.mp3` (seconds 2–10 of sparse, driving, layered; 8 s each) and `compare-members-driving.mp3` (seconds 10–16 of driving with each featured member; the breakdown starts 2 s into each clip).
+
+Status: awaiting the user's listening approval.

@@ -7,7 +7,10 @@ import re
 import subprocess
 from pathlib import Path
 
-from render_theme import ARRANGEMENTS, MEMBERS, HERE
+
+HERE = Path(__file__).resolve().parent
+ARRANGEMENTS = ("sparse", "driving", "layered")
+MEMBERS = ("frontman", "keyboardist", "keytar", "drummer")
 
 
 OUTPUT_DIR = HERE.parents[1] / "app" / "src" / "main" / "assets" / "demo" / "audio"

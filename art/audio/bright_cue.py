@@ -525,15 +525,18 @@ def lead_part(dest: np.ndarray, doubling: np.ndarray) -> None:
 ARP_ORDER = [0, 1, 2, 3, 2, 1, 0, 2, 3, 2, 1, 3, 0, 1, 2, 3]
 
 
-def arp_part(dest: np.ndarray) -> None:
+def arp_part(dest: np.ndarray, every: int = 1, open_breakdown: bool = False) -> None:
+    """every=2 plays every other 16th; open_breakdown keeps the arpeggio bright through bar 7."""
     for bar, name in enumerate(CHORDS, 1):
         tones = PAD[name]
         for step in range(16):
+            if step % every:
+                continue
             when = at(bar, step)
             # intro opens from dark to bright over bars 1-2; breakdown thins it
             if bar <= 2:
                 bright = 1100 + 3400 * ((bar - 1) * 16 + step) / 32
-            elif bar == 7:
+            elif bar == 7 and not open_breakdown:
                 bright = 1600 if step < 8 else 1600 + 2800 * (step - 8) / 8
             else:
                 bright = 5200
@@ -591,13 +594,19 @@ def pad_part(dest: np.ndarray) -> None:
         put(dest, sound, at(bar), .34 if bar <= 2 else .3)
 
 
-def bass_events() -> list[tuple[float, float, int]]:
+def bass_events(style: str = "full") -> list[tuple[float, float, int]]:
+    """style: "full" (the approved cue), "sparse" (one held root per bar) or
+    "driving" (16th notes alternating root and octave from bar 2, through the breakdown)."""
     events: list[tuple[float, float, int]] = []
     for bar, name in enumerate(CHORDS, 1):
         root = ROOT[name]
         if bar == 1:
             continue
-        if bar in (2, 7):  # held, swelling
+        if style == "driving":
+            for step in range(16 if bar < 10 else 9):
+                events.append((at(bar, step), STEP * .8, root + (12 if step % 2 else 0)))
+            continue
+        if bar in (2, 7) or style == "sparse":  # held, swelling
             events.append((at(bar), BAR, root))
             continue
         for step in range(0, 16, 2):
@@ -606,11 +615,11 @@ def bass_events() -> list[tuple[float, float, int]]:
         if bar in (6, 9):  # push into next bar
             events[-1] = (at(bar, 14), STEP, root + 12)
             events.append((at(bar, 15), STEP, root + 10 if bar == 6 else root + 14))
-    return events
+    return sorted(events)
 
 
-def bass_part(dest: np.ndarray) -> None:
-    events = bass_events()
+def bass_part(dest: np.ndarray, style: str = "full") -> None:
+    events = bass_events(style)
     total = len(dest)
     freq, _ = mono_line(events, total, glide=.012)
     gate = np.zeros(total)
@@ -633,31 +642,47 @@ def bass_part(dest: np.ndarray) -> None:
 
 # --- arrangement -----------------------------------------------------------
 
-def drum_events() -> list[tuple[str, float, float]]:
+def drum_events(style: str = "full", fills: bool = False) -> list[tuple[str, float, float]]:
     """(kind, time, gain) for every drum hit, in the order drum_parts plays them.
 
     Kinds: kick, snare, roll (bar 7 crescendo and bar 2 fill), ghost, tom, hat, open_hat.
     Times are on the grid; drum_parts adds a few ms of humanising jitter to ghosts and hats.
+    style: "full" (the approved cue), "sparse" (half time: kick on beat 1, snare on beat 3, no hats
+    or ghosts) or "driving" (kick on every beat from bar 1 through the breakdown, 16th hats throughout).
+    fills adds snare and tom fills in bars 4, 8 and 9 and a drum break in bar 7.
     """
     events: list[tuple[str, float, float]] = []
-    for bar in range(2, 11):
-        if bar == 7:
+    for bar in range(1 if style == "driving" else 2, 11):
+        if bar == 7 and style != "driving":
             continue
         beats = range(4) if bar < 10 else (0, 1, 2)
         for b in beats:
+            if style == "sparse" and b:
+                continue
             events.append(("kick", at(bar, b * 4), .72 if bar > 2 else .55))
-        if bar in (5, 9):  # extra push before the bar end
+        if bar in (5, 9) and style != "sparse":  # extra push before the bar end
             events.append(("kick", at(bar, 14), .55))
     for bar in range(3, 11):
         if bar == 10:
             events.append(("snare", at(bar, 4), .8))
             break
         if bar == 7:
+            if fills:  # drum break: kick and snare, toms, then a short roll
+                for step in (0, 3, 6):
+                    events.append(("kick", at(7, step), .72))
+                events.append(("snare", at(7, 4), .8))
+                for step in (8, 9, 10, 11):
+                    events.append(("tom", at(7, step), .55))
+                for i in range(4):
+                    events.append(("roll", at(7, 12 + i), .45 + .12 * i))
+                continue
             for i in range(8):  # crescendo roll into re-entry
                 events.append(("roll", at(7, 8 + i), .2 + .07 * i))
             continue
-        for b in (1, 3):
+        for b in ((2,) if style == "sparse" else (1, 3)):
             events.append(("snare", at(bar, b * 4), .8))
+        if style == "sparse":
+            continue
         for ghost in (7, 15) if bar % 2 else (10,):
             events.append(("ghost", at(bar, ghost), .12))
     # bar 2 fill: snare 16ths then low tom
@@ -667,29 +692,42 @@ def drum_events() -> list[tuple[str, float, float]]:
     # tom fill at the end of bar 6
     for step in (12, 13, 14, 15):
         events.append(("tom", at(6, step), .45))
-    for bar in range(2, 11):
+    if fills:
+        for i, step in enumerate((12, 13, 14, 15)):  # snare run into bar 5
+            events.append(("roll", at(4, step), .35 + .1 * i))
+        for step in (12, 13, 14, 15):  # toms into bar 9
+            events.append(("tom", at(8, step), .5))
+        for i, step in enumerate(range(8, 16)):  # snare and toms into the ending
+            events.append(("tom" if step % 2 else "roll", at(9, step), .4 + .05 * i))
+    for bar in range(1 if style == "driving" else 2, 11):
         for step in range(16):
-            if bar == 2 and step % 2:
+            if style == "sparse":
+                break
+            if bar == 2 and step % 2 and style != "driving":
                 continue
-            if bar == 7 and step % 4 != 2:
+            if bar == 7 and step % 4 != 2 and style != "driving":
                 continue
             if bar == 10 and step >= 8:
                 break
             accent = 1.0 if step % 4 == 2 else (.55 if step % 2 == 0 else .38)
-            opened = step % 8 == 6 and bar not in (2, 7)
+            opened = step % 8 == 6 and bar not in (1, 2, 7)
             events.append(("open_hat" if opened else "hat", at(bar, step), accent))
     return events
 
 
-TOM_NOTES = {at(2, 15): 43, at(6, 12): 50, at(6, 13): 47, at(6, 14): 43, at(6, 15): 40}
+TOM_NOTES = {at(7, 8): 50, at(7, 9): 47, at(7, 10): 43, at(7, 11): 40, at(2, 15): 43, at(6, 12): 50, at(6, 13): 47, at(6, 14): 43, at(6, 15): 40,
+             at(8, 12): 50, at(8, 13): 47, at(8, 14): 43, at(8, 15): 40,
+             at(9, 9): 50, at(9, 11): 47, at(9, 13): 43, at(9, 15): 40}
 
 
-def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
+def drum_parts(dry: np.ndarray, snare_bus: np.ndarray, hat_bus: np.ndarray | None = None,
+               style: str = "full", fills: bool = False) -> list[float]:
+    hat_bus = dry if hat_bus is None else hat_bus
     kicks: list[float] = []
     k = kick()
     s = snare()
     hats = None
-    for kind, when, gain in drum_events():
+    for kind, when, gain in drum_events(style, fills):
         if kind == "kick":
             put(dry, k, when, gain)
             kicks.append(when)
@@ -701,7 +739,7 @@ def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
             put(dry, snare(), when + RNG.normal(0, .003), gain)
         elif kind == "tom":
             step = round((when % BAR) / STEP)
-            pan = -.3 if when < at(3) else .35 - .2 * (step - 12)
+            pan = -.3 if when < at(3) else float(np.clip(.35 - .2 * (step - 12), -.5, .5))
             put(dry, tom(TOM_NOTES[when]), when, gain, pan)
         else:
             if hats is None:
@@ -710,18 +748,93 @@ def drum_parts(dry: np.ndarray, snare_bus: np.ndarray) -> list[float]:
             jitter = RNG.normal(0, .0035)
             vel = gain * (1 + .12 * RNG.standard_normal())
             if kind == "open_hat":
-                put(dry, hats[1], when + jitter, .26 * vel, .3)
+                put(hat_bus, hats[1], when + jitter, .26 * vel, .3)
             else:
-                put(dry, hats[0], when + jitter, .4 * vel, .3 if step % 2 else -.15)
+                put(hat_bus, hats[0], when + jitter, .4 * vel, .3 if step % 2 else -.15)
     return kicks
 
 
-def render(wet: bool) -> np.ndarray:
+def counter_part(dest: np.ndarray) -> None:
+    """Soft half-note counterline on chord tones under the hook, for the layered arrangement."""
+    for bar, name in enumerate(CHORDS, 1):
+        if bar < 3 or bar in (7, 10):
+            continue
+        for half, index in ((0, 2), (8, 1)):
+            note = PAD[name][index]
+            n = int((BAR / 2 + .3) * RATE)
+            env = adsr(n, .06, .4, .75, .25, BAR / 2 * .95)
+            left, right = supersaw(np.full(n, hz(note)), voices=3, cents=8)
+            put(dest, np.stack([low(left, 2200), low(right, 2200)], 1) * env[:, None], at(bar, half), .35)
+
+
+# Keytar answers: short phrases in the gaps of the hook (bar 2 pickup, held notes in bars 6 and 7).
+ANSWERS = [(2, 8, 2, 72), (2, 10, 2, 77), (2, 12, 2, 81), (2, 14, 2, 84),
+           (6, 10, 1, 83), (6, 11, 1, 86), (6, 12, 2, 83), (6, 14, 2, 81),
+           (7, 10, 2, 76), (7, 12, 2, 79), (7, 14, 2, 81)]
+# Keytar solo in the breakdown (bar 7): an A minor pentatonic run up and back, in 16ths.
+ANSWERS_SOLO = [(7, step, 1, note) for step, note in
+                enumerate([69, 72, 74, 76, 79, 81, 84, 81, 79, 76, 79, 81, 84, 86, 88, 84])]
+
+
+def answers_part(dest: np.ndarray, solo: bool = False) -> None:
+    """Hollow pulse voice, panned right, a little under the lead's level. solo: the bar 7 run
+    replaces the bar 7 answers."""
+    table = [a for a in ANSWERS if a[0] != 7] + ANSWERS_SOLO if solo else ANSWERS
+    events = [(at(bar, step), length * STEP, note) for bar, step, length, note in table]
+    voice = lead_square(events, len(dest))
+    active = np.abs(voice).max(1) > 1e-4
+    voice *= 10 ** (-18 / 20) / np.sqrt(np.mean(voice[active] ** 2))
+    dest += voice * np.array([.6, 1.0])
+
+
+def octave_part(dest: np.ndarray, first_bar: int = 8) -> None:
+    """Thin supersaw an octave above the hook from first_bar to the end of bar 9."""
+    for start, dur, note in lead_events():
+        if at(first_bar) <= start < at(10):
+            n = int((dur + .2) * RATE)
+            env = adsr(n, .008, .3, .7, .1, dur)
+            left, right = supersaw(np.full(n, hz(note + 12)), voices=3, cents=7)
+            put(dest, np.stack([low(left, 6000), low(right, 6000)], 1) * env[:, None], start, .22)
+
+
+A_MINOR = [57, 59, 60, 62, 64, 65, 67]  # A B C D E F G
+
+
+def third_below(note: int) -> int:
+    """The A minor scale tone two steps below note."""
+    octave, pc = divmod(note - 57, 12)
+    index = max(i for i, n in enumerate(A_MINOR) if n - 57 <= pc)
+    index -= 2
+    return A_MINOR[index % 7] + 12 * (octave + index // 7)
+
+
+def harmony_part(dest: np.ndarray) -> None:
+    """Soft supersaw a diatonic third under the hook, for the layered arrangement."""
+    for start, dur, note in lead_events():
+        n = int((dur + .25) * RATE)
+        env = adsr(n, .02, .3, .75, .15, dur)
+        left, right = supersaw(np.full(n, hz(third_below(note))), voices=5, cents=10)
+        put(dest, np.stack([low(left, 3500), low(right, 3500)], 1) * env[:, None], start, .2, pan=-.2)
+
+
+PARTS = ("drums", "hats", "snares", "bass", "pads", "arp", "lead", "double", "counter", "answers", "octave", "harmony", "fx")
+
+
+def render_parts(variant: dict | None = None) -> dict[str, np.ndarray]:
+    """Every part on its own bus, before effects.
+
+    variant changes what is played: "drums" and "bass" styles, "fills", "arp_every", "arp_open",
+    "answers", "answers_solo", "octave", "octave_from" and "harmony". With no variant this is the approved cue; the counterline, answers and
+    octave parts are then silent or absent.
+    """
     global RNG
     RNG = np.random.default_rng(2026)
-    drums, snares, bass, pads, arp, lead, double, fx = (bus() for _ in range(8))
+    v = variant or {}
+    parts = {name: bus() for name in PARTS}
 
-    kicks = drum_parts(drums, snares)
+    parts["kicks"] = np.array(drum_parts(parts["drums"], parts["snares"], parts["hats"],
+                                         v.get("drums", "full"), v.get("fills", False)))
+    fx = parts["fx"]
     for bar in (3, 8):
         put(fx, crash(), at(bar), .55)
         put(fx, impact(), at(bar), .55)
@@ -730,10 +843,10 @@ def render(wet: bool) -> np.ndarray:
     put(fx, riser(BAR * .75), at(2, 4), .55)
     put(fx, riser(BAR / 2), at(7, 8), .6)
 
-    bass_part(bass)
-    pad_part(pads)
-    arp_part(arp)
-    lead_part(lead, double)
+    bass_part(parts["bass"], v.get("bass", "full"))
+    pad_part(parts["pads"])
+    arp_part(parts["arp"], v.get("arp_every", 1), v.get("arp_open", False))
+    lead_part(parts["lead"], parts["double"])
     # final stab on bar 10 beat 3: whole band hits the A minor chord
     stab_n = int(1.2 * RATE)
     k = np.arange(stab_n) / RATE
@@ -744,8 +857,25 @@ def render(wet: bool) -> np.ndarray:
         stab_l += l
         stab_r += r
     stab = np.stack([vlow(stab_l, 800 + 5000 * np.exp(-k / .25), 1), vlow(stab_r, 800 + 5000 * np.exp(-k / .25), 1)], 1)
-    put(lead, stab * np.exp(-k / .5)[:, None], at(10, 8), .12)
+    put(parts["lead"], stab * np.exp(-k / .5)[:, None], at(10, 8), .12)
+    counter_part(parts["counter"])
+    if v.get("answers"):
+        answers_part(parts["answers"], v.get("answers_solo", False))
+    if v.get("octave"):
+        octave_part(parts["octave"], v.get("octave_from", 8))
+    if v.get("harmony"):
+        harmony_part(parts["harmony"])
+    return parts
 
+
+def mix_parts(parts: dict[str, np.ndarray], wet: bool, gains: dict[str, float] | None = None) -> np.ndarray:
+    """Effects and master on scaled parts. gains: per-part level (default 1), plus "verb" for the plate return."""
+    gains = gains or {}
+    g = {name: parts[name] * gains.get(name, 1.0) for name in PARTS}
+    drums = g["drums"] + g["hats"]
+    snares, bass, pads, arp, lead, double, fx = (g[name] for name in ("snares", "bass", "pads", "arp", "lead", "double", "fx"))
+    lead = lead + g["answers"] + g["octave"] + g["harmony"]
+    kicks = list(parts["kicks"])
     ducked = duck_curve(kicks, .55)
     light_duck = duck_curve(kicks, .3)
 
@@ -756,6 +886,8 @@ def render(wet: bool) -> np.ndarray:
         pads = high(pads, 200) - .37 * band(pads, 250, 500) - .25 * band(pads, 2000, 5000)
         pad_duck, pad_send = light_duck, .22
     bass_stereo = bass * light_duck
+    if gains.get("counter", 0):
+        double = double + g["counter"]
     if not wet:
         mix = drums + snares + bass_stereo + pads * pad_duck + arp * ducked + lead + double * .5 + fx * .5
     else:
@@ -772,8 +904,12 @@ def render(wet: bool) -> np.ndarray:
                + (arp + .5 * arp_echo) * ducked
                + lead + .3 * lead_echo + double * .5
                + .5 * fx
-               + .38 * verb * ducked)
+               + .38 * gains.get("verb", 1.0) * verb * ducked)
     return master(mix)
+
+
+def render(wet: bool) -> np.ndarray:
+    return mix_parts(render_parts(), wet)
 
 
 def master(mix: np.ndarray) -> np.ndarray:
