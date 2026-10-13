@@ -1,6 +1,6 @@
 # ADR 0004: Fit playing joints to instrument surfaces
 
-- Status: in progress (drum correction verified; keyboard contact, pedal feet and fingers remain)
+- Status: in progress (contact corrections implemented; video export and device check remain)
 - Date: 2026-10-13
 - Scope: performance export in `art/blender/render_mix_performances.py`
 
@@ -41,3 +41,44 @@ separately from the app assets.
 The bundled 36 videos have not yet been regenerated. After the remaining contact details are
 checked, regenerate them one at a time, validate all media before writing manifest hashes, then
 build and test the APK. Main remains `d984f1d`; playtest diagnostics are in draft PR #6.
+
+## Keyboard and keytar hands
+
+`performance_hands.py` adds three two-segment fingers and a thumb to each playing/grip hand.
+The fingers flex on note events. The middle fingertip is fitted to the selected physical key;
+the two neighbouring fingers follow with smaller flex. This is a stylized playing hand, not
+independent piano fingering or a full chord fingering system.
+
+The BORG right hand follows the hook and featured arpeggio. Its left hand plays chord roots,
+with no playing contact during the raised-hand gesture. That gesture now returns by 16 seconds,
+before the bar-9 chord; the original 16.3-second return caused an abrupt corrective arm movement.
+Contact correction fades in and out around playing, preserving the authored idle poses.
+
+The keytar's smaller key range folds high notes down by octaves while retaining pitch class.
+Its keys hand follows bass/answer events, and its neck hand stays on the touch strip. The keytar
+moves 12 cm toward the keys hand so its highest keys are reachable. This changes staging, not audio.
+
+All 1,541 key-note contacts across the twelve motions pass with measured gaps under 1 mm.
+The same five-axis joint fit is shared with drums in `rigid_joint_fit.py`. It checks the target
+error and frame-to-frame angular change before export. `verify_key_contacts.py` checks the actual
+transformed fingertip at every assigned note, rather than checking only joint-angle peaks.
+
+## Pedal feet
+
+`performance_pedals.py` adds a toe plate under the drummer's kick and hi-hat feet and the
+keyboardist's sustain foot. It hides the old sustain pedal, which was in front of the boot.
+Each boot and its trim rotate about a fixed heel; its sole stays on the hinged plate.
+
+Kick presses and hi-hat openings follow the mix's actual `kick` and `open_hat` events. Sustain
+holds follow the chord events. Presses use the same floored audio frame as hand contacts and
+release between events. `verify_pedal_contacts.py` checks heel position and sole/plate contact
+on all 480 frames of all twelve motions, requires movement where there are events, and checks
+event-frame poses. Sparse mixes with no open-hi-hat events keep that pedal closed.
+
+These checks establish geometry and timeline alignment in exported frames. They do not establish
+the separate 50 ms physical audio/video output-sync target on a phone.
+
+The pedal geometry run checked 17,280 sole/heel frame combinations and 104 open-hi-hat events.
+The first geometry test failed because the kick pedal was missing; a separate event test caught
+the incorrect `openhat` spelling before export. The corrected test also covers sparse mixes with
+no open-hi-hat events instead of requiring movement for notes that are not played.

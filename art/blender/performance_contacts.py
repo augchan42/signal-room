@@ -62,8 +62,9 @@ def correct_drums(events):
     Forward kinematics is evaluated without repeatedly updating Blender's scene.
     """
     import bpy
-    from mathutils import Matrix, Vector, Euler
+    from mathutils import Vector
     import performance_motion as motion
+    from rigid_joint_fit import fit_tracks, key_rotations
 
     scene = bpy.context.scene
     hits = drum_contacts(events)
@@ -101,52 +102,10 @@ def correct_drums(events):
         bpy.context.view_layer.update()
         for arm in arms.values():
             arm["records"].append((arm["chain"][0].parent.matrix_world.copy(),
-                                   [list(o.rotation_euler) for o in arm["chain"]]))
+                                   [list(o.rotation_euler) for o in arm["chain"]], arm["tail"] @ arm["tip"]))
 
     for side, arm in arms.items():
-        theta = None
-        worst = 0.0
-        for (root, base), goal in zip(arm["records"], arm["goals"]):
-            if theta is None:
-                theta = [base[o][a] for o, a in axes]
-
-            def forward(values):
-                angles = [x[:] for x in base]
-                for (o, a), value in zip(axes, values):
-                    angles[o][a] = value
-                world = root.copy()
-                for obj, angle in zip(arm["chain"], angles):
-                    world = world @ obj.matrix_parent_inverse @ Matrix.LocRotScale(
-                        obj.location, Euler(angle, "XYZ").to_quaternion(), obj.scale)
-                return world @ arm["tail"] @ arm["tip"]
-
-            for _ in range(50):
-                point = forward(theta)
-                error = goal - point
-                if error.length < .001:
-                    break
-                jacobian = []
-                for k in range(len(theta)):
-                    shifted = theta[:]
-                    shifted[k] += .001
-                    jacobian.append((forward(shifted) - point) / .001)
-                normal = Matrix([[sum(c[i] * c[j] for c in jacobian) + (.00015 if i == j else 0)
-                                  for j in range(3)] for i in range(3)])
-                solved = normal.inverted() @ error
-                theta = [v + max(-.12, min(.12, col.dot(solved))) for v, col in zip(theta, jacobian)]
-            gap = (goal - forward(theta)).length
-            worst = max(worst, gap)
-            if gap > .008:
-                raise ValueError(f"Unreachable {side} drum tip at frame {len(arm['fitted']) + 1}: {gap:.3f}m")
-            arm["fitted"].append(theta[:])
-        speed = max(abs(b[k] - a[k]) for a, b in zip(arm["fitted"], arm["fitted"][1:]) for k in range(5))
-        if speed > .7:
-            raise ValueError(f"Drum contact correction jumps: {side}: {speed:.3f} rad/frame")
-        for frame, values in enumerate(arm["fitted"], 1):
-            for (obj_index, axis), value in zip(axes, values):
-                obj = arm["chain"][obj_index]
-                obj.rotation_euler[axis] = value
-                obj.keyframe_insert(data_path="rotation_euler", index=axis, frame=frame)
-        print("DRUM_CONTACT_FIT", side, "max gap", round(worst, 6), "max angular step", round(speed, 4), flush=True)
+        fitted = fit_tracks(arm["chain"], arm["records"], arm["goals"], axes, side + " drum tip")
+        key_rotations(arm["chain"], fitted, axes)
     scene.frame_set(1)
     bpy.context.view_layer.update()

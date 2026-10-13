@@ -63,3 +63,21 @@ python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report a
 ```
 
 Frames go to the ignored `frames/mixes/<concept>-<mix>/`.
+
+### Performer surface contacts
+
+After applying a mix's authored motion, the exporter fits stick tips to their assigned pads,
+adds articulated playing fingers and fits the BORG/keytar fingertips to their keys. The keytar
+neck hand remains on its touch strip. Heel-down kick, hi-hat and sustain pedals follow the mix
+events. The source `.blend` is unchanged; these additions run at export time. See
+`docs/adr/0004-performer-contacts.md` for the physical mapping and limits.
+
+Run these geometry checks sequentially before exporting new videos:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_drum_contacts.py
+/Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_key_contacts.py
+/Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_pedal_contacts.py
+```
+
+Do not refresh manifest hashes until all 36 replacement videos have been rendered and validated.

@@ -27,6 +27,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 import performance_motion  # noqa: E402
 import performance_contacts  # noqa: E402
+import performance_hands  # noqa: E402
+import performance_pedals  # noqa: E402
 
 EVENTS = ROOT / "demo" / "mix-events"
 FRAMES = ROOT / "demo" / "frames" / "mixes"
@@ -86,7 +88,10 @@ def apply_motion(mix):
             curve.update()
 
 
-    performance_contacts.correct_drums(performance_motion.load_events(EVENTS / f"{mix}.json"))
+    events = performance_motion.load_events(EVENTS / f"{mix}.json")
+    performance_contacts.correct_drums(events)
+    performance_hands.correct_keys(events)
+    performance_pedals.add_pedals(events)
 
 
 def _screen_nodes():
