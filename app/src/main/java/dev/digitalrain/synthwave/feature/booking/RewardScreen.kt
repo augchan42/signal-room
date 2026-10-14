@@ -48,7 +48,7 @@ internal fun RewardScreen(snapshot: RunSnapshot, content: BookingContent,
             (previous?.let { "   (${signed(result.invitationScore - it)} on last time)" } ?: ""),
             fontSize = 18.sp, fontWeight = FontWeight.Medium)
         ScoreBar(result.invitationScore, previous)
-        Text("Return booking at 65 · three stars at 75", fontSize = 14.sp)
+        Text("Return booking at 65 · three stars at 75", fontSize = 16.sp, fontWeight = FontWeight.Medium)
     }
     PanelCard {
         Text("NEXT TIME", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
@@ -68,50 +68,51 @@ internal fun RewardScreen(snapshot: RunSnapshot, content: BookingContent,
     }
 }
 
-/** The former verdict and recap explanation, unchanged in substance. */
+/** The former verdict and recap explanation, with labelled rows and the brief and audience report added. */
 @Composable
 private fun ScoreDetails(result: BookingResult, content: BookingContent) {
     PanelCard {
-        Text("THE SCORE", color = MaterialTheme.colorScheme.primary)
+        Text("THE SCORE", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         DimensionRow("Coherence (look & sound)", result.coherence, content.balance.weights[0])
         DimensionRow("Execution (playing)", result.execution, content.balance.weights[1])
         DimensionRow("Brief fit (late-night slot)", result.briefFit, content.balance.weights[2])
     }
     PanelCard {
-        Text("WHY IT LANDED THIS WAY", color = MaterialTheme.colorScheme.primary)
+        Text("WHY IT LANDED THIS WAY", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         result.coherence.contributions.filter { it.id != "concept-base" && it.id != "clamp" }
             .sortedByDescending { kotlin.math.abs(it.points) }
-            .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}") }
+            .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}", fontSize = 16.sp) }
         result.execution.contributions.filter { it.id != "arrangement-base" && it.id != "clamp" }
             .sortedByDescending { kotlin.math.abs(it.points) }
-            .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}") }
+            .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}", fontSize = 16.sp) }
         listOf("Coherence" to result.coherence, "Execution" to result.execution).forEach { (label, dimension) ->
             val overflow = dimension.contributions.firstOrNull { it.id == "clamp" }?.points ?: 0.0
             if (overflow < 0) Text("$label reached the 100-point cap; " +
-                "${displayScore(-overflow)} extra points did not count.")
+                "${displayScore(-overflow)} extra points did not count.", fontSize = 16.sp)
         }
     }
     PanelCard {
-        Text("FIVE AUDIENCES", color = MaterialTheme.colorScheme.primary)
-        Text("Awareness: how many of them know the band. Affinity: how much they like it.")
+        Text("FIVE AUDIENCES", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        Text("Awareness: how many of them know the band.", fontSize = 16.sp)
+        Text("Affinity: how much they like it.", fontSize = 16.sp)
         content.segments.forEach { (id, segment) ->
             val after = result.audienceAfter.getValue(id)
             Text("${segment.displayName}: awareness ${signed(after.awareness - segment.initial.awareness)}, " +
-                "affinity ${signed(after.affinity - segment.initial.affinity)}")
+                "affinity ${signed(after.affinity - segment.initial.affinity)}", fontSize = 16.sp)
         }
-        Text("Audience gains are separate from the invitation score.")
+        Text("Audience gains are separate from the invitation score.", fontSize = 16.sp)
     }
     PanelCard {
-        Text("THE BRIEF AND THE AUDIENCE REPORT", color = MaterialTheme.colorScheme.primary)
-        content.brief.forEach { Text(it) }
-        content.researchReport.forEach { Text(it) }
+        Text("THE BRIEF AND THE AUDIENCE REPORT", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        content.brief.forEach { Text(it, fontSize = 16.sp) }
+        content.researchReport.forEach { Text(it, fontSize = 16.sp) }
     }
 }
 
 @Composable
 private fun DimensionRow(label: String, dimension: Dimension, weight: Double) {
     Text("$label ${displayScore(dimension.value)} × ${displayScore(weight)} = " +
-        displayScore(dimension.value * weight))
+        displayScore(dimension.value * weight), fontSize = 16.sp)
 }
 
 internal fun signed(value: Double): String = (if (value >= 0) "+" else "−") + displayScore(kotlin.math.abs(value))
