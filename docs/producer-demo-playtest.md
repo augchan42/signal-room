@@ -86,7 +86,12 @@ connection; playback controls were checked visually.
   the great music and animation with a cool reward/prize/congrats screen ... simple loop, great
   simple visuals, great music". Formulas stay available behind a link. Design:
   `docs/superpowers/specs/2026-10-14-casual-loop-design.md`.
-- Casual loop implemented on branch `casual-loop`; awaiting the user's second playtest.
+- Casual loop implemented on branch `casual-loop` (PR #9).
+
+**Second playtest, 2026-10-14 (Pixel 7 Pro, casual loop).** The user played the new loop several times
+and said: "love the new plathrough". One problem: Reset demo on the Reward screen sometimes looked stuck
+for a few seconds. Logged resets always completed in 5–26 ms, and the delay was not reproduced by
+injected taps, on the emulator, or in a recorded playthrough where it worked. Tracked in issue #10.
 
 ### Initial performer contact inspection (2026-10-13)
 
