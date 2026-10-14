@@ -53,8 +53,6 @@ import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.simulation.RunAction
 import dev.digitalrain.synthwave.core.ui.SceneBackdrop
 
-private val Panel = Color(0xF5081422)
-
 @Composable
 fun BookingScreen(
     snapshot: RunSnapshot,
@@ -80,113 +78,39 @@ fun BookingScreen(
         Box(Modifier.fillMaxSize().background(Color(0xB808111D)))
         key(snapshot.phase, snapshot.attemptId) {
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
-        Column(
-            Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Text("SIGNAL ROOM / BOOKING 01 / ATTEMPT ${snapshot.attemptId}",
-                style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            if (recoveryRequired) {
-                PanelCard {
-                    Text(message ?: "Save could not be read", color = MaterialTheme.colorScheme.error)
-                    Button(onClick = onReset, modifier = Modifier.testTag("reset-demo")) { Text("Start new demo") }
+        Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+            Column(
+                Modifier.weight(1f).verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text("SIGNAL ROOM / BOOKING 01 / ATTEMPT ${snapshot.attemptId}",
+                    style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                if (recoveryRequired) {
+                    PanelCard {
+                        Text(message ?: "Save could not be read", color = MaterialTheme.colorScheme.error)
+                        Button(onClick = onReset, modifier = Modifier.testTag("reset-demo")) { Text("Start new demo") }
+                    }
+                } else {
+                    when (snapshot.phase) {
+                        Phase.BRIEF -> IntroScreen(content, onAction)
+                        Phase.DESK -> ChooseScreen(snapshot, content, catalog, onAction)
+                        Phase.PREPARATION -> PreparationScreen(snapshot, content, onAction)
+                        Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
+                            videoPlayer, onAction, onReset, onPlayPause, onMute)
+                        Phase.VERDICT -> Verdict(snapshot, content, onAction)
+                        Phase.RECAP -> Recap(snapshot, content, onAction, onReset)
+                    }
+                    if (message != null) PanelCard { Text(message, color = MaterialTheme.colorScheme.error) }
                 }
-            } else {
-                when (snapshot.phase) {
-                    Phase.BRIEF -> Brief(content, onAction)
-                    Phase.DESK -> Desk(snapshot, content, catalog, playback, onAction, onPlayPause)
-                    Phase.PREPARATION -> PreparationScreen(snapshot, content, onAction)
-                    Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
-                        videoPlayer, onAction, onReset, onPlayPause, onMute)
-                    Phase.VERDICT -> Verdict(snapshot, content, onAction)
-                    Phase.RECAP -> Recap(snapshot, content, onAction, onReset)
-                }
-                if (message != null) PanelCard { Text(message, color = MaterialTheme.colorScheme.error) }
+                Spacer(Modifier.height(24.dp))
             }
-            Spacer(Modifier.height(24.dp))
+            if (!recoveryRequired && snapshot.phase == Phase.DESK) {
+                ChooseBar(snapshot, content, playback, onAction, onPlayPause)
+            }
         }
         }
         }
-    }
-}
-
-@Composable
-private fun Brief(content: BookingContent, onAction: (RunAction) -> Unit) {
-    Text(content.title, style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.ExtraBold)
-    PanelCard {
-        Text("23:40 / late-night cable slot", color = MaterialTheme.colorScheme.primary)
-        Text("Instrumental special stage", style = MaterialTheme.typography.titleLarge)
-        content.brief.forEach { Text(it) }
-        Text("Invitation target: ${displayScore(content.balance.invitationThreshold)}")
-        Text("Three preparation slots. Your audience response carries into the recap.")
-    }
-    Button(onClick = { onAction(RunAction.OpenDesk) }, modifier = Modifier.testTag("open-desk")) {
-        Text("Open producer desk")
-    }
-}
-
-@Composable
-private fun Desk(
-    snapshot: RunSnapshot,
-    content: BookingContent,
-    catalog: AssetCatalog,
-    playback: PlaybackState,
-    onAction: (RunAction) -> Unit,
-    onPlayPause: () -> Unit,
-) {
-    Text("Producer desk", style = MaterialTheme.typography.headlineLarge)
-    Text("Choose a mix, featured member, and stage concept. All 12 mixes are available offline.")
-    PanelCard {
-        Text("ARRANGEMENT", color = MaterialTheme.colorScheme.primary)
-        ArrangementId.entries.forEach { id ->
-            val rules = content.arrangements.getValue(id)
-            Choice("${rules.displayName}${if (snapshot.selection.arrangement == id) " • selected" else ""}",
-                "arrangement-${id.name.lowercase()}", onClick = {
-                    onAction(RunAction.ChooseArrangement(id))
-                })
-            Text(rules.riskDescription, style = MaterialTheme.typography.bodySmall)
-        }
-    }
-    PanelCard {
-        Text("FEATURED MEMBER", color = MaterialTheme.colorScheme.primary)
-        MemberId.entries.forEach { id ->
-            val member = content.members.getValue(id)
-            Choice("${member.displayName}${if (snapshot.selection.member == id) " • selected" else ""}",
-                "member-${id.name.lowercase()}", onClick = {
-                    onAction(RunAction.ChooseMember(id))
-                })
-            Text("${member.strength} Fatigue ${member.fatigue}/100.", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-    PanelCard {
-        Text("STAGE CONCEPT", color = MaterialTheme.colorScheme.primary)
-        ConceptId.entries.forEach { id ->
-            val path = catalog.concept(id).stillPath
-            SceneBackdrop("demo/$path", "${content.concepts.getValue(id).displayName} preview",
-                Modifier.fillMaxWidth().height(160.dp))
-            Choice("${content.concepts.getValue(id).displayName}${if (snapshot.selection.concept == id) " • selected" else ""}",
-                "concept-${id.name.lowercase()}", onClick = {
-                    onAction(RunAction.ChooseConcept(id))
-                })
-        }
-    }
-    PanelCard {
-        Text("NOW AUDITIONING", color = MaterialTheme.colorScheme.primary)
-        Text("${content.arrangements.getValue(snapshot.selection.arrangement).displayName} / " +
-            content.members.getValue(snapshot.selection.member).displayName)
-        val key = "${snapshot.selection.arrangement.name.lowercase()}-${snapshot.selection.member.name.lowercase()}"
-        Text(content.mixDescriptions.getValue(key))
-        Text("${playback.positionMs / 1_000}s / 20s • ${playback.status.name.lowercase()}")
-        if (playback.status == PlaybackStatus.ERROR) Text("Could not play ${playback.errorAssetId}. Check the bundled audio.")
-        Button(onClick = onPlayPause, modifier = Modifier.testTag("preview-play-pause")) {
-            Text(if (playback.status == PlaybackStatus.PLAYING) "Pause mix" else "Play mix")
-        }
-        Text("Arrangement risk is public. The audience report is revealed by Research.",
-            style = MaterialTheme.typography.bodySmall)
-    }
-    Button(onClick = { onAction(RunAction.OpenPreparation) }, modifier = Modifier.testTag("open-preparation")) {
-        Text("Plan preparation")
     }
 }
 
@@ -365,19 +289,6 @@ private fun Recap(snapshot: RunSnapshot, content: BookingContent,
         Text("Retry booking")
     }
     OutlinedButton(onClick = onReset, modifier = Modifier.testTag("reset-demo")) { Text("Reset demo") }
-}
-
-@Composable
-private fun PanelCard(content: @Composable ColumnScope.() -> Unit) {
-    Surface(color = Panel, shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-        modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
-    }
-}
-
-@Composable
-private fun Choice(text: String, tag: String, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag(tag)) { Text(text) }
 }
 
 private fun signed(value: Double): String = (if (value >= 0) "+" else "−") + displayScore(kotlin.math.abs(value))
