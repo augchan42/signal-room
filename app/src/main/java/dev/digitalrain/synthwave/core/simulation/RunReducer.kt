@@ -116,7 +116,8 @@ fun actionError(state: RunSnapshot, action: RunAction, content: BookingContent):
             else -> null
         }
         RunAction.OpenRecap -> if (state.phase == Phase.VERDICT) null else "View the verdict first"
-        RunAction.ConfirmRetry -> if (state.phase == Phase.RECAP) null else "Open the recap before retrying"
+        RunAction.ConfirmRetry ->
+            if (state.phase == Phase.VERDICT || state.phase == Phase.RECAP) null else "Finish the show before retrying"
     }
 }
 
