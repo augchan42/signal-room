@@ -3,6 +3,7 @@ package dev.digitalrain.synthwave.core.simulation
 import dev.digitalrain.synthwave.core.model.ArrangementId
 import dev.digitalrain.synthwave.core.model.ConceptId
 import dev.digitalrain.synthwave.core.model.MemberId
+import dev.digitalrain.synthwave.core.model.PrepAction
 import dev.digitalrain.synthwave.core.model.Preparation
 import dev.digitalrain.synthwave.core.model.Selection
 import org.junit.Assert.assertEquals
@@ -69,5 +70,59 @@ class RewardTipTest {
         assertEquals(1, fitDots(content, Selection(ArrangementId.SPARSE, MemberId.FRONTMAN, ConceptId.ELECTRIC))) // 35
         assertEquals(1, fitDots(content, Selection(ArrangementId.LAYERED, MemberId.FRONTMAN, ConceptId.MONOCHROME))) // 48
         assertEquals(2, fitDots(content, Selection(ArrangementId.DRIVING, MemberId.FRONTMAN, ConceptId.MONOCHROME))) // 50
+    }
+
+    private val lkw = Selection(ArrangementId.LAYERED, MemberId.KEYBOARDIST, ConceptId.WARM)
+
+    @Test fun refineNoteWhenLookAndSoundIsAlreadyAtMax() {
+        assertEquals(TokenNote.AT_MAX, tokenNote(content, sfm, Preparation(0, 1, 0, false), PrepAction.REFINE))
+    }
+
+    @Test fun rehearseNoteWhenTirednessOutweighsTheGain() {
+        assertEquals(TokenNote.TOO_TIRED, tokenNote(content, dke, Preparation(1, 0, 0, false), PrepAction.REHEARSE))
+        assertEquals(TokenNote.HARDLY_HELPS, tokenNote(content, dke, Preparation(0, 0, 0, false), PrepAction.REHEARSE))
+    }
+
+    @Test fun restNoteWhenAlreadyRested() {
+        assertEquals(TokenNote.FULLY_RESTED, tokenNote(content, lkw, Preparation(0, 0, 1, false), PrepAction.REST))
+    }
+
+    @Test fun noNoteOnceAllSlotsAreUsed() {
+        assertEquals(null, tokenNote(content, sfm, Preparation(1, 1, 1, false), PrepAction.REFINE))
+    }
+
+    @Test fun notesFollowTheCurrentMember() {
+        val prep = Preparation(0, 0, 1, false)
+        assertEquals(TokenNote.FULLY_RESTED, tokenNote(content, lkw, prep, PrepAction.REST))
+        assertEquals(null, tokenNote(content, lkw.copy(member = MemberId.FRONTMAN), prep, PrepAction.REST))
+    }
+
+    @Test fun bestSwapNamesTheLargestGain() {
+        val swap = requireNotNull(bestSwap(content, sfm, Preparation(1, 1, 1, false)))
+        assertEquals(PrepAction.REFINE, swap.from)
+        assertEquals(PrepAction.REST, swap.to)
+        assertEquals(82.17 - 80.02, swap.gain, 1e-2)
+    }
+
+    @Test fun noSwapForTheBestPlan() {
+        assertEquals(null, bestSwap(content, sfm, Preparation(1, 0, 2, false)))
+    }
+
+    @Test fun swapNeverMovesResearch() {
+        assertEquals(null, bestSwap(content, sfm, Preparation(1, 0, 1, true)))
+
+        val prep = Preparation(0, 2, 0, true)
+        val swap = requireNotNull(bestSwap(content, sfm, prep))
+        assertEquals(PrepAction.REFINE, swap.from)
+        assertEquals(PrepAction.REHEARSE, swap.to)
+        val moved = prep.adjusted(swap.from, -1).adjusted(swap.to, 1)
+        assertEquals(true, moved.researched)
+        assertEquals(3, moved.used)
+    }
+
+    @Test fun highlightIsTheLargestWeightedPart() {
+        val result = scoreBooking(content, sfm, Preparation(1, 1, 1, false))
+        // .35 * 100 = 35 > .40 * 60.05 = 24.02 > .25 * 84 = 21
+        assertEquals(Highlight.LOOK_AND_SOUND, highlight(content, result))
     }
 }
