@@ -89,9 +89,25 @@ def apply_motion(mix):
 
 
     events = performance_motion.load_events(EVENTS / f"{mix}.json")
+    apply_staging()
     performance_contacts.correct_drums(events)
     performance_hands.correct_keys(events)
     performance_pedals.add_pedals(events)
+
+
+SINGER_SHIFT = .45  # metres to stage left (+x); see tests/verify_sightlines.py
+
+
+def apply_staging():
+    """Move the singer and lead mic so their hair stops hiding the drummer's right-hand pad.
+
+    Centred, the singer's hair covered about half the drum hits from the camera. At +0.2 m the
+    swept-up hair covered more; from +0.4 m it covers none, and the keys stay clear of the keytar.
+    """
+    for obj in bpy.data.objects:
+        if obj.parent is None and (obj.name == "PERFORMER 1 | 01 Cropped jacket"
+                                   or obj.name.startswith("Lead vocal mic")):
+            obj.location.x += SINGER_SHIFT
 
 
 def _screen_nodes():

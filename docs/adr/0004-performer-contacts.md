@@ -103,3 +103,17 @@ durable retry/reset, complete first viewing, invitation outcomes and skippable r
 few-second retry/reset delay was not reproduced (131/103 ms in the latest durable transition run)
 and is not marked fixed. Debug timing stays enabled. Uncoached gameplay feedback and physical
 audio/video output-sync measurement remain separate open checks.
+
+## Singer sightline (added 2026-10-14)
+
+Checking the renders from the camera showed the contacts above were often invisible: the singer
+stands in front of the drum riser, and their swept-up hair hid the drummer's right-hand pad
+(pad 1, x = 0.10 m). Ray casts from the camera to each hit counted 99 of 191 drum hits hidden in
+driving-drummer, 100 of 185 in driving-keytar and 73 of 161 in layered-drummer. The singer's drop
+"point" also reached the BORG keyboard's end on screen.
+
+The exporter now moves the singer and lead mic +0.45 m in x (`render_mix_performances.apply_staging`).
+Hidden drum hits in driving-drummer by offset: +0.2 m 145 (the hair sweeps that way), +0.3 m 83,
++0.35 m 34, +0.4 m 0, +0.45 m 0; −0.3 m 32 (it hides the snare instead). +0.45 m keeps a margin.
+`tests/verify_sightlines.py` checks all 3,045 drum, BORG and keytar hits in the twelve mixes; none
+is hidden by the singer. The drum, key and pedal contact checks pass unchanged.

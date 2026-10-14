@@ -78,6 +78,15 @@ Run these geometry checks sequentially before exporting new videos:
 /Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_drum_contacts.py
 /Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_key_contacts.py
 /Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_pedal_contacts.py
+/Applications/Blender.app/Contents/MacOS/Blender --background /Users/auchan/projects/signal-room/art/blender/demo/signal-room-performance.blend --threads 1 --python-exit-code 1 --python /Users/auchan/projects/signal-room/art/blender/tests/verify_sightlines.py
 ```
+
+### Singer position
+
+The exporter moves the singer and lead mic 0.45 m to stage left (screen right). Centred, the
+singer's hair hid the drummer's right-hand pad from the camera on about half of all drum hits
+(99 of 191 in driving-drummer). `verify_sightlines.py` casts a ray from the camera to every drum,
+BORG and keytar hit in all twelve mixes and fails if the singer is in the way. The concept stills
+and four-second loops still show the singer centred.
 
 Do not refresh manifest hashes until all 36 replacement videos have been rendered and validated.
