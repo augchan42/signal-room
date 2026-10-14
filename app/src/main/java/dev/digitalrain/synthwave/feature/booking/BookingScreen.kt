@@ -39,8 +39,6 @@ import dev.digitalrain.synthwave.core.data.AssetCatalog
 import dev.digitalrain.synthwave.core.model.BookingContent
 import dev.digitalrain.synthwave.core.model.Dimension
 import dev.digitalrain.synthwave.core.model.Phase
-import dev.digitalrain.synthwave.core.model.PrepAction
-import dev.digitalrain.synthwave.core.model.Preparation
 import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.simulation.RunAction
 import dev.digitalrain.synthwave.core.ui.SceneBackdrop
@@ -87,7 +85,7 @@ fun BookingScreen(
                     when (snapshot.phase) {
                         Phase.BRIEF -> IntroScreen(content, onAction)
                         Phase.DESK -> ChooseScreen(snapshot, content, catalog, onAction)
-                        Phase.PREPARATION -> PreparationScreen(snapshot, content, onAction)
+                        Phase.PREPARATION -> PrepareScreen(snapshot, content, onAction)
                         Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
                             videoPlayer, onAction, onReset, onPlayPause, onMute)
                         Phase.VERDICT -> Verdict(snapshot, content, onAction)
@@ -100,64 +98,10 @@ fun BookingScreen(
             if (!recoveryRequired && snapshot.phase == Phase.DESK) {
                 ChooseBar(snapshot, content, playback, onAction, onPlayPause)
             }
+            if (!recoveryRequired && snapshot.phase == Phase.PREPARATION) PrepareBar(snapshot, onAction)
         }
         }
         }
-    }
-}
-
-@Composable
-private fun PreparationScreen(snapshot: RunSnapshot, content: BookingContent, onAction: (RunAction) -> Unit) {
-    val prep = snapshot.preparation
-    Text("Preparation", style = MaterialTheme.typography.headlineLarge)
-    OutlinedButton(onClick = { onAction(RunAction.ReturnToDesk) }, modifier = Modifier.testTag("return-desk")) {
-        Text("Edit mix or stage")
-    }
-    PanelCard {
-        Text("${3 - prep.used} preparation slots remaining", style = MaterialTheme.typography.titleLarge)
-        Text("Rehearsal improves execution but adds fatigue; later rehearsals help less.")
-        PrepControl("Rehearse", "prep-rehearse", prep.rehearsals, prep, PrepAction.REHEARSE, onAction)
-        Text("Refinement improves coherence and layered coordination; later passes help less.")
-        PrepControl("Refine", "prep-refine", prep.refinements, prep, PrepAction.REFINE, onAction)
-        Text("Rest reduces featured-member fatigue.")
-        PrepControl("Rest", "prep-rest", prep.rests, prep, PrepAction.REST, onAction)
-    }
-    PanelCard {
-        Text("AUDIENCE RESEARCH", color = MaterialTheme.colorScheme.primary)
-        if (prep.researched) {
-            Text("Audience report", style = MaterialTheme.typography.titleLarge)
-            content.researchReport.forEach { Text(it) }
-            Text("Research spent one slot. It cannot be removed.")
-        } else {
-            Text("Reveal audience preferences and show risks. Research immediately commits one slot.")
-            Button(onClick = { onAction(RunAction.PurchaseResearch) },
-                modifier = Modifier.testTag("research-open")) { Text("Spend a slot on Research") }
-            if (prep.used == 3) Text("Free one slot first to buy Research.")
-        }
-    }
-    PanelCard {
-        Text("BROADCAST CONFIRMATION", color = MaterialTheme.colorScheme.primary)
-        Text("${content.arrangements.getValue(snapshot.selection.arrangement).displayName} / " +
-            "${content.members.getValue(snapshot.selection.member).displayName} / " +
-            content.concepts.getValue(snapshot.selection.concept).displayName)
-        Text("Plan: ${prep.rehearsals} rehearsal, ${prep.refinements} refinement, ${prep.rests} rest" +
-            if (prep.researched) ", Research" else "")
-        Text("First viewing runs the full 20 seconds. The result is saved on confirmation.")
-        Button(onClick = { onAction(RunAction.ConfirmBroadcast) }, enabled = prep.used == 3,
-            modifier = Modifier.testTag("confirm-broadcast")) { Text("Confirm broadcast") }
-    }
-}
-
-@Composable
-private fun PrepControl(label: String, tag: String, count: Int, prep: Preparation,
-                        kind: PrepAction,
-                        onAction: (RunAction) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Button(onClick = { onAction(RunAction.AdjustPreparation(kind, 1)) }, enabled = prep.used < 3,
-            modifier = Modifier.testTag(tag)) { Text("Add $label") }
-        Text("×$count")
-        OutlinedButton(onClick = { onAction(RunAction.AdjustPreparation(kind, -1)) }, enabled = count > 0,
-            modifier = Modifier.testTag("remove-${tag.removePrefix("prep-")}")) { Text("−") }
     }
 }
 
