@@ -44,7 +44,7 @@ This is a local debug APK for one offline booking. The 20-second instrumental cu
 - First-beat audio/light output alignment to within 50 ms is **not verified**. Position and seek tests pass, but the headless emulator's device-audio screen recording produced irregular timestamps even for a premuxed calibration clip. An audio-enabled emulator retry caused a System UI recorder hang. Do not infer physical output alignment from `currentPosition`.
 - The user approved the revised mixes by ear and the review performance clip. Whether an uncoached player understands the producer decisions and verdicts is still untested.
 - The app now plays mix-specific 20-second performances with music-driven arm/wrist motion, torso and head movement, singer hair motion, and moving searchlights. Assigned drum contacts, held key/fingertip contacts, keytar grip, articulated playing fingers and heel-down pedals are now verified and included in all 36 videos (ADR 0004). This is stylized playing, not independent full chord fingering or detailed facial performance.
-- The user's uncoached playtest is pending. Automated tests are not a substitute for deciding whether choices and verdicts are understandable.
+- The user's uncoached playtest is recorded below (2026-10-14). The game was understandable but opaque; a casual-loop redesign follows.
 - There is only one booking. No later-week progression, vocals, choreography, audience voting, or monetization is claimed.
 
 ## User playtest
@@ -62,7 +62,30 @@ Record the user's answers here before calling the playtest complete. Tuning is l
 
 ### Playtest record
 
-In progress. The user reported on 2026-10-13 that both “Retry booking” and “Reset demo” waited a few seconds, then the next screen appeared without further input. No Android ANR was recorded. The delay was not reproduced in the awake device tests above and is not marked fixed. The debug app now logs action request/completion times under `SignalRoomActions` so a recurrence can be measured. The four gameplay-understanding answers are still pending.
+In progress. The user reported on 2026-10-13 that both “Retry booking” and “Reset demo” waited a few seconds, then the next screen appeared without further input. No Android ANR was recorded. The delay was not reproduced in the awake device tests above and is not marked fixed. The debug app now logs action request/completion times under `SignalRoomActions` so a recurrence can be measured. The gameplay report below replaces the four questions.
+
+**Uncoached playtest, 2026-10-14 (Pixel 7 Pro, from Reset demo).** Two attempts: 77.52 and 80.76,
+both invited back. The user walked through mix, member and stage choice, playback controls,
+preparation, Research, broadcast, results, editing and retry. Audio could not be heard over the
+connection; playback controls were checked visually.
+
+- Worked: arrangement and member descriptions give decision clues; stage previews; three
+  preparation slots with clear tradeoffs; editing keeps preparation; results show success, the
+  required score, and on the second recap the previous score and +3.24.
+- Confusing: the brief introduces systems before the player's role; the desk takes several screens
+  of scrolling and the selections and next action are not kept visible; selected options look like
+  unselected ones and button text is thin and dim; "Confirm broadcast" is disabled with unused slots
+  without saying why; results explain formulas but not what to change (both attempts wasted
+  coherence above the cap, learned only afterwards); "awareness" and "affinity" are unexplained and
+  the recap refers to audience changes "above" on the previous screen; the broadcast has no
+  countdown.
+- Suggested first changes: one plain introduction; a visible plan summary and Continue button;
+  immediate preparation effects with cap warnings and reasons for disabled buttons; results that
+  lead with the outcome and one adjustment, formulas under Details; an attempt comparison.
+- The user's direction after the report: "this is a simple casual game ... add some ritual before
+  the great music and animation with a cool reward/prize/congrats screen ... simple loop, great
+  simple visuals, great music". Formulas stay available behind a link. Design:
+  `docs/superpowers/specs/2026-10-14-casual-loop-design.md`.
 
 ### Initial performer contact inspection (2026-10-13)
 
