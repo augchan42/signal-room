@@ -1,6 +1,8 @@
 package dev.digitalrain.synthwave.feature.booking
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,11 +69,13 @@ fun ScoreBar(score: Double, previous: Double?, modifier: Modifier = Modifier) {
         }
         if (previous != null) mark(previous, ghost, 3f)
         mark(65.0, target, 5f)
-        mark(75.0, bar, 5f)
+        // Dark outline under a light line so the marker stays visible on a full bar.
+        mark(75.0, Color(0xFF081422), 9f)
+        mark(75.0, Color.White, 4f)
     }
 }
 
-private fun starPath(cx: Float, cy: Float, outer: Float): Path = Path().apply {
+internal fun starPath(cx: Float, cy: Float, outer: Float): Path = Path().apply {
     val inner = outer * .45f
     for (i in 0 until 10) {
         val radius = if (i % 2 == 0) outer else inner
@@ -107,11 +112,12 @@ fun StarRow(stars: Int, modifier: Modifier = Modifier) {
 
 @Composable
 fun ReadinessLight(label: String, level: Readiness) {
-    val color = when (level) {
+    val target = when (level) {
         Readiness.LOW -> MaterialTheme.colorScheme.secondary
         Readiness.GOOD -> MaterialTheme.colorScheme.primary
         Readiness.MAX -> Color(0xFFFFE08A)
     }
+    val color by animateColorAsState(target, tween(400), label = "readiness")
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.semantics { contentDescription = "$label ${readinessText(level)}" }) {
         Canvas(Modifier.size(18.dp)) { drawCircle(color) }
@@ -125,13 +131,14 @@ fun ReadinessLight(label: String, level: Readiness) {
 fun LevelBar(label: String, value: Int) {
     val track = MaterialTheme.colorScheme.onBackground.copy(alpha = .15f)
     val fill = MaterialTheme.colorScheme.secondary
+    val shown by animateFloatAsState(value.coerceIn(0, 100) / 100f, tween(400), label = "level")
     Column(verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.semantics { contentDescription = "$label $value of 100" }) {
         Text("$label $value", fontSize = 16.sp, fontWeight = FontWeight.Medium)
         Canvas(Modifier.fillMaxWidth().height(10.dp)) {
             val r = CornerRadius(size.height / 2)
             drawRoundRect(track, cornerRadius = r)
-            drawRoundRect(fill, size = Size(size.width * value.coerceIn(0, 100) / 100f, size.height), cornerRadius = r)
+            drawRoundRect(fill, size = Size(size.width * shown, size.height), cornerRadius = r)
         }
     }
 }
@@ -144,5 +151,20 @@ fun FitDots(dots: Int) {
         modifier = Modifier.semantics { contentDescription = "Late-night fit $dots of 3" }) {
         Text("Late-night fit", fontSize = 16.sp, fontWeight = FontWeight.Medium)
         repeat(3) { index -> Canvas(Modifier.size(12.dp)) { drawCircle(if (index < dots) lit else dim) } }
+    }
+}
+
+/** 1–3 rising bars: the energy of a mix. */
+@Composable
+fun EnergyIcon(level: Int, modifier: Modifier = Modifier) {
+    val color = MaterialTheme.colorScheme.primary
+    Canvas(modifier.fillMaxWidth().height(48.dp).semantics { contentDescription = "Energy $level of 3" }) {
+        val barWidth = 14.dp.toPx()
+        val gap = 8.dp.toPx()
+        repeat(level.coerceIn(1, 3)) { index ->
+            val barHeight = size.height * (index + 1) / 3f
+            drawRoundRect(color, Offset(index * (barWidth + gap), size.height - barHeight),
+                Size(barWidth, barHeight), CornerRadius(3.dp.toPx()))
+        }
     }
 }

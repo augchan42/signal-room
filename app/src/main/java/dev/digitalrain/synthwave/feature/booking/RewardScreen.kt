@@ -45,7 +45,7 @@ internal fun RewardScreen(snapshot: RunSnapshot, content: BookingContent,
     PanelCard {
         val previous = snapshot.previousResult?.invitationScore
         Text("${displayScore(result.invitationScore)} / 100" +
-            (previous?.let { "   (${signed(result.invitationScore - it)} on last time)" } ?: ""),
+            (previous?.let { "   (${signed(result.invitationScore - it)} vs last time)" } ?: ""),
             fontSize = 18.sp, fontWeight = FontWeight.Medium)
         ScoreBar(result.invitationScore, previous)
         Text("Return booking at 65 · three stars at 75", fontSize = 16.sp, fontWeight = FontWeight.Medium)

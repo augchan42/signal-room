@@ -79,8 +79,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     }
     LaunchedEffect(snapshot.phase, snapshot.attemptId) {
         if (snapshot.phase == Phase.BROADCAST) {
-            val fresh = !restoredFromStore && !snapshot.viewingCompleted && snapshot.broadcastPositionMs == 0L
-            if (fresh) {
+            if (shouldCountIn(restoredFromStore, snapshot.viewingCompleted, snapshot.broadcastPositionMs)) {
                 audio.reset()
                 try {
                     for (n in 3 downTo 1) { countIn = n; delay(1_000) }
@@ -157,3 +156,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
         )
     }
 }
+
+/** The 3-2-1 count-in runs only on a fresh first viewing, never on a restored or already-watched show. */
+internal fun shouldCountIn(restored: Boolean, viewingCompleted: Boolean, positionMs: Long): Boolean =
+    !restored && !viewingCompleted && positionMs == 0L

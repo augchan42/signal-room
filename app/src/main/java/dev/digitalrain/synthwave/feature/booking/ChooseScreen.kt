@@ -47,7 +47,12 @@ internal fun ChooseScreen(snapshot: RunSnapshot, content: BookingContent, catalo
         ArrangementId.entries.forEach { id ->
             val rules = content.arrangements.getValue(id)
             ChoiceCard(rules.displayName, rules.riskDescription, selection.arrangement == id,
-                "arrangement-${id.name.lowercase()}", { onAction(RunAction.ChooseArrangement(id)) })
+                "arrangement-${id.name.lowercase()}", { onAction(RunAction.ChooseArrangement(id)) },
+                picture = { EnergyIcon(when {
+                    rules.energy < 45 -> 1
+                    rules.energy < 75 -> 2
+                    else -> 3
+                }) })
         }
     }
     CardRow("FEATURED MEMBER") {

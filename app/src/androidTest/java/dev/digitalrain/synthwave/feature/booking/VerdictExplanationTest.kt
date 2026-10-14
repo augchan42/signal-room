@@ -77,14 +77,15 @@ class VerdictExplanationTest {
         val selection = Selection(ArrangementId.DRIVING, MemberId.FRONTMAN, ConceptId.WARM)
         val preparation = Preparation(1, 1, 1, false)
         val store = MemoryStore()
+        val result = scoreBooking(content, selection, preparation)
         runBlocking {
             store.save(newRun(content).copy(phase = Phase.RECAP, selection = selection, preparation = preparation,
-                result = scoreBooking(content, selection, preparation), viewingCompleted = true,
+                result = result, viewingCompleted = true,
                 broadcastPositionMs = 20_000))
         }
         compose.setContent { SignalRoomApp(store) }
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("reward").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithTag("stars-1").assertExists() // 64.80
+        compose.onNodeWithTag("stars-${starsFor(result.invitationScore)}").assertExists()
         compose.onNodeWithTag("confirm-retry").performScrollTo().performClick()
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("open-desk").fetchSemanticsNodes().isNotEmpty() }
         assertTrue(store.current?.attemptId == 2)

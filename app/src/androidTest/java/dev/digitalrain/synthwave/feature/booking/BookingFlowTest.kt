@@ -49,6 +49,7 @@ class BookingFlowTest {
         compose.onNodeWithTag("prep-rest").performScrollTo().performClick()
         awaitText("Go on air")
         compose.onNodeWithTag("confirm-broadcast").performClick()
+        awaitTag("count-in")
         awaitTag("broadcast-stage")
         compose.onNodeWithText("Driving / Frontman / Warm transmission").assertIsDisplayed()
     }

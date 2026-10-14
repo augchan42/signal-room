@@ -150,14 +150,14 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         }
     }
     PanelCard {
-        Text("${timeLeft(playback.positionMs)} left • ${playback.status.name.lowercase()}",
+        if (countIn == 0) Text("${timeLeft(playback.positionMs)} left • ${playback.status.name.lowercase()}",
             fontSize = 18.sp, fontWeight = FontWeight.Medium)
         if (playback.status == PlaybackStatus.ERROR) {
             Text("Audio ${playback.errorAssetId} failed. The booking cannot continue.",
                 color = MaterialTheme.colorScheme.error)
             Text("The bundled media needs repair or reinstalling. Your saved run remains on this device.")
             OutlinedButton(onClick = onReset, modifier = Modifier.testTag("reset-demo")) { Text("Start new demo") }
-        } else {
+        } else if (countIn == 0) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onPlayPause, modifier = Modifier.testTag("broadcast-play-pause")) {
                     Text(if (playback.status == PlaybackStatus.PLAYING) "Pause" else "Resume")
