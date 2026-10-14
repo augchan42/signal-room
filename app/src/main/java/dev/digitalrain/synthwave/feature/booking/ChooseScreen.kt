@@ -91,10 +91,11 @@ internal fun ChooseBar(snapshot: RunSnapshot, content: BookingContent, playback:
                 color = MaterialTheme.colorScheme.error)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = onPlayPause, modifier = Modifier.testTag("preview-play-pause")) {
-                    Text(if (playback.status == PlaybackStatus.PLAYING) "Pause mix" else "Play mix", fontSize = 16.sp)
+                    Text(if (playback.status == PlaybackStatus.PLAYING) "Pause mix" else "Play mix", fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium)
                 }
                 Button(onClick = { onAction(RunAction.OpenPreparation) },
-                    modifier = Modifier.weight(1f).testTag("open-preparation")) { Text("Next", fontSize = 16.sp) }
+                    modifier = Modifier.weight(1f).testTag("open-preparation")) { Text("Next", fontSize = 16.sp, fontWeight = FontWeight.Medium) }
             }
         }
     }
@@ -119,7 +120,7 @@ private fun ChoiceCard(title: String, line: String, selected: Boolean, tag: Stri
             picture?.invoke()
             Text((if (selected) "✓ " else "") + title, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
                 color = if (selected) primary else MaterialTheme.colorScheme.onBackground)
-            Text(line, fontSize = 14.sp, color = MaterialTheme.colorScheme.onBackground)
+            Text(line, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
             footer?.invoke()
         }
     }
