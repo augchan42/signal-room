@@ -5,11 +5,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.digitalrain.synthwave.SignalRoomApp
@@ -48,9 +47,7 @@ class RetryFlowTest {
         waitTag("open-desk")
         compose.onNodeWithTag("open-desk").performScrollTo().performClick()
         waitTag("concept-electric")
-        // The stage cards sit below the fixed bottom bar; swipe the page until they clear it.
-        compose.onRoot().performTouchInput { swipeUp(startY = height * 0.7f, endY = height * 0.1f) }
-        compose.waitForIdle()
+        compose.onNodeWithTag("booking-scroll").performScrollToNode(hasTestTag("concept-electric"))
         compose.onNodeWithTag("concept-electric").performScrollTo().performClick()
         compose.waitUntil(5_000) {
             runCatching { compose.onNodeWithTag("concept-electric").assertIsSelected() }.isSuccess

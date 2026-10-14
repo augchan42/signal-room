@@ -9,9 +9,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.digitalrain.synthwave.SignalRoomApp
@@ -35,11 +34,7 @@ class BookingFlowTest {
             runCatching { compose.onNodeWithTag("arrangement-driving").assertIsSelected() }.isSuccess
         }
         compose.onNodeWithTag("member-frontman").performScrollTo().performClick()
-        // performScrollTo only moves the nearest scroll container (the horizontal card row), so swipe the page
-        // until the stage cards clear the fixed bottom bar. The swipe starts mid-screen, away from the bar, and the
-        // sleep lets the fling settle: a tap during the fling only stops it.
-        compose.onRoot().performTouchInput { swipeUp(startY = height * 0.7f, endY = height * 0.1f) }
-        compose.waitForIdle(); Thread.sleep(1500)
+        compose.onNodeWithTag("booking-scroll").performScrollToNode(hasTestTag("concept-warm"))
         compose.onNodeWithTag("concept-warm").performScrollTo().performClick()
         compose.waitUntil(5_000) {
             runCatching { compose.onNodeWithTag("concept-warm").assertIsSelected() }.isSuccess

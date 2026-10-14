@@ -35,6 +35,8 @@ class ResearchFlowTest {
         waitFor("Place 2 more tokens")
         compose.onNodeWithTag("confirm-broadcast").assertIsNotEnabled()
         compose.onNodeWithTag("slot-0").performScrollTo().performClick()
+        compose.waitForIdle()
+        waitFor("Place 2 more tokens")
         waitFor("Research (locked)")
         assertEquals(true, store.current?.preparation?.researched)
         compose.onNodeWithTag("prep-rest").performScrollTo().performClick()

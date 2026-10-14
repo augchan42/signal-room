@@ -72,7 +72,7 @@ fun BookingScreen(
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             Column(
-                Modifier.weight(1f).verticalScroll(rememberScrollState())
+                Modifier.weight(1f).testTag("booking-scroll").verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 18.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
