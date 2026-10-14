@@ -1,5 +1,8 @@
 package dev.digitalrain.synthwave
 
+import android.content.pm.ApplicationInfo
+import android.os.SystemClock
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +35,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     val context = LocalContext.current
+    val debugTiming = remember(context) {
+        context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     val content = remember { context.assets.open("content/late-night.json").bufferedReader().use { loadContent(it.readText()) } }
     val catalog = remember { loadAndroidAssetCatalog(context.assets) }
@@ -115,8 +121,24 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             videoPlayer = video.player,
             message = message,
             recoveryRequired = recoveryRequired,
-            onAction = { action -> scope.launch { model.dispatch(action) } },
-            onReset = { scope.launch { model.startNewDemo() } },
+            onAction = { action ->
+                val start = SystemClock.elapsedRealtime()
+                if (debugTiming) Log.d("SignalRoomActions", "${action.javaClass.simpleName} requested")
+                scope.launch {
+                    model.dispatch(action)
+                    if (debugTiming) Log.d("SignalRoomActions", "${action.javaClass.simpleName} completed " +
+                        "in ${SystemClock.elapsedRealtime() - start}ms; phase=${model.state.value.phase}")
+                }
+            },
+            onReset = {
+                val start = SystemClock.elapsedRealtime()
+                if (debugTiming) Log.d("SignalRoomActions", "ResetDemo requested")
+                scope.launch {
+                    model.startNewDemo()
+                    if (debugTiming) Log.d("SignalRoomActions", "ResetDemo completed " +
+                        "in ${SystemClock.elapsedRealtime() - start}ms; phase=${model.state.value.phase}")
+                }
+            },
             onPlayPause = { if (playback.status == PlaybackStatus.PLAYING) audio.pause() else audio.play() },
             onMute = { audio.setMuted(!playback.muted) },
         )
