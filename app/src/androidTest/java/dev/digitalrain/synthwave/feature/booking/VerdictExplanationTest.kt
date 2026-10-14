@@ -2,8 +2,12 @@ package dev.digitalrain.synthwave.feature.booking
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import dev.digitalrain.synthwave.SignalRoomApp
@@ -18,6 +22,8 @@ import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.model.Selection
 import dev.digitalrain.synthwave.core.simulation.newRun
 import dev.digitalrain.synthwave.core.simulation.scoreBooking
+import dev.digitalrain.synthwave.core.simulation.starsFor
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -49,13 +55,38 @@ class VerdictExplanationTest {
         }
 
         compose.setContent { SignalRoomApp(store) }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("reward").fetchSemanticsNodes().isNotEmpty() }
+        val stars = starsFor(result.invitationScore)
+        compose.onNodeWithTag("stars-$stars").assertExists()
+        compose.onNodeWithText(headline(stars)).assertExists()
+        compose.onAllNodesWithText("WHY IT LANDED THIS WAY").assertCountEquals(0)
+        compose.onNodeWithTag("score-details").performScrollTo().performClick()
         compose.waitUntil(5_000) {
             compose.onAllNodesWithText("WHY IT LANDED THIS WAY").fetchSemanticsNodes().isNotEmpty()
         }
-
         compose.onNodeWithText("Preparation refinement: +23.00").assertExists()
         compose.onAllNodesWithText("Bounded to the 0–100 scale", substring = true).assertCountEquals(0)
         compose.onAllNodesWithText("Coherence reached the 100-point cap", substring = true)
             .assertCountEquals(1)
+    }
+
+    @Test fun recapSaveOpensTheRewardAndRetries() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val content = loadContent(context.assets.open("content/late-night.json")
+            .bufferedReader().use { it.readText() })
+        val selection = Selection(ArrangementId.DRIVING, MemberId.FRONTMAN, ConceptId.WARM)
+        val preparation = Preparation(1, 1, 1, false)
+        val store = MemoryStore()
+        runBlocking {
+            store.save(newRun(content).copy(phase = Phase.RECAP, selection = selection, preparation = preparation,
+                result = scoreBooking(content, selection, preparation), viewingCompleted = true,
+                broadcastPositionMs = 20_000))
+        }
+        compose.setContent { SignalRoomApp(store) }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("reward").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("stars-1").assertExists() // 64.80
+        compose.onNodeWithTag("confirm-retry").performScrollTo().performClick()
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("open-desk").fetchSemanticsNodes().isNotEmpty() }
+        assertTrue(store.current?.attemptId == 2)
     }
 }

@@ -39,7 +39,6 @@ import dev.digitalrain.synthwave.core.audio.VideoState
 import dev.digitalrain.synthwave.core.audio.VideoStatus
 import dev.digitalrain.synthwave.core.data.AssetCatalog
 import dev.digitalrain.synthwave.core.model.BookingContent
-import dev.digitalrain.synthwave.core.model.Dimension
 import dev.digitalrain.synthwave.core.model.Phase
 import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.simulation.RunAction
@@ -91,8 +90,7 @@ fun BookingScreen(
                         Phase.PREPARATION -> PrepareScreen(snapshot, content, onAction)
                         Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
                             videoPlayer, countIn, onAction, onReset, onPlayPause, onMute)
-                        Phase.VERDICT -> Verdict(snapshot, content, onAction)
-                        Phase.RECAP -> Recap(snapshot, content, onAction, onReset)
+                        Phase.VERDICT, Phase.RECAP -> RewardScreen(snapshot, content, onAction, onReset)
                     }
                     if (message != null) PanelCard { Text(message, color = MaterialTheme.colorScheme.error) }
                 }
@@ -175,73 +173,3 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         } else Text("First viewing is required before the verdict.")
     }
 }
-
-@Composable
-private fun Verdict(snapshot: RunSnapshot, content: BookingContent, onAction: (RunAction) -> Unit) {
-    val result = requireNotNull(snapshot.result)
-    Text(if (result.invited) "INVITED BACK" else "NOT INVITED", style = MaterialTheme.typography.headlineLarge,
-        color = if (result.invited) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary)
-    PanelCard {
-        Text("${displayScore(result.invitationScore)} / 100", style = MaterialTheme.typography.displayMedium)
-        Text("Needed ${displayScore(content.balance.invitationThreshold)}")
-        DimensionRows("Coherence", result.coherence, content.balance.weights[0])
-        DimensionRows("Execution", result.execution, content.balance.weights[1])
-        DimensionRows("Brief fit", result.briefFit, content.balance.weights[2])
-    }
-    PanelCard {
-        Text("WHY IT LANDED THIS WAY", color = MaterialTheme.colorScheme.primary)
-        result.coherence.contributions.filter { it.id != "concept-base" && it.id != "clamp" }
-            .sortedByDescending { kotlin.math.abs(it.points) }
-            .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}") }
-        result.execution.contributions.filter { it.id != "arrangement-base" && it.id != "clamp" }
-            .sortedByDescending { kotlin.math.abs(it.points) }
-            .take(2).forEach { Text("${it.explanation}: ${signed(it.points)}") }
-        listOf("Coherence" to result.coherence, "Execution" to result.execution).forEach { (label, dimension) ->
-            val overflow = dimension.contributions.firstOrNull { it.id == "clamp" }?.points ?: 0.0
-            if (overflow < 0) Text("$label reached the 100-point cap; " +
-                "${displayScore(-overflow)} extra points did not count.")
-        }
-    }
-    PanelCard {
-        Text("FIVE AUDIENCES", color = MaterialTheme.colorScheme.primary)
-        content.segments.forEach { (id, segment) ->
-            val after = result.audienceAfter.getValue(id)
-            Text("${segment.displayName}: awareness ${signed(after.awareness - segment.initial.awareness)}, " +
-                "affinity ${signed(after.affinity - segment.initial.affinity)}")
-        }
-        Text("Audience gains are separate from the invitation score.")
-    }
-    Button(onClick = { onAction(RunAction.OpenRecap) }, modifier = Modifier.testTag("open-recap")) {
-        Text("Open recap")
-    }
-}
-
-@Composable
-private fun DimensionRows(label: String, dimension: Dimension, weight: Double) {
-    Text("$label ${displayScore(dimension.value)} × ${displayScore(weight)} = " +
-        displayScore(dimension.value * weight))
-}
-
-@Composable
-private fun Recap(snapshot: RunSnapshot, content: BookingContent,
-                  onAction: (RunAction) -> Unit, onReset: () -> Unit) {
-    val result = requireNotNull(snapshot.result)
-    Text("Booking recap", style = MaterialTheme.typography.headlineLarge)
-    PanelCard {
-        Text("Attempt ${snapshot.attemptId}: ${displayScore(result.invitationScore)} — " +
-            if (result.invited) "invited back" else "not invited")
-        val previous = snapshot.previousResult
-        if (previous != null) {
-            Text("Previous attempt: ${displayScore(previous.invitationScore)}")
-            Text("Change: ${signed(result.invitationScore - previous.invitationScore)}")
-        }
-        Text("The five audience changes above carry into this recap; this demo ends after one booking.")
-        Text("Try another production plan for ${content.title}.")
-    }
-    Button(onClick = { onAction(RunAction.ConfirmRetry) }, modifier = Modifier.testTag("confirm-retry")) {
-        Text("Retry booking")
-    }
-    OutlinedButton(onClick = onReset, modifier = Modifier.testTag("reset-demo")) { Text("Reset demo") }
-}
-
-private fun signed(value: Double): String = (if (value >= 0) "+" else "−") + displayScore(kotlin.math.abs(value))
