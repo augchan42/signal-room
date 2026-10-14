@@ -27,7 +27,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -53,6 +55,7 @@ fun BookingScreen(
     videoPlayer: ExoPlayer,
     message: String?,
     recoveryRequired: Boolean,
+    countIn: Int = 0,
     onAction: (RunAction) -> Unit,
     onReset: () -> Unit,
     onPlayPause: () -> Unit,
@@ -87,7 +90,7 @@ fun BookingScreen(
                         Phase.DESK -> ChooseScreen(snapshot, content, catalog, onAction)
                         Phase.PREPARATION -> PrepareScreen(snapshot, content, onAction)
                         Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
-                            videoPlayer, onAction, onReset, onPlayPause, onMute)
+                            videoPlayer, countIn, onAction, onReset, onPlayPause, onMute)
                         Phase.VERDICT -> Verdict(snapshot, content, onAction)
                         Phase.RECAP -> Recap(snapshot, content, onAction, onReset)
                     }
@@ -108,7 +111,7 @@ fun BookingScreen(
 @Composable
 private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, catalog: AssetCatalog,
                             playback: PlaybackState, visual: VideoState, videoPlayer: ExoPlayer,
-                            onAction: (RunAction) -> Unit, onReset: () -> Unit,
+                            countIn: Int, onAction: (RunAction) -> Unit, onReset: () -> Unit,
                             onPlayPause: () -> Unit, onMute: () -> Unit) {
     Text("ON AIR", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.secondary)
     Text("${content.arrangements.getValue(snapshot.selection.arrangement).displayName} / " +
@@ -127,6 +130,8 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         if (visual.status == VideoStatus.FALLBACK) {
             Text("Still image: video unavailable", Modifier.align(Alignment.TopStart).background(Panel).padding(6.dp))
         }
+        Text(timeLeft(playback.positionMs), Modifier.align(Alignment.TopEnd).background(Panel).padding(6.dp),
+            fontSize = 18.sp, fontWeight = FontWeight.Medium)
         Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(100.dp, 134.dp).background(Panel)) {
             SceneBackdrop("demo/${catalog.member(snapshot.selection.member).stillPath}",
                 "${content.members.getValue(snapshot.selection.member).displayName} fancam inset", Modifier.fillMaxSize())
@@ -134,9 +139,21 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Panel).padding(3.dp),
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
         }
+        if (countIn > 0) {
+            Box(Modifier.fillMaxSize().background(Color(0x99000000)).testTag("count-in"),
+                contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("$countIn", fontSize = 96.sp, fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary)
+                    Text("ON AIR", fontSize = 24.sp, fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary)
+                }
+            }
+        }
     }
     PanelCard {
-        Text("${playback.positionMs / 1_000}s / 20s • ${playback.status.name.lowercase()}")
+        Text("${timeLeft(playback.positionMs)} left • ${playback.status.name.lowercase()}",
+            fontSize = 18.sp, fontWeight = FontWeight.Medium)
         if (playback.status == PlaybackStatus.ERROR) {
             Text("Audio ${playback.errorAssetId} failed. The booking cannot continue.",
                 color = MaterialTheme.colorScheme.error)

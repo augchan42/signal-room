@@ -75,8 +75,9 @@ class RetryResetDeviceTest {
         }
         compose.setContent { SignalRoomApp(timed) }
         compose.waitUntil(10_000) {
-            compose.onAllNodesWithText("19s / 20s • paused").fetchSemanticsNodes().isNotEmpty()
+            compose.onAllNodesWithText("0:01 left • paused").fetchSemanticsNodes().isNotEmpty()
         }
+        compose.onNodeWithTag("count-in").assertDoesNotExist()
         compose.onNodeWithTag("broadcast-play-pause").performScrollTo().performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithTag("open-recap").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("open-recap").performScrollTo().performClick()

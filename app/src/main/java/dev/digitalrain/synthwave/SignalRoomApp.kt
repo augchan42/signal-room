@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -54,6 +55,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     val playback by audio.state.collectAsState()
     val visual by video.state.collectAsState()
     val broadcastLoadedAttempt = remember { mutableIntStateOf(0) }
+    var countIn by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(model) { model.load() }
     DisposableEffect(lifecycleOwner) {
@@ -77,6 +79,11 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     }
     LaunchedEffect(snapshot.phase, snapshot.attemptId) {
         if (snapshot.phase == Phase.BROADCAST) {
+            val fresh = !restoredFromStore && !snapshot.viewingCompleted && snapshot.broadcastPositionMs == 0L
+            if (fresh) {
+                for (n in 3 downTo 1) { countIn = n; delay(1_000) }
+                countIn = 0
+            }
             val audioLoad = launch {
                 audio.startBroadcast(catalog.audio(snapshot.selection), snapshot.broadcastPositionMs,
                     autoPlay = !restoredFromStore)
@@ -121,6 +128,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             videoPlayer = video.player,
             message = message,
             recoveryRequired = recoveryRequired,
+            countIn = countIn,
             onAction = { action ->
                 val start = SystemClock.elapsedRealtime()
                 if (debugTiming) Log.d("SignalRoomActions", "${action.javaClass.simpleName} requested")
