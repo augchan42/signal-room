@@ -81,12 +81,17 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
         if (snapshot.phase == Phase.BROADCAST) {
             val fresh = !restoredFromStore && !snapshot.viewingCompleted && snapshot.broadcastPositionMs == 0L
             if (fresh) {
-                for (n in 3 downTo 1) { countIn = n; delay(1_000) }
-                countIn = 0
+                audio.reset()
+                try {
+                    for (n in 3 downTo 1) { countIn = n; delay(1_000) }
+                } finally {
+                    countIn = 0
+                }
             }
+            val inForeground = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
             val audioLoad = launch {
                 audio.startBroadcast(catalog.audio(snapshot.selection), snapshot.broadcastPositionMs,
-                    autoPlay = !restoredFromStore)
+                    autoPlay = !restoredFromStore && inForeground)
                 broadcastLoadedAttempt.intValue = snapshot.attemptId
             }
             launch { video.load(snapshot.selection) }
