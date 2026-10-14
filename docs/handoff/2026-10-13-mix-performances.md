@@ -96,3 +96,13 @@ answers, recurrence timing if the delay returns, and a separate physical output-
 The new combined review clip is intentionally untracked:
 `/Users/auchan/projects/signal-room/art/blender/demo/performer-contact-review.mp4`.
 The local project map is updated but the published Claude artifact remains v29.
+
+## Singer sightline (2026-10-14, branch `singer-sightline`, stacked on PR #7)
+
+From the camera, the singer's hair hid the drummer's right-hand pad on about half of all drum hits.
+The exporter now moves the singer and lead mic 0.45 m to screen right
+(`render_mix_performances.apply_staging`). `art/blender/tests/verify_sightlines.py` checks all
+3,045 drum, BORG and keytar hits in the twelve mixes; none is hidden. All 36 videos were
+re-rendered one at a time and hashed; validation (59 assets), 54 JVM tests, 37 Blender unit tests,
+12 validator tests and the drum/key/pedal contact checks pass. Merge order: #6, #7 (retargeted to
+main), then this PR. Call Z in the map: keep the move (default) or keep the singer centred.
