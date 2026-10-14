@@ -86,6 +86,7 @@ connection; playback controls were checked visually.
   the great music and animation with a cool reward/prize/congrats screen ... simple loop, great
   simple visuals, great music". Formulas stay available behind a link. Design:
   `docs/superpowers/specs/2026-10-14-casual-loop-design.md`.
+- Casual loop implemented on branch `casual-loop`; awaiting the user's second playtest.
 
 ### Initial performer contact inspection (2026-10-13)
 
