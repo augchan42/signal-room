@@ -1,7 +1,7 @@
 # Casual loop: choose, prepare, watch, reward
 
 - Date: 2026-10-14
-- Status: draft for the user's review
+- Status: draft for the user's review, revised after a review by GPT-6.1-sol (high)
 - Branch: `casual-loop` (from `singer-sightline`, PR #8)
 
 ## Why
@@ -22,7 +22,7 @@ default.
 One short loop that a first-time player understands without reading rules:
 
 1. **Choose** a mix, a featured member and a stage.
-2. **Prepare**: place three tokens and watch a show meter rise.
+2. **Prepare**: place three tokens and watch the band get ready.
 3. **Watch** the 20-second performance.
 4. **Reward**: stars, a congratulation, one tip, play again.
 
@@ -58,7 +58,14 @@ without opening the details.
   uses a medium weight at full contrast.
 - A fixed bottom bar, always visible: the current pick ("Driving · Keytar · Electric"), a
   play/pause button for the mix (`preview-play-pause`) and "Next" (`open-preparation`).
-- Member cards show fatigue as a small bar instead of "Fatigue 25/100".
+- Member cards show fatigue as a labelled bar ("Fatigue") instead of "Fatigue 25/100".
+- Each card row shows a partial next card at the right edge so it is clear the row scrolls.
+  Unselected cards stay at full text contrast; only the selected card gets the outline, check
+  mark and filled background.
+- Stage cards get a one-line description (new content text, one per concept).
+- A "Late-night fit" line under the bottom-bar pick shows 1–3 dots from the mix and stage's brief
+  fit (`conceptFit`: below 50 one dot, 50–69 two, 70 and up three; today only Sparse with
+  Monochrome or Warm gets three), so a weak pairing is visible before preparing.
 
 ### 3. Prepare (phase PREPARATION) — the ritual
 
@@ -66,12 +73,13 @@ without opening the details.
   (`prep-*`). Tapping a filled slot removes that token.
 - One action card per kind, with a plain effect line: "Rehearse: tighter playing, more tired",
   "Refine: the look and sound fit better", "Rest: less tired".
-- **Show meter**: a large horizontal gauge 0–100 with a marker at 65 labelled "Return booking"
-  and a marker at 75 labelled "3 stars". It shows the projected score for the current tokens and
-  animates when a token is placed. With fewer than three tokens, unplaced slots count as nothing.
-- **Fatigue bar** for the featured member, updating as tokens are placed.
-- A token that adds nothing (for example a refinement once coherence is at its cap) shows a short
-  note under its card: "Already at max — try Rehearse or Rest". Its button stays enabled.
+- **Two readiness lights**, not the score: "Look & sound" (coherence) and "Playing" (execution),
+  each Low / Good / Max from the plan so far, and the featured member's **fatigue bar**. Lights and
+  fatigue animate when a token is placed. The score itself stays hidden until the reward, so the
+  reveal keeps its tension. Thresholds: Low below 60, Good from 60, Max at the 100 cap.
+- A token that adds nothing or costs points shows a short note under its card, from the actual
+  projected effect: "Look & sound is already at max" or "Too tired — another Rehearse hurts". Its
+  button stays enabled.
 - The button reads "Place 2 more tokens" while disabled and "Go on air" (`confirm-broadcast`)
   when all three are placed.
 - "Back" (`return-desk`) returns to Choose with the tokens kept.
@@ -80,37 +88,36 @@ without opening the details.
 
 ### 4. Watch (phase BROADCAST)
 
-- The stage video as now, with a countdown ring and "0:14" in the corner, and the show meter as a
-  thin bar under the video that pulses on the beat (the mix's 120 BPM).
+- **Go-on-air transition**: a 3-second "3 · 2 · 1 · ON AIR" count over the stage still, then the
+  performance starts. Only on the first viewing.
+- The stage video as now, with the time left as text ("0:14") in the corner, driven by the
+  playback position.
 - Pause/resume, mute and skip (after the first full viewing) as now.
 
 ### 5. Reward (phase VERDICT; RECAP is folded in)
 
-- A full-screen reveal: stars fill one by one (about 0.4 s each) with the stage colours, then the
-  headline.
+- A full-screen reveal: stars fill one by one (about 0.4 s each) in the stage colours, then a large
+  award card.
   - 3 stars: score ≥ 75, "Showstopper! Invited back."
   - 2 stars: score ≥ 65, "Invited back."
   - 1 star: below 65, "Good set — not invited this time."
-  Over all 360 plans, about 41% get 1 star, 49% get 2 and 10% get 3.
-- The final score on the show meter, with the previous attempt's score as a faint marker and the
-  change ("+3.24") on a retry.
-- **One tip**, chosen by fixed rules in this order:
-  1. Coherence was capped: "Your look and sound were already perfect — swap a Refine for
-     Rehearse or Rest."
-  2. Fatigue cost more than 8 points of execution: "<Member> was tired — try a Rest."
-  3. Otherwise the part with the lowest weighted share: execution → "Try a Rehearse", coherence →
-     "Try a Refine", brief fit → "Try a different mix or stage for this late-night slot."
-  4. Rules 1–3 are checked against `projectScore`: the suggested one-token change (one token
-     moved to another kind) must gain at least 1 point, otherwise the next rule is tried. If no rule qualifies:
-     "Try a different mix, member or stage to see another show."
-- **Crowd row**: five audience icons (performance, melodic-lead, fashion, story, retro fans). An
-  icon lights up when that audience was won over (the existing `adopted` rule) and shows a small
-  heart count otherwise. Tapping an icon shows one line about what they like.
-- Buttons: "Play again" (`confirm-retry`, keeps nothing but the previous score) and "Watch again"
-  (replays the performance without changing the result).
+  The thresholds are provisional. Over all 360 plans (each selection with each preparation,
+  equally weighted, not likely player choices) the split is 148 / 177 / 35 plans (41.11 / 49.17 /
+  9.72%). 9 of the 36 selections can reach 3 stars; 7 cannot be invited with any preparation.
+- **One positive line** naming the strongest weighted part: "Your look and sound carried the
+  show", "The band played tight", or "A perfect fit for the late-night slot".
+- The score on a 0–100 bar with markers at 65 and 75, the previous attempt's score as a faint
+  marker and the change ("+3.24") on a retry.
+- **One tip**, from the actual best one-token swap: every plan that moves one token to another
+  kind is scored with `projectScore`; if the best gains at least 1 point, the tip names it ("Swap a
+  Refine for a Rest next time: +2.40"). Otherwise: "Your preparation was the best for this show —
+  try another mix, member or stage." For the 7 selections that cannot be invited it adds "This
+  mix and stage are a hard sell for the late-night slot."
+- Buttons: "Play again" (`confirm-retry`).
 - A small "How the score works" link opens a sheet with the current formula text (the three
-  parts, weights, caps, the "why it landed" lines, audience awareness and affinity numbers, the
-  brief and the research report). This is the existing verdict content, moved.
+  parts, weights, caps, the "why it landed" lines, the five audiences' awareness and affinity
+  changes with a one-line definition of each, the brief and the research report). This is the
+  existing verdict content, moved.
 
 ### Visual style
 
@@ -123,34 +130,42 @@ without opening the details.
 
 - `RUN_SCHEMA_VERSION` stays 1; no new fields are required.
 - A save in RECAP opens on the Reward screen.
-- A save with `researched = true` loads, still counts that slot as used, and scores as before.
+- Retry keeps what it keeps now: `attemptId` + 1, `previousResult` and `viewingCompleted`.
+- Preparation is stored as counts, so restored tokens are shown in the order Rehearse, Refine,
+  Rest.
+- A save with `researched = true` loads, shows a locked "Research" token in one slot, and scores
+  as before.
 - `ConfirmRetry` is allowed from VERDICT and RECAP.
 
 ## Code
 
-- `core/simulation/ScoreBooking.kt`: add `projectScore(content, selection, prep)` that scores a
+- `core/simulation/ScoreBooking.kt`: add `projectScore(content, selection, prep)`, which scores a
   plan with fewer than three slots (unplaced slots do nothing), and `starsFor(score)`.
-- New `core/simulation/RewardTip.kt`: the tip rules above as a pure function.
-- `core/simulation/RunReducer.kt`: allow `ConfirmRetry` from VERDICT; add `ReplayViewing`
-  (VERDICT → BROADCAST at 0 ms, result unchanged); `PurchaseResearch` stays for old saves but has
-  no button.
-- `feature/booking/BookingScreen.kt` is split by screen: `IntroScreen.kt`, `ChooseScreen.kt`,
-  `PrepareScreen.kt`, `WatchScreen.kt`, `RewardScreen.kt`, plus `ShowMeter.kt` and `Stars.kt`
-  for the shared graphics. `BookingScreen.kt` keeps only the phase switch and backdrop.
+- New `core/simulation/RewardTip.kt`: the readiness levels, the token notes, the positive line and
+  the best-swap tip as pure functions.
+- `core/simulation/RunReducer.kt`: allow `ConfirmRetry` from VERDICT. `PurchaseResearch` stays
+  for old saves but has no button.
+- New screens go in their own files under `feature/booking/` (`IntroScreen.kt`,
+  `ChooseScreen.kt`, `PrepareScreen.kt`, `RewardScreen.kt`) with the shared bar and stars in
+  `ScoreGraphics.kt`. The broadcast screen stays in `BookingScreen.kt`.
 
 ## Testing
 
-- JVM: `projectScore` equals `scoreBooking` for full plans and is monotonic per token; `starsFor`
-  boundaries (64.99, 65, 74.99, 75); every tip rule with a crafted plan; the 1-point rule; reducer
-  retry from VERDICT and replay keeps the result; old RECAP and researched saves load.
-- Phone (existing device tests updated): a full loop by tags; the disabled "Go on air" label; stars
-  and headline for two known plans, with the expected stars computed in the test from
-  `scoreBooking`, not hard-coded; "How the score works" shows
-  "Coherence reached the 100-point cap" for the capped plan; countdown text during playback.
+- JVM: `projectScore` equals `scoreBooking` for full plans (not monotonic: extra rehearsals can
+  lower the score, e.g. Driving / Keytar / Electric 67.25 → 66.05 → 63.65); `starsFor` boundaries
+  (64.99, 65, 74.99, 75); readiness levels and token notes; the best-swap tip and its 1-point
+  guard; the hard-sell line for the 7 selections; reducer retry from VERDICT; old RECAP and
+  researched saves load.
+- Phone: update `BookingFlowTest`, `ResearchFlowTest` (becomes a legacy-save test), `RetryFlowTest`,
+  `RetryResetDeviceTest`, `VerdictExplanationTest` and the selected-text and countdown
+  assertions; keep the lifecycle, persistence and recovery coverage. Stars and headline are
+  checked for two plans with the expected stars computed from `scoreBooking`; "How the score
+  works" shows "Coherence reached the 100-point cap" for a capped plan.
 - Screenshots of each screen on the Pixel 7 Pro for the user's review.
 
 ## Out of scope
 
 - New music, new videos, sound effects for the reward (can follow).
+- "Watch again", a crowd-icon row on the reward screen, a beat-pulsing meter, a countdown ring.
 - Changing the balance numbers.
 - More than one booking.
