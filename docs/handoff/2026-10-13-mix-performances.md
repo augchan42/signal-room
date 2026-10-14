@@ -50,3 +50,49 @@ For the next Claude session working in `/Users/auchan/projects/signal-room`.
 - A Blender process open for days and a Gradle daemon may be the user's own; leave them alone.
 - Untracked and not committed on purpose: review clips in `art/blender/demo/` and probe MP3s in
   `art/audio/probe/`. Render frames in `art/blender/demo/frames/` are ignored.
+
+## Codex continuation: performer contacts and playtest (2026-10-13)
+
+Main remains `d984f1d`. Draft PR #6 contains retry/reset timing diagnostics and two real-storage
+device tests. The user's report is a few seconds of delay on both buttons, with eventual recovery.
+The awake phone tests did not reproduce the delay; it is not marked fixed. A separate host Blender
+startup crash does not affect the app's bundled media. Four gameplay-understanding answers remain
+pending; see `docs/producer-demo-playtest.md`.
+
+Contact source is on `codex/performer-contacts`, draft PR #7, based on PR #6's branch. Commits:
+`a183e9d` drum fitting, `f9dea3d` playing fingers/pedals, `5e0afc6` held-key and hi-hat timing fixes.
+PR #6 was merged into this working branch as `6830300`, not into main. Merge #6 first when approved,
+then retarget #7 to main. No main merge is authorized by this continuation's draft state.
+
+The final source checks cover all twelve mix motions:
+
+- 1,504 assigned drum strikes. Target-fit error is below 1 mm, with a deliberate 1 mm pad-face
+  clearance (physical surface clearance can therefore reach 2 mm).
+- 1,541 key onsets and 12,866 held-key frames on the actual mesh faces, with gaps below 1 mm.
+- 5,760 keytar neck-grip frames and the raised BORG gesture in every mix.
+- 17,280 heel/sole frames and both open/closed hi-hat event states.
+- 37 ordinary Blender tests, 20 audio tests and 12 validator tests pass.
+
+The source `.blend` and approved audio are unchanged. The exporter adds corrections, articulated
+playing fingers, and heel-down kick/hi-hat/sustain pedals after applying each mix's original motion.
+The keytar is moved 12 cm toward its keys hand to make the full range reachable. Contiguous notes
+release visually for the last two frames before the next onset; audio tails are not shortened.
+See `docs/adr/0004-performer-contacts.md` for the mapping and verification commands.
+
+All 36 replacements are complete, exported strictly one Blender child at a time. Each MP4 was
+staged, checked for video format/duration/frame count, fully decoded, then atomically promoted to
+its existing app asset path. Warm checkpoint `e6b5bfd`, electric checkpoint `71422e9`, final
+monochrome set and validated hashes `e2e13ea`. Full validation passes all 59 assets, the APK build
+and all 54 JVM tests pass, and eight focused phone tests pass (53.946 seconds). The updated app and
+test APKs are installed on the Pixel 7 Pro with the real saved game preserved. The real brief was
+opened and checked afterward. Latest durable retry/reset timings were 131/103 ms; the reported
+few-second delay remains unreproduced, not fixed.
+
+APK: `/Users/auchan/projects/signal-room/app/build/outputs/apk/debug/app-debug.apk`
+(92,292,728 bytes). Media report: `/Users/auchan/projects/signal-room/app/build/reports/demo-assets.json`.
+No further Blender contact work is required for this MVP pass. Next: the four uncoached playtest
+answers, recurrence timing if the delay returns, and a separate physical output-sync measurement.
+
+The new combined review clip is intentionally untracked:
+`/Users/auchan/projects/signal-room/art/blender/demo/performer-contact-review.mp4`.
+The local project map is updated but the published Claude artifact remains v29.

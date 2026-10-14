@@ -116,252 +116,252 @@
       "member": "FRONTMAN",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-sparse-frontman.mp4",
-      "sha256": "165e60e854759bf156881a28ac8c24ac8a0c8a0ddb2abc839576dab5b558f360"
+      "sha256": "21b44da1c93b4c06ee354de77070e66840a78984b2a410d89544693f7a258097"
     },
     {
       "arrangement": "SPARSE",
       "member": "FRONTMAN",
       "concept": "WARM",
       "path": "visual/performance/warm-sparse-frontman.mp4",
-      "sha256": "0411bbb30bb67de2294c26defab11d809119b00859000b3da48287a5910c2ce1"
+      "sha256": "ba65780644666b60491f481b05a401479897c49761bf2f1c146b88b31de54aaa"
     },
     {
       "arrangement": "SPARSE",
       "member": "FRONTMAN",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-sparse-frontman.mp4",
-      "sha256": "991dd06725bf0a4af9afba72d3e6faf91610edbb5037d304f5701110308fe642"
+      "sha256": "5cc70f683dabb75581fa6573f7aef3509a1ba0b3f3874ab73428de59e343f660"
     },
     {
       "arrangement": "SPARSE",
       "member": "KEYBOARDIST",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-sparse-keyboardist.mp4",
-      "sha256": "131c62e9bab78f1bfedf51c916d50f5061cac2ff3b79ca1143673bfdd2b1f87c"
+      "sha256": "e809e46d121f62aae8574f7af3e374a249a4b84e852cbd05f15a719d3d6db180"
     },
     {
       "arrangement": "SPARSE",
       "member": "KEYBOARDIST",
       "concept": "WARM",
       "path": "visual/performance/warm-sparse-keyboardist.mp4",
-      "sha256": "0d16840dc7828a455a93ad083bf96596cf241de38dc5eaa3c5d5d08da0a1bdf8"
+      "sha256": "057d23c3bbbffa8643ac82529cd949ccbd40b9dc5d7169b1e2933d81df456064"
     },
     {
       "arrangement": "SPARSE",
       "member": "KEYBOARDIST",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-sparse-keyboardist.mp4",
-      "sha256": "baba4417b11b2b3b220d3970ec6dfe08f0f9165137df7c87c94d3c8b4c77bd2f"
+      "sha256": "840e3ee9da0592731575821a25e9d62dcb523ff840a67b0f5788332018671880"
     },
     {
       "arrangement": "SPARSE",
       "member": "KEYTAR",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-sparse-keytar.mp4",
-      "sha256": "2dfb81df1a3a321a325f24d28073c32001d59bb769e7a0dad3c7363e4c500483"
+      "sha256": "5193acbca37a11166b7a1d7081974c6cf8b6fd18413bb65a9655015e5779eeb9"
     },
     {
       "arrangement": "SPARSE",
       "member": "KEYTAR",
       "concept": "WARM",
       "path": "visual/performance/warm-sparse-keytar.mp4",
-      "sha256": "d6745ab0192a6cbffd32f17bce997ee1d2601cdc5f01caa93eb9332f0d90887a"
+      "sha256": "ba1834ef4fbfbdf7ab7f229d190e405d5a4af95b1685f623c99fcb7ec592e6b1"
     },
     {
       "arrangement": "SPARSE",
       "member": "KEYTAR",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-sparse-keytar.mp4",
-      "sha256": "6c815ecc2408c33ff175fedbf591e7302fdbf06f92de495a262d15ca86fe62cb"
+      "sha256": "28fdd7e52a919c0b4c3bb23565a46dfc90846828b8c74dfabaf013ed1814795c"
     },
     {
       "arrangement": "SPARSE",
       "member": "DRUMMER",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-sparse-drummer.mp4",
-      "sha256": "01db55c3ecac4d5b787d6116d65a61abf013ef91eaab2f087213acd518e8fc7c"
+      "sha256": "7a6ea49910a870e740dca9a19f1e0c50fea983d83fa874b9c9fb426ea06a387e"
     },
     {
       "arrangement": "SPARSE",
       "member": "DRUMMER",
       "concept": "WARM",
       "path": "visual/performance/warm-sparse-drummer.mp4",
-      "sha256": "888c235718f03443d808acdb4a8f17787c0b241951b6bebee543b76dcc2b55ff"
+      "sha256": "4abe5fafdee931575b7ac25f7d7d0a0c22689a1988838a29921015b91e03d38c"
     },
     {
       "arrangement": "SPARSE",
       "member": "DRUMMER",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-sparse-drummer.mp4",
-      "sha256": "2caf639f036ed056026a8dbdbcc93ae60c8e547cd101d055ec9d1b65250f2ad8"
+      "sha256": "eea5b1519b5f9701a849b2c08be1435fb5891f3aba65b078a2fa84c7fa08d3e6"
     },
     {
       "arrangement": "DRIVING",
       "member": "FRONTMAN",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-driving-frontman.mp4",
-      "sha256": "e1702da438ab4d7db760eefa5187b178935a1e8a3c006c38c49ad140eadcfbc8"
+      "sha256": "44df769fb67dabd30a3fc5c5b7881e163bfc036b91b146f6ae3a8df8eb5931eb"
     },
     {
       "arrangement": "DRIVING",
       "member": "FRONTMAN",
       "concept": "WARM",
       "path": "visual/performance/warm-driving-frontman.mp4",
-      "sha256": "596903525d3b7292f8230f67732797feca79efa40d12083c4900986628050f3a"
+      "sha256": "7362eaf794b4ec10119dcbac39396a122011b5a58af973f329eb0f3fe312c4f3"
     },
     {
       "arrangement": "DRIVING",
       "member": "FRONTMAN",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-driving-frontman.mp4",
-      "sha256": "42c7b9add3974f59f347e471c000e7e986f1f66e7becdddfc195f5e6d7e71a85"
+      "sha256": "8f2a285e66121f8a5f7f36b6907659a1f55a1db8627e56bf22831cc7d691d1dd"
     },
     {
       "arrangement": "DRIVING",
       "member": "KEYBOARDIST",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-driving-keyboardist.mp4",
-      "sha256": "050c22c9e9457d33e8c599e043669a87959917ffa0788c9651047c8fb8a8327c"
+      "sha256": "84083f219e9fad345b2fedce313608ad270ae00c7cca05e2b45c90528933c871"
     },
     {
       "arrangement": "DRIVING",
       "member": "KEYBOARDIST",
       "concept": "WARM",
       "path": "visual/performance/warm-driving-keyboardist.mp4",
-      "sha256": "11361d181dbea75f945deed11ef06482918e6319942067d4c08d8b39f10f0e28"
+      "sha256": "7ec213fcbc2c5026eb5ff5bbf8a54457404b80677640cf501e682ad310f4c1d8"
     },
     {
       "arrangement": "DRIVING",
       "member": "KEYBOARDIST",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-driving-keyboardist.mp4",
-      "sha256": "046cc2ced7638704a4e7eb33a862375e6084733c7cf6a9f1c046a8d46c70ce00"
+      "sha256": "e8c4d2ecdad984751a949ccd5cf9fc3011711a7e7a05c43e5714c65a15789964"
     },
     {
       "arrangement": "DRIVING",
       "member": "KEYTAR",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-driving-keytar.mp4",
-      "sha256": "afc1595751e81602e2e6eaf7518fd6e5a4e7a9f2cfe9b1adfac5b232f034ae90"
+      "sha256": "e38c6003276e0fab13535d4dd80595133caa9d482b725f79bb375d844a689bcf"
     },
     {
       "arrangement": "DRIVING",
       "member": "KEYTAR",
       "concept": "WARM",
       "path": "visual/performance/warm-driving-keytar.mp4",
-      "sha256": "a3524a38ffba73b6db9ed3df9a844c05d223e9e8de6791600eb1f5580d4af378"
+      "sha256": "101ec087c7355a5cbba252af543c4554ec391bdb23336e47817dd84c5c3641a2"
     },
     {
       "arrangement": "DRIVING",
       "member": "KEYTAR",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-driving-keytar.mp4",
-      "sha256": "391af7f4a9551e0a2e0f64e13861622a999bc59522058ad93b8d076d5a2627cf"
+      "sha256": "310c8620d5c4b05715d1340e7c681e534be7fe9e7876b11bd26d18f2b940e538"
     },
     {
       "arrangement": "DRIVING",
       "member": "DRUMMER",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-driving-drummer.mp4",
-      "sha256": "9fa9cb37b54636fc04531600d98777efe29b232a52fcf11a41ac1e7d75d63656"
+      "sha256": "9154f2b9a70273c14e4ed2cd84a21d37ba89650e135b4296625be5be776e2ee5"
     },
     {
       "arrangement": "DRIVING",
       "member": "DRUMMER",
       "concept": "WARM",
       "path": "visual/performance/warm-driving-drummer.mp4",
-      "sha256": "5d78f2eb4f8cdd8e5dc8d67445be02df4d5b7d49ef28d2c49acc5dfabc714a7c"
+      "sha256": "30f3bc172952efbdd2399c0767a9a60339b6913d3dd3a1fb52006f98d002a30f"
     },
     {
       "arrangement": "DRIVING",
       "member": "DRUMMER",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-driving-drummer.mp4",
-      "sha256": "31a6b8255c69fc6ec31ac329f2f0a6d3d551a65a86e36e4b8ac830d294192216"
+      "sha256": "c0a1be923fab902dd970d541b190443cc6a449f873a429c7a92b8ed4ba322c00"
     },
     {
       "arrangement": "LAYERED",
       "member": "FRONTMAN",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-layered-frontman.mp4",
-      "sha256": "3002c82add99a39fc8be50eaa990477af9dd1a7b42d8bedfeca7af7175ba825b"
+      "sha256": "1b6cbb14d00cf8a1ba28e32f086447491346c13999a246e1f58158404dd8cbcf"
     },
     {
       "arrangement": "LAYERED",
       "member": "FRONTMAN",
       "concept": "WARM",
       "path": "visual/performance/warm-layered-frontman.mp4",
-      "sha256": "8ff00f8ec925d8a234e34625bf301bd34e6bff71aa7a3750ef0b22e340b23f9f"
+      "sha256": "c8ef0ad89c33df3de1744992b267fb8f170ab81e159d7474c15c6947a0400769"
     },
     {
       "arrangement": "LAYERED",
       "member": "FRONTMAN",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-layered-frontman.mp4",
-      "sha256": "2f43e6502edafe011536b2c3602e8074870534ee0ed3e98f870bdd32f7a9e86a"
+      "sha256": "d5951644e1ed9f237e14fb4beb5c15a8db8e1126b182510ed8ee41877bb064fc"
     },
     {
       "arrangement": "LAYERED",
       "member": "KEYBOARDIST",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-layered-keyboardist.mp4",
-      "sha256": "b557530bdb7f82faa42100d4f428f0bd6c64defa96fe4d47fb1d27e8363dedc5"
+      "sha256": "4b2b06374cf37f5473e288b2357f0bd5a636485bde071aa2ff72eb2c181c1658"
     },
     {
       "arrangement": "LAYERED",
       "member": "KEYBOARDIST",
       "concept": "WARM",
       "path": "visual/performance/warm-layered-keyboardist.mp4",
-      "sha256": "51bc94ac4a53901a52436b1694f6094f5bc2a6a5be6792e5e9f7a1563d8948d8"
+      "sha256": "72e7252bcef79eddaf658f5cdc1cbc1657e6ef0a9d45d12c77033cc6fce3e1e8"
     },
     {
       "arrangement": "LAYERED",
       "member": "KEYBOARDIST",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-layered-keyboardist.mp4",
-      "sha256": "3e22f8d6fa1d9e42b023c3703dd1d2fac36edca35c9e64aefbad31aa41e68f0f"
+      "sha256": "b3d568b1c455109028b9fd32b8e819534fcd41c60bd22d4163dfca4f5e0000ba"
     },
     {
       "arrangement": "LAYERED",
       "member": "KEYTAR",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-layered-keytar.mp4",
-      "sha256": "535ca93257fbc6463eda66afec9d7a0576cea38e14b0c83bf8d80987d32e61ea"
+      "sha256": "0aff48c5dd62c405d77e01784e4fdf546dfe6fc19233e75e7b517f64a3aab582"
     },
     {
       "arrangement": "LAYERED",
       "member": "KEYTAR",
       "concept": "WARM",
       "path": "visual/performance/warm-layered-keytar.mp4",
-      "sha256": "96a6cfd9086f8857031a002eaeae49cc6e3125bc6d38c0a20b05fd149229011d"
+      "sha256": "cb54b4042eb22947c2c08b49966bd041c85f197e898337061731731e14825e73"
     },
     {
       "arrangement": "LAYERED",
       "member": "KEYTAR",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-layered-keytar.mp4",
-      "sha256": "bc0d1526beb0267bf6d49527f16a96cdfcc47edc30cde79012d8119d0e88eec5"
+      "sha256": "b1279236aebaccf731b182833432ffb857f5b37581d3ce33bd0076abbfb2ca0e"
     },
     {
       "arrangement": "LAYERED",
       "member": "DRUMMER",
       "concept": "MONOCHROME",
       "path": "visual/performance/monochrome-layered-drummer.mp4",
-      "sha256": "f18fa47f0de9c9e6af0c4e0e3130f4ecc2b95673ab825ada0d56779afd90766f"
+      "sha256": "294d04950ba52f879f4d733e55d10117487d1e65f63100b40c8cb06fd572c325"
     },
     {
       "arrangement": "LAYERED",
       "member": "DRUMMER",
       "concept": "WARM",
       "path": "visual/performance/warm-layered-drummer.mp4",
-      "sha256": "e62d1cd4853a3a1a2f6d61ed391cb3a594f1dfb68e014b8022cc25519641c67e"
+      "sha256": "518d54b8fca4c0cd3beaa564356ace781bd65820e2b262b30838abd36359499a"
     },
     {
       "arrangement": "LAYERED",
       "member": "DRUMMER",
       "concept": "ELECTRIC",
       "path": "visual/performance/electric-layered-drummer.mp4",
-      "sha256": "00d935bc66ba110699f4698ea944b6a20503501cc6dcb3a0622ee92650087be0"
+      "sha256": "5fa87866ec841598a690ace1dc007e9aa1270babe85ef0f5df9b1f67d59a124f"
     }
   ],
   "members": [
