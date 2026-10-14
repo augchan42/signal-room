@@ -26,6 +26,19 @@ fun scoreBooking(
         "Preparation counts must be non-negative"
     }
     require(prep.used == 3) { "Preparation must use exactly three slots" }
+    return projectBooking(content, selection, prep)
+}
+
+/** Scores a plan with up to three slots; unplaced slots add nothing. */
+fun projectBooking(
+    content: BookingContent,
+    selection: Selection,
+    prep: Preparation,
+): BookingResult {
+    require(prep.rehearsals >= 0 && prep.refinements >= 0 && prep.rests >= 0) {
+        "Preparation counts must be non-negative"
+    }
+    require(prep.used <= 3) { "Preparation can use at most three slots" }
 
     val member = requireNotNull(content.members[selection.member])
     val arrangement = requireNotNull(content.arrangements[selection.arrangement])
@@ -94,6 +107,9 @@ fun scoreBooking(
         fatigueAfter = fatigueAfter,
     )
 }
+
+fun projectScore(content: BookingContent, selection: Selection, prep: Preparation): Double =
+    projectBooking(content, selection, prep).invitationScore
 
 private fun dimension(contributions: List<Contribution>): Dimension {
     val raw = contributions.sumOf(Contribution::points)

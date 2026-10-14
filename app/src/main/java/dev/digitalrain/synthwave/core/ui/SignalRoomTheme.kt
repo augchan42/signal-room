@@ -5,8 +5,11 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
+import androidx.compose.ui.text.font.FontWeight
 import dev.digitalrain.synthwave.R
 
 private val SignalRoomColors = darkColorScheme(
@@ -18,7 +21,26 @@ private val SignalRoomColors = darkColorScheme(
     onSurface = Color(0xFFE8E1D2),
 )
 
-val SignalRoomDisplayFont = FontFamily(Font(R.font.oxanium_variable))
+// Oxanium ships as one variable file; each weight must set the wght axis or Compose renders the
+// file's default (light) instance for every weight.
+@OptIn(ExperimentalTextApi::class)
+private fun oxanium(weight: FontWeight) = Font(
+    R.font.oxanium_variable,
+    weight = weight,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
+)
+
+val SignalRoomDisplayFont = FontFamily(
+    listOf(
+        FontWeight.ExtraLight,
+        FontWeight.Light,
+        FontWeight.Normal,
+        FontWeight.Medium,
+        FontWeight.SemiBold,
+        FontWeight.Bold,
+        FontWeight.ExtraBold,
+    ).map(::oxanium),
+)
 
 private val DefaultTypography = Typography()
 

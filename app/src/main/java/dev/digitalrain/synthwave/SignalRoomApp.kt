@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -54,6 +55,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     val playback by audio.state.collectAsState()
     val visual by video.state.collectAsState()
     val broadcastLoadedAttempt = remember { mutableIntStateOf(0) }
+    var countIn by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(model) { model.load() }
     DisposableEffect(lifecycleOwner) {
@@ -77,9 +79,18 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     }
     LaunchedEffect(snapshot.phase, snapshot.attemptId) {
         if (snapshot.phase == Phase.BROADCAST) {
+            if (shouldCountIn(restoredFromStore, snapshot.viewingCompleted, snapshot.broadcastPositionMs)) {
+                audio.reset()
+                try {
+                    for (n in 3 downTo 1) { countIn = n; delay(1_000) }
+                } finally {
+                    countIn = 0
+                }
+            }
+            val inForeground = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)
             val audioLoad = launch {
                 audio.startBroadcast(catalog.audio(snapshot.selection), snapshot.broadcastPositionMs,
-                    autoPlay = !restoredFromStore)
+                    autoPlay = !restoredFromStore && inForeground)
                 broadcastLoadedAttempt.intValue = snapshot.attemptId
             }
             launch { video.load(snapshot.selection) }
@@ -121,6 +132,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             videoPlayer = video.player,
             message = message,
             recoveryRequired = recoveryRequired,
+            countIn = countIn,
             onAction = { action ->
                 val start = SystemClock.elapsedRealtime()
                 if (debugTiming) Log.d("SignalRoomActions", "${action.javaClass.simpleName} requested")
@@ -144,3 +156,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
         )
     }
 }
+
+/** The 3-2-1 count-in runs only on a fresh first viewing, never on a restored or already-watched show. */
+internal fun shouldCountIn(restored: Boolean, viewingCompleted: Boolean, positionMs: Long): Boolean =
+    !restored && !viewingCompleted && positionMs == 0L

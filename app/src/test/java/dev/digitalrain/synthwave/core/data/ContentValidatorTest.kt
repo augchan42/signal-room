@@ -64,6 +64,15 @@ class ContentValidatorTest {
         assertTrue(errors.any { it.contains("rehearsalGains") })
     }
 
+    @Test
+    fun conceptsNeedDescriptions() {
+        val content = TestContent.lateNight()
+        val blank = content.copy(concepts = content.concepts.mapValues { it.value.copy(description = " ") })
+
+        assertTrue(validateContent(blank).any { "description" in it })
+        assertEquals(emptyList<String>(), validateContent(content))
+    }
+
     @Test(expected = SerializationException::class)
     fun rejectsUnknownEnumIds() {
         loadContent(checkedInJson().replace("\"SPARSE\"", "\"UNKNOWN\""))

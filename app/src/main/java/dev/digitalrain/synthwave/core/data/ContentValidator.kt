@@ -43,6 +43,7 @@ fun validateContent(content: BookingContent): List<String> = buildList {
     content.concepts.forEach { (id, concept) ->
         range("$id brightness", concept.brightness)
         if (concept.displayName.isBlank()) add("$id displayName must not be blank")
+        if (concept.description.isBlank()) add("$id concept description must not be blank")
     }
 
     content.segments.forEach { (id, segment) ->

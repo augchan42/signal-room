@@ -106,3 +106,11 @@ The exporter now moves the singer and lead mic 0.45 m to screen right
 re-rendered one at a time and hashed; validation (59 assets), 54 JVM tests, 37 Blender unit tests,
 12 validator tests and the drum/key/pedal contact checks pass. Merge order: #6, #7 (retargeted to
 main), then this PR. Call Z in the map: keep the move (default) or keep the singer centred.
+
+## Casual loop (2026-10-14, branch `casual-loop`)
+
+The producer flow is now five screens: Intro, Choose, Prepare, Watch, Reward. Score formulas moved
+behind "How the score works" on the Reward screen. Design:
+`docs/superpowers/specs/2026-10-14-casual-loop-design.md`. The branch is implemented and tested
+(JVM and phone classes); the user's second playtest is still open. Note that
+`connectedDebugAndroidTest` uninstalls the app and its save from the phone.

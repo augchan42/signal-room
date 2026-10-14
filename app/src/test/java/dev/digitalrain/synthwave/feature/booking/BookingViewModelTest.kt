@@ -2,11 +2,13 @@ package dev.digitalrain.synthwave.feature.booking
 
 import dev.digitalrain.synthwave.core.data.FileSnapshotStore
 import dev.digitalrain.synthwave.core.data.SnapshotStore
+import dev.digitalrain.synthwave.core.model.Phase
 import dev.digitalrain.synthwave.core.model.Preparation
 import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.simulation.RunAction
 import dev.digitalrain.synthwave.core.simulation.TestContent
 import dev.digitalrain.synthwave.core.simulation.newRun
+import dev.digitalrain.synthwave.core.simulation.scoreBooking
 import java.io.IOException
 import java.nio.file.Files
 import kotlinx.coroutines.Dispatchers
@@ -108,5 +110,25 @@ class BookingViewModelTest {
         holder.startNewDemo()
         assertFalse(holder.recoveryRequired.value)
         assertEquals(newRun(content), store.load())
+    }
+
+    @Test fun resultPhaseSaveWithIncompletePreparationRequiresReset() = runBlocking {
+        val store = FileSnapshotStore(temp.root.toPath())
+        val complete = Preparation(1, 1, 1, false)
+        val result = scoreBooking(content, newRun(content).selection, complete)
+        for (phase in listOf(Phase.VERDICT, Phase.RECAP)) {
+            store.save(newRun(content).copy(phase = phase, preparation = Preparation(1, 1, 0, false),
+                result = result, viewingCompleted = true))
+            val holder = BookingViewModel(content, store)
+
+            holder.load()
+            assertTrue("$phase", holder.recoveryRequired.value)
+            assertFalse("$phase", holder.restoredFromStore.value)
+        }
+        store.save(newRun(content).copy(phase = Phase.RECAP, preparation = complete, result = result,
+            viewingCompleted = true))
+        val valid = BookingViewModel(content, store)
+        valid.load()
+        assertFalse(valid.recoveryRequired.value)
     }
 }

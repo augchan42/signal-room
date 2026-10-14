@@ -79,10 +79,10 @@ fun actionError(state: RunSnapshot, action: RunAction, content: BookingContent):
         is RunAction.AdjustPreparation -> when {
             !planning -> "Preparation is locked after broadcast"
             action.delta !in -1..1 || action.delta == 0 -> "Adjust one preparation slot at a time"
-            adjustedPreparation(state.preparation, action.kind, action.delta).let {
+            state.preparation.adjusted(action.kind, action.delta).let {
                 it.rehearsals < 0 || it.refinements < 0 || it.rests < 0
             } -> "Preparation counts cannot be negative"
-            adjustedPreparation(state.preparation, action.kind, action.delta).used > 3 ->
+            state.preparation.adjusted(action.kind, action.delta).used > 3 ->
                 "Only three preparation slots are available"
             else -> null
         }
@@ -116,7 +116,8 @@ fun actionError(state: RunSnapshot, action: RunAction, content: BookingContent):
             else -> null
         }
         RunAction.OpenRecap -> if (state.phase == Phase.VERDICT) null else "View the verdict first"
-        RunAction.ConfirmRetry -> if (state.phase == Phase.RECAP) null else "Open the recap before retrying"
+        RunAction.ConfirmRetry ->
+            if (state.phase == Phase.VERDICT || state.phase == Phase.RECAP) null else "Finish the show before retrying"
     }
 }
 
@@ -129,7 +130,7 @@ fun reduceRun(state: RunSnapshot, action: RunAction, content: BookingContent): R
         is RunAction.ChooseMember -> state.copy(selection = state.selection.copy(member = action.id))
         is RunAction.ChooseConcept -> state.copy(selection = state.selection.copy(concept = action.id))
         is RunAction.SetPreparation -> state.copy(preparation = action.preparation)
-        is RunAction.AdjustPreparation -> state.copy(preparation = adjustedPreparation(state.preparation, action.kind, action.delta))
+        is RunAction.AdjustPreparation -> state.copy(preparation = state.preparation.adjusted(action.kind, action.delta))
         RunAction.OpenPreparation -> state.copy(phase = Phase.PREPARATION)
         RunAction.ReturnToDesk -> state.copy(phase = Phase.DESK)
         RunAction.PurchaseResearch -> if (state.preparation.researched) {
@@ -154,8 +155,14 @@ fun reduceRun(state: RunSnapshot, action: RunAction, content: BookingContent): R
     }
 }
 
-private fun adjustedPreparation(prep: Preparation, kind: PrepAction, delta: Int): Preparation = when (kind) {
-    PrepAction.REHEARSE -> prep.copy(rehearsals = prep.rehearsals + delta)
-    PrepAction.REFINE -> prep.copy(refinements = prep.refinements + delta)
-    PrepAction.REST -> prep.copy(rests = prep.rests + delta)
+fun Preparation.adjusted(kind: PrepAction, delta: Int): Preparation = when (kind) {
+    PrepAction.REHEARSE -> copy(rehearsals = rehearsals + delta)
+    PrepAction.REFINE -> copy(refinements = refinements + delta)
+    PrepAction.REST -> copy(rests = rests + delta)
+}
+
+fun Preparation.count(kind: PrepAction): Int = when (kind) {
+    PrepAction.REHEARSE -> rehearsals
+    PrepAction.REFINE -> refinements
+    PrepAction.REST -> rests
 }

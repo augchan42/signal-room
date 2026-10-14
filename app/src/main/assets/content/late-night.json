@@ -79,9 +79,9 @@
     }
   },
   "concepts": {
-    "MONOCHROME": { "displayName": "Monochrome signal", "brightness": 20 },
-    "WARM": { "displayName": "Warm transmission", "brightness": 50 },
-    "ELECTRIC": { "displayName": "Electric broadcast", "brightness": 85 }
+    "MONOCHROME": { "displayName": "Monochrome signal", "brightness": 20, "description": "Grey suits and signal bars; cool, restrained and late-night." },
+    "WARM": { "displayName": "Warm transmission", "brightness": 50, "description": "Red and tan suits under amber light; a classic studio glow." },
+    "ELECTRIC": { "displayName": "Electric broadcast", "brightness": 85, "description": "Blue rims and a test pattern; bright, loud and showy." }
   },
   "segments": {
     "performance": {

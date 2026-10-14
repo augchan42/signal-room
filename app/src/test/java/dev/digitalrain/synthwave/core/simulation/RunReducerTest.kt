@@ -107,6 +107,22 @@ class RunReducerTest {
         assertEquals(0L, retried.broadcastPositionMs)
     }
 
+    @Test fun retryWorksFromVerdictAndKeepsPreviousResult() {
+        var state = newRun(content)
+        for (action in listOf(RunAction.OpenDesk, RunAction.OpenPreparation,
+            RunAction.SetPreparation(Preparation(1, 1, 1, false)), RunAction.ConfirmBroadcast,
+            RunAction.CheckpointPlayback(20_000), RunAction.CompleteViewing)) {
+            state = reduceRun(state, action, content)
+        }
+        assertEquals(Phase.VERDICT, state.phase)
+        assertEquals(null, actionError(state, RunAction.ConfirmRetry, content))
+        val retried = reduceRun(state, RunAction.ConfirmRetry, content)
+        assertEquals(Phase.BRIEF, retried.phase)
+        assertEquals(2, retried.attemptId)
+        assertEquals(state.result, retried.previousResult)
+        assertEquals(true, retried.viewingCompleted)
+    }
+
     @Test fun finalMemberReceivesPreparationAndOtherMembersRemainUnchanged() {
         val desk = reduceRun(newRun(content), RunAction.OpenDesk, content)
         val prep = reduceRun(desk, RunAction.SetPreparation(Preparation(1, 1, 1, false)), content)

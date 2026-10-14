@@ -122,6 +122,8 @@ class BookingViewModel(
             "Save has invalid playback position. Start new demo to reset it."
         saved.phase in setOf(Phase.BROADCAST, Phase.VERDICT, Phase.RECAP) && saved.result == null ->
             "Save is missing its result. Start new demo to reset it."
+        saved.phase in setOf(Phase.VERDICT, Phase.RECAP) && saved.preparation.used < 3 ->
+            "Save has incomplete preparation. Start new demo to reset it."
         saved.phase in setOf(Phase.BRIEF, Phase.DESK, Phase.PREPARATION) && saved.result != null ->
             "Save has a result before broadcast. Start new demo to reset it."
         else -> null
