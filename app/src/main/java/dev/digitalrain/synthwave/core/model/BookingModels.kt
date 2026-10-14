@@ -87,6 +87,7 @@ data class ArrangementRules(
 data class ConceptProfile(
     val displayName: String,
     val brightness: Double,
+    val description: String = "",
 )
 
 @Serializable
