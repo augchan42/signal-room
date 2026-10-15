@@ -16,6 +16,8 @@ import dev.digitalrain.synthwave.core.ui.SignalRoomTheme
 import dev.digitalrain.synthwave.core.ui.SplashScreen
 import dev.digitalrain.synthwave.spike.GodotStage
 import dev.digitalrain.synthwave.spike.SignalRoomClockPlugin
+import dev.digitalrain.synthwave.spike.StageChoice
+import dev.digitalrain.synthwave.spike.systemProperty
 import org.godotengine.godot.Godot
 import org.godotengine.godot.GodotFragment
 import org.godotengine.godot.GodotHost
@@ -28,9 +30,11 @@ class MainActivity : FragmentActivity(), GodotHost {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Spike (throwaway): start Godot once, with no container; the broadcast screen attaches its view.
-        godotFragment = supportFragmentManager.findFragmentByTag(GODOT_TAG) as? GodotFragment
-            ?: GodotFragment().also { supportFragmentManager.beginTransaction().add(it, GODOT_TAG).commitNow() }
-        GodotStage.view = { godotFragment?.view }
+        if (!StageChoice.filament) {
+            godotFragment = supportFragmentManager.findFragmentByTag(GODOT_TAG) as? GodotFragment
+                ?: GodotFragment().also { supportFragmentManager.beginTransaction().add(it, GODOT_TAG).commitNow() }
+            GodotStage.view = { godotFragment?.view }
+        }
         setContent {
             // The splash plays once per launch; rotation and process restore skip it.
             var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -49,10 +53,7 @@ class MainActivity : FragmentActivity(), GodotHost {
 
     // Spike: `adb shell setprop debug.signalroom.maxfps 30` caps Godot's frame rate on the next launch.
     override fun getCommandLine(): List<String> {
-        val maxFps = runCatching {
-            Class.forName("android.os.SystemProperties").getMethod("get", String::class.java)
-                .invoke(null, "debug.signalroom.maxfps") as String
-        }.getOrDefault("")
+        val maxFps = systemProperty("debug.signalroom.maxfps")
         return listOf("--audio-driver", "Dummy") + if (maxFps.isNotEmpty()) listOf("--max-fps", maxFps) else emptyList()
     }
 

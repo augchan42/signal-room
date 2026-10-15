@@ -50,3 +50,42 @@ Pixel 7 Pro, release build, Driving / Frontman / Warm, same show on both builds:
   Not tried: lower MSAA, smaller shadow atlas, no glow.
 - Compose overlays (timer, member cam) draw over the Godot view without problems.
 - Cap at runtime: `adb shell setprop debug.signalroom.maxfps 30`, then relaunch the app.
+
+## Filament in the same app (option 3)
+
+`app/.../spike/FilamentStage.kt` draws the same GLB with Filament 1.75.1 and gltfio (1.76 and
+later need compileSdk 37). It applies all 75 glTF animations at the audio time each frame, sets
+light and emission values from `*.tracks.json`, rebuilds the area lights as spot lights, removes
+the haze box and uses the glTF camera `CAM | Broadcast group`. The assets are
+`build/filament-assets/filament/` (the GLB and tracks file copied from `godot/export/`).
+
+Pick the stage at launch: `adb shell setprop debug.signalroom.stage filament` (anything else:
+Godot); `debug.signalroom.backend vulkan` for Filament's Vulkan backend (default OpenGL ES);
+`debug.signalroom.maxfps N` caps either engine. With `filament`, the Godot engine is not started.
+
+Same phone and show. CPU is the whole app (cores), from `top -H`; video baseline 0.64.
+
+| | frame interval | whole app CPU | engine threads | app main thread |
+|---|---|---|---|---|
+| Godot, 30 cap | 33.3 ms flat | 1.07-1.12 | 0.33 | 0.09 |
+| Godot, 60 cap | 16.7 ms flat | 1.18-1.27 | 0.48-0.54 | 0.08 |
+| Filament GLES, 60 cap | p50 17.0, p99 19-20 ms | 1.50-1.52 | 0.45 + jobs 0.16 + driver 0.15 | 0.23-0.25 |
+| Filament GLES, no cap (120) | p50 8.7, p99 10-12 ms | 1.52-1.57 | 0.45 + 0.17 + 0.17 | 0.29-0.32 |
+| Filament Vulkan, 30 cap | p50 34.5, p99 37-39 ms | 1.12-1.13 | 0.23 + jobs 0.12 | 0.19-0.22 |
+| Filament Vulkan, 60 cap | p50 17.2, p99 19-22 ms | 1.27-1.31 | 0.30 + jobs 0.20 | 0.24-0.25 |
+| Filament Vulkan, no cap (120) | p50 8.6, p99 10-12 ms | 1.46-1.52 | 0.34 + jobs 0.22 | 0.36-0.40 |
+
+| | memory (PSS, after the show) | native libraries | start cost |
+|---|---|---|---|
+| video (main) | 249 MB | - | - |
+| Godot | 741-764 MB | 71 MB | engine at app launch; 140 ms hitch on every show start |
+| Filament | 460-487 MB (390 MB 10 s later) | 6 MB | 150 ms on the main thread at the first show only |
+
+- Filament's frame pacing with a cap is looser than Godot's (p99 a few ms over the interval),
+  because the cap skips vsyncs in the app's Choreographer callback.
+- Filament runs the animation update on the app's main thread: 3-5 ms per frame, shared with
+  Compose. It could move to its own thread.
+- Look: about the same as Godot. Filament shows the empty area above the stage as dark navy (the
+  clear colour) where Godot shows black, and its key light reads slightly warmer.
+- The GLB also carries every member's fancam camera, so Filament (or Godot) could draw the member
+  cam live as a second view instead of decoding the video.

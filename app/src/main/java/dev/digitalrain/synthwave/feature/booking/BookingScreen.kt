@@ -1,6 +1,8 @@
 package dev.digitalrain.synthwave.feature.booking
 
+import dev.digitalrain.synthwave.spike.FilamentStageView
 import dev.digitalrain.synthwave.spike.GodotStageView
+import dev.digitalrain.synthwave.spike.StageChoice
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
@@ -121,7 +123,8 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
     Box(Modifier.fillMaxWidth().aspectRatio(9f / 16f).background(Color.Black).testTag("broadcast-stage")) {
         if (visual.status == VideoStatus.READY && playback.status == PlaybackStatus.PLAYING) {
             // Spike (throwaway): the live Godot stage in place of the performance video.
-            GodotStageView(Modifier.fillMaxSize().testTag("godot-stage"))
+            if (StageChoice.filament) FilamentStageView(Modifier.fillMaxSize().testTag("filament-stage"))
+            else GodotStageView(Modifier.fillMaxSize().testTag("godot-stage"))
         } else {
             SceneBackdrop("demo/${visual.stillPath ?: catalog.concept(snapshot.selection.concept).stillPath}",
                 "Selected stage concept", Modifier.fillMaxSize())

@@ -63,6 +63,8 @@ android {
     sourceSets.getByName("test").resources.srcDir("src/main/assets")
     // Spike (throwaway): the exported Godot project, unpacked from spikes/realtime-3d/build/spike3d.apk.
     sourceSets.getByName("main").assets.srcDir("../spikes/realtime-3d/build/godot-assets")
+    // Spike (throwaway): the same stage for Filament (GLB and light/material tracks from export_gltf.py).
+    sourceSets.getByName("main").assets.srcDir("../spikes/realtime-3d/build/filament-assets")
     // Godot keeps its imported files in the hidden .godot directory, which aapt skips by default.
     androidResources {
         ignoreAssetsPattern = "!.svn:!.git:!.gitignore:!.ds_store:!*.scc:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
@@ -83,6 +85,8 @@ dependencies {
     implementation(libs.media3.ui)
     implementation("org.godotengine:godot:4.7.2.stable")
     implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("com.google.android.filament:filament-android:1.75.1")
+    implementation("com.google.android.filament:gltfio-android:1.75.1")
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)

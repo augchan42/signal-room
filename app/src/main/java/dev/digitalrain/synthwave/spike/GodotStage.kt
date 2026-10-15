@@ -20,7 +20,19 @@ import org.godotengine.godot.plugin.UsedByGodot
 object GodotStage {
     /** Godot's render view; MainActivity points this at its Godot fragment. */
     var view: () -> View? = { null }
+}
 
+/** Spike: which live stage the broadcast screen shows, from `debug.signalroom.stage` at launch. */
+object StageChoice {
+    val filament: Boolean by lazy { systemProperty("debug.signalroom.stage") == "filament" }
+}
+
+internal fun systemProperty(name: String): String = runCatching {
+    Class.forName("android.os.SystemProperties").getMethod("get", String::class.java).invoke(null, name) as String
+}.getOrDefault("")
+
+/** The show position for the live stages, carried forward from the app's audio samples. */
+object StageClock {
     @Volatile private var sampledPositionMs = 0L
     @Volatile private var sampledAtMs = 0L
     @Volatile private var playing = false
@@ -41,15 +53,21 @@ class SignalRoomClockPlugin(godot: Godot) : GodotPlugin(godot) {
     override fun getPluginName() = "SignalRoomClock"
 
     @UsedByGodot
-    fun positionMs(): Long = GodotStage.positionMs()
+    fun positionMs(): Long = StageClock.positionMs()
 }
 
 @Composable
 fun GodotStageView(modifier: Modifier = Modifier) {
+    LiveStageView({ GodotStage.view() }, modifier)
+}
+
+/** Attaches a long-lived render view, taking it from wherever it was attached before. */
+@Composable
+internal fun LiveStageView(view: (android.content.Context) -> View?, modifier: Modifier = Modifier) {
     AndroidView(
         factory = { context ->
             FrameLayout(context).apply {
-                GodotStage.view()?.let { view ->
+                view(context)?.let { view ->
                     (view.parent as? ViewGroup)?.removeView(view)
                     addView(view, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.MATCH_PARENT))
