@@ -115,12 +115,12 @@ class BroadcastVideoController(
         if (released || mutableState.value.status != VideoStatus.READY) return
         val loops = mutableState.value.loops
         val expected = BroadcastClock.visualPosition(audioPositionMs, loops)
-        if (BroadcastClock.needsCorrection(audioPositionMs, player.currentPosition, loops)) {
+        if (BroadcastClock.needsCorrection(audioPositionMs, player.currentPosition, loops, player.isSeeking())) {
             player.seekTo(expected)
         }
         if (audioStatus == PlaybackStatus.PLAYING) player.play() else player.pause()
         if (!loops && camPlayer.mediaItemCount > 0) {
-            if (BroadcastClock.needsCorrection(audioPositionMs, camPlayer.currentPosition, false)) {
+            if (BroadcastClock.needsCorrection(audioPositionMs, camPlayer.currentPosition, false, camPlayer.isSeeking())) {
                 camPlayer.seekTo(expected)
             }
             if (audioStatus == PlaybackStatus.PLAYING) camPlayer.play() else camPlayer.pause()
@@ -157,3 +157,6 @@ class BroadcastVideoController(
         if (waiting?.isActive == true) waiting.resume(Unit)
     }
 }
+
+/** A seek leaves the player buffering until the decoder has caught up to the new position. */
+private fun ExoPlayer.isSeeking(): Boolean = playbackState == Player.STATE_BUFFERING
