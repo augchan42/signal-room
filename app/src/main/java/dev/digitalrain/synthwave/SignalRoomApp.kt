@@ -29,6 +29,7 @@ import dev.digitalrain.synthwave.core.simulation.RunAction
 import dev.digitalrain.synthwave.core.ui.SignalRoomTheme
 import dev.digitalrain.synthwave.feature.booking.BookingScreen
 import dev.digitalrain.synthwave.feature.booking.BookingViewModel
+import dev.digitalrain.synthwave.spike.GodotStage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -105,6 +106,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
         while (isActive && snapshot.phase == Phase.BROADCAST) {
             audio.refresh()
             video.sync(audio.state.value.positionMs, audio.state.value.status)
+            GodotStage.update(audio.state.value.positionMs, audio.state.value.status == PlaybackStatus.PLAYING)
             delay(50)
         }
     }

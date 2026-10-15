@@ -155,6 +155,7 @@ func _add_environment() -> void:
 
 
 var clock := 0.0
+var app_clock: Object = Engine.get_singleton("SignalRoomClock") if Engine.has_singleton("SignalRoomClock") else null
 
 
 func _process(delta: float) -> void:
@@ -162,6 +163,10 @@ func _process(delta: float) -> void:
 		clock += delta
 		var sh := find_children("*Cropped jacket shoulder", "", true, false)[0] as Node3D
 		sh.quaternion = Quaternion(Vector3(0, 0, 1), -abs(sin(clock)) * PI / 2)
+	elif app_clock:
+		# Inside Signal Room: follow the audio position the app reports.
+		clock = clampf(app_clock.positionMs() / 1000.0, 0.0, (FRAMES - 1) / FPS)
+		player.seek(clock, true)
 	elif not has_meta("frozen"):
 		clock = fmod(clock + delta, FRAMES / FPS)
 		player.seek(clock, true)

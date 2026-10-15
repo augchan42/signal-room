@@ -42,6 +42,8 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // Spike (throwaway): the Godot library ships four ABIs; the test phone needs one.
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     buildTypes {
@@ -59,6 +61,12 @@ android {
     buildFeatures { compose = true }
     testOptions { unitTests.isIncludeAndroidResources = false }
     sourceSets.getByName("test").resources.srcDir("src/main/assets")
+    // Spike (throwaway): the exported Godot project, unpacked from spikes/realtime-3d/build/spike3d.apk.
+    sourceSets.getByName("main").assets.srcDir("../spikes/realtime-3d/build/godot-assets")
+    // Godot keeps its imported files in the hidden .godot directory, which aapt skips by default.
+    androidResources {
+        ignoreAssetsPattern = "!.svn:!.git:!.gitignore:!.ds_store:!*.scc:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"
+    }
 }
 
 dependencies {
@@ -73,6 +81,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
+    implementation("org.godotengine:godot:4.7.2.stable")
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
