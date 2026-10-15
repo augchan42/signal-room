@@ -46,29 +46,4 @@ class MediaPlaybackTest {
             }
         }
     }
-
-    @Test
-    fun bundledVideoFollowsAudioClockAndRemainsSilent() = runBlocking {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val catalog = loadAndroidAssetCatalog(context.assets)
-        withContext(Dispatchers.Main) {
-            val video = BroadcastVideoController(context, catalog)
-            try {
-                withTimeout(10_000) {
-                    video.load(Selection(ArrangementId.DRIVING, MemberId.KEYTAR, ConceptId.WARM))
-                    assertEquals(VideoStatus.READY, video.state.value.status)
-                    assertEquals(false, video.state.value.loops)
-                    assertEquals(0f, video.player.volume)
-                    video.sync(9250, PlaybackStatus.PAUSED)
-                    assertTrue(abs(video.player.currentPosition - 9250) <= 50)
-                    video.sync(9250, PlaybackStatus.PLAYING)
-                    assertTrue(video.player.playWhenReady)
-                    video.onBackground()
-                    assertTrue(!video.player.playWhenReady)
-                }
-            } finally {
-                video.release()
-            }
-        }
-    }
 }

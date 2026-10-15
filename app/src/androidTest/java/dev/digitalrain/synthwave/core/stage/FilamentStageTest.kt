@@ -11,6 +11,7 @@ import dev.digitalrain.synthwave.core.model.Selection
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.math.abs
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -50,6 +51,24 @@ class FilamentStageTest {
         bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(pixels))
         File(requireNotNull(context.getExternalFilesDir(null)), name).outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }
+    }
+
+    /** An activity restart builds the new screen's stage before the old one is gone. */
+    @Test fun aSecondStageOutlivesTheFirst() = runBlocking {
+        val show = request(ArrangementId.DRIVING, MemberId.FRONTMAN, ConceptId.WARM)
+        val first = FilamentStage(context, StageClock(), StageBackend.VULKAN)
+        assertTrue(first.prepare(show))
+        val second = FilamentStage(context, StageClock(), StageBackend.VULKAN)
+        try {
+            val loaded = async { second.prepare(show) }
+            first.release()
+            assertTrue(loaded.await())
+            assertTrue(lit(second.capture(main = true, 270, 480, 10f)) > 0.2f)
+            second.unload()
+            assertTrue(second.prepare(show))
+        } finally {
+            second.release()
         }
     }
 

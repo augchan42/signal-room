@@ -32,7 +32,7 @@ import org.junit.runner.RunWith
 class BroadcastVisualTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun pausedBroadcastKeepsSelectedStageVisibleAfterVideoPrepares() {
+    @Test fun pausedBroadcastShowsTheFrozenLiveStage() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val content = context.assets.open("content/late-night.json").bufferedReader().use { loadContent(it.readText()) }
         val selection = Selection(ArrangementId.SPARSE, MemberId.FRONTMAN, ConceptId.MONOCHROME)
@@ -43,11 +43,10 @@ class BroadcastVisualTest {
                 preparation = prep, result = scoreBooking(content, selection, prep)))
         }
         compose.setContent { SignalRoomApp(store) }
-        compose.waitUntil(5_000) {
-            compose.onAllNodesWithTag("broadcast-stage").fetchSemanticsNodes().isNotEmpty()
-        }
-        Thread.sleep(2_000)
-        compose.onNodeWithContentDescription("Selected stage concept").assertExists()
+        // A restored broadcast starts paused; the stage still loads and holds its frame.
+        compose.waitUntil(10_000) { compose.onAllNodesWithTag("live-stage").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Selected stage concept").assertDoesNotExist()
+        compose.onNodeWithContentDescription("Frontman fancam inset").assertExists()
     }
 
     @Test fun selectedKeyboardistAndElectricStageRenderInPortrait() {

@@ -72,7 +72,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.media3.exoplayer)
-    implementation(libs.media3.ui)
+    debugImplementation(libs.media3.ui) // the debug sync fixture only
     implementation(libs.filament.android)
     implementation(libs.gltfio.android)
 

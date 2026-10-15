@@ -28,21 +28,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
 import dev.digitalrain.synthwave.core.audio.PlaybackState
 import dev.digitalrain.synthwave.core.audio.PlaybackStatus
-import dev.digitalrain.synthwave.core.audio.VideoState
-import dev.digitalrain.synthwave.core.audio.VideoStatus
 import dev.digitalrain.synthwave.core.data.AssetCatalog
 import dev.digitalrain.synthwave.core.model.BookingContent
 import dev.digitalrain.synthwave.core.model.Phase
 import dev.digitalrain.synthwave.core.model.RunSnapshot
 import dev.digitalrain.synthwave.core.simulation.RunAction
+import dev.digitalrain.synthwave.core.stage.FilamentStage
+import dev.digitalrain.synthwave.core.stage.StageState
+import dev.digitalrain.synthwave.core.stage.StageStatus
 import dev.digitalrain.synthwave.core.ui.SceneBackdrop
 
 @Composable
@@ -51,9 +51,8 @@ fun BookingScreen(
     content: BookingContent,
     catalog: AssetCatalog,
     playback: PlaybackState,
-    visual: VideoState,
-    videoPlayer: ExoPlayer,
-    camPlayer: ExoPlayer,
+    stage: StageState,
+    liveStage: FilamentStage,
     message: String?,
     recoveryRequired: Boolean,
     countIn: Int = 0,
@@ -90,8 +89,8 @@ fun BookingScreen(
                         Phase.BRIEF -> IntroScreen(content, onAction)
                         Phase.DESK -> ChooseScreen(snapshot, content, catalog, onAction)
                         Phase.PREPARATION -> PrepareScreen(snapshot, content, onAction)
-                        Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
-                            videoPlayer, camPlayer, countIn, onAction, onReset, onPlayPause, onMute)
+                        Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, stage,
+                            liveStage, countIn, onAction, onReset, onPlayPause, onMute)
                         Phase.VERDICT, Phase.RECAP -> RewardScreen(snapshot, content, onAction, onReset)
                     }
                     if (message != null) PanelCard { Text(message, color = MaterialTheme.colorScheme.error) }
@@ -110,7 +109,7 @@ fun BookingScreen(
 
 @Composable
 private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, catalog: AssetCatalog,
-                            playback: PlaybackState, visual: VideoState, videoPlayer: ExoPlayer, camPlayer: ExoPlayer,
+                            playback: PlaybackState, stage: StageState, liveStage: FilamentStage,
                             countIn: Int, onAction: (RunAction) -> Unit, onReset: () -> Unit,
                             onPlayPause: () -> Unit, onMute: () -> Unit) {
     Text("ON AIR", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.secondary)
@@ -118,28 +117,28 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         "${content.members.getValue(snapshot.selection.member).displayName} / " +
         content.concepts.getValue(snapshot.selection.concept).displayName)
     Box(Modifier.fillMaxWidth().aspectRatio(9f / 16f).background(Color.Black).testTag("broadcast-stage")) {
-        if (visual.status == VideoStatus.READY && playback.status == PlaybackStatus.PLAYING) {
-            AndroidView(factory = { context -> PlayerView(context).apply {
-                useController = false
-                player = videoPlayer
-            } }, update = { it.player = videoPlayer }, modifier = Modifier.fillMaxSize())
+        // Ready means drawn: while the show is paused the stage holds its last frame.
+        if (stage.status == StageStatus.READY) {
+            LiveStageView(liveStage, Modifier.fillMaxSize().testTag("live-stage"))
         } else {
-            SceneBackdrop("demo/${visual.stillPath ?: catalog.concept(snapshot.selection.concept).stillPath}",
+            SceneBackdrop("demo/${stage.stillPath ?: catalog.concept(snapshot.selection.concept).stillPath}",
                 "Selected stage concept", Modifier.fillMaxSize())
         }
-        if (visual.status == VideoStatus.FALLBACK) {
-            Text("Still image: video unavailable", Modifier.align(Alignment.TopStart).background(Panel).padding(6.dp))
+        if (stage.status == StageStatus.FALLBACK) {
+            Text("Still image: live stage unavailable", Modifier.align(Alignment.TopStart).background(Panel).padding(6.dp))
         }
         Text(timeLeft(playback.positionMs), Modifier.align(Alignment.TopEnd).background(Panel).padding(6.dp),
             fontSize = 18.sp, fontWeight = FontWeight.Medium)
         Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(140.dp, 180.dp).background(Panel).clipToBounds()) {
-            if (visual.status == VideoStatus.READY && !visual.loops && playback.status == PlaybackStatus.PLAYING) {
-                MemberCam(camPlayer, snapshot.selection.member, Modifier.fillMaxSize().testTag("member-cam"))
+            val name = content.members.getValue(snapshot.selection.member).displayName
+            if (stage.status == StageStatus.READY) {
+                LiveMemberCam(liveStage, Modifier.fillMaxSize().testTag("member-cam")
+                    .semantics { contentDescription = "$name fancam inset" })
             } else {
-                SceneBackdrop("demo/${catalog.member(snapshot.selection.member).stillPath}",
-                    "${content.members.getValue(snapshot.selection.member).displayName} fancam inset", Modifier.fillMaxSize())
+                SceneBackdrop("demo/${catalog.member(snapshot.selection.member).stillPath}", "$name fancam inset",
+                    Modifier.fillMaxSize())
             }
-            Text("${content.members.getValue(snapshot.selection.member).displayName.uppercase()} CAM",
+            Text("${name.uppercase()} CAM",
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Panel).padding(3.dp),
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
         }

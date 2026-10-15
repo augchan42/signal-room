@@ -131,67 +131,6 @@ def audio_metric_failures(metrics: dict) -> list[str]:
     return failures
 
 
-def inspect_video(path: Path) -> dict:
-    stream = _single_stream(
-        path, "v:0",
-        "stream=codec_name,pix_fmt,color_range,width,height,avg_frame_rate,nb_read_frames,duration",
-        count_frames=True,
-    )
-    numerator, denominator = (int(value) for value in stream["avg_frame_rate"].split("/"))
-    all_streams = _json_probe(path, "", "stream=codec_type").get("streams", [])
-    return {
-        "codec": stream.get("codec_name"),
-        "pixelFormat": stream.get("pix_fmt"),
-        "colorRange": stream.get("color_range"),
-        "width": int(stream["width"]),
-        "height": int(stream["height"]),
-        "fps": numerator / denominator,
-        "frames": int(stream["nb_read_frames"]),
-        "duration": float(stream["duration"]),
-        "audioStreams": sum(item.get("codec_type") == "audio" for item in all_streams),
-        "bytes": path.stat().st_size,
-    }
-
-
-def video_metric_failures(metrics: dict) -> list[str]:
-    failures = []
-    if metrics["codec"] != "h264" or metrics["pixelFormat"] != "yuv420p":
-        failures.append("loop must be H.264/yuv420p")
-    if metrics["colorRange"] not in ("tv", "unknown", None):
-        failures.append("loop must use limited video color range")
-    if (metrics["width"], metrics["height"]) != (1080, 1920):
-        failures.append("loop must be 1080 x 1920")
-    if metrics["fps"] != 24:
-        failures.append("loop must be 24 fps")
-    if metrics.get("audioStreams", 0):
-        failures.append("loop must be silent")
-    if metrics["frames"] != 96:
-        failures.append(f"loop must have 96 frames, got {metrics['frames']}")
-    if abs(metrics["duration"] - 4.0) > .001:
-        failures.append("loop must be 4.000 seconds")
-    return failures
-
-
-def performance_metric_failures(metrics: dict) -> list[str]:
-    """The band playing one mix in one concept: 20 seconds, played once alongside the mix's audio."""
-    failures = []
-    if metrics["codec"] != "h264" or metrics["pixelFormat"] != "yuv420p":
-        failures.append("performance must be H.264/yuv420p")
-    if metrics["colorRange"] not in ("tv", "unknown", None):
-        failures.append("performance must use limited video color range")
-    if (metrics["width"], metrics["height"]) != (540, 960):
-        failures.append("performance must be 540 x 960")
-    if metrics["fps"] != 24:
-        failures.append("performance must be 24 fps")
-    if metrics.get("audioStreams", 0):
-        failures.append("performance must be silent")
-    if metrics["frames"] != 480:
-        failures.append(f"performance must have 480 frames, got {metrics['frames']}")
-    if abs(metrics["duration"] - 20.0) > .001:
-        failures.append("performance must be 20.000 seconds")
-    return failures
-
-
 def inspect_image(path: Path) -> dict:
     stream = _single_stream(path, "v:0", "stream=codec_name,width,height")
     return {
@@ -231,10 +170,6 @@ def _manifest_entries(manifest: dict) -> list[tuple[str, str, str]]:
     for item in manifest.get("concepts", []):
         if isinstance(item, dict):
             entries.append((item.get("stillPath"), "image", item.get("stillSha256", "")))
-            entries.append((item.get("loopPath"), "video", item.get("loopSha256", "")))
-    for item in manifest.get("performances", []):
-        if isinstance(item, dict):
-            entries.append((item.get("path"), "performance", item.get("sha256", "")))
     for item in manifest.get("members", []):
         if isinstance(item, dict):
             entries.append((item.get("stillPath"), "image", item.get("sha256", "")))
@@ -274,11 +209,10 @@ def _live_structure_failures(live: object) -> list[str]:
 
 def validate_manifest_structure(manifest: dict, root: Path) -> list[str]:
     failures = []
-    if manifest.get("schemaVersion") != 3:
-        failures.append("manifest schemaVersion must be 3")
+    if manifest.get("schemaVersion") != 4:
+        failures.append("manifest schemaVersion must be 4")
     audio = manifest.get("audio")
     concepts = manifest.get("concepts")
-    performances = manifest.get("performances")
     members = manifest.get("members")
     if not isinstance(audio, list) or len(audio) != 12:
         failures.append("manifest must contain exactly 12 audio entries")
@@ -286,9 +220,7 @@ def validate_manifest_structure(manifest: dict, root: Path) -> list[str]:
         failures.append("manifest must contain exactly 3 concepts")
     if not isinstance(members, list) or len(members) != 4:
         failures.append("manifest must contain exactly 4 members")
-    if not isinstance(performances, list) or len(performances) != 36:
-        failures.append("manifest must contain exactly 36 performances")
-    if not all(isinstance(items, list) for items in (audio, concepts, performances, members)):
+    if not all(isinstance(items, list) for items in (audio, concepts, members)):
         return failures
     seen_ids = set()
     for item in audio:
@@ -313,28 +245,13 @@ def validate_manifest_structure(manifest: dict, root: Path) -> list[str]:
             continue
         identifier = item.get("concept")
         slug = str(identifier).lower()
-        if identifier not in CONCEPTS or item.get("stillPath") != f"visual/concept-{slug}.webp" or item.get("loopPath") != f"visual/loop-{slug}.mp4":
+        if identifier not in CONCEPTS or item.get("stillPath") != f"visual/concept-{slug}.webp":
             failures.append(f"invalid concept mapping: {identifier}")
         if identifier in seen_concepts:
             failures.append(f"duplicate concept: {identifier}")
         seen_concepts.add(identifier)
     if seen_concepts != set(CONCEPTS):
         failures.append("concept matrix does not cover all 3 concepts")
-    seen_performances = set()
-    for item in performances:
-        if not isinstance(item, dict):
-            failures.append("performance entry must be an object")
-            continue
-        triple = (item.get("arrangement"), item.get("member"), item.get("concept"))
-        slug = "-".join(str(value).lower() for value in (triple[2], triple[0], triple[1]))
-        if triple[0] not in ARRANGEMENTS or triple[1] not in MEMBERS or triple[2] not in CONCEPTS \
-                or item.get("path") != f"visual/performance/{slug}.mp4":
-            failures.append(f"invalid performance mapping: {triple}")
-        if triple in seen_performances:
-            failures.append(f"duplicate performance: {triple}")
-        seen_performances.add(triple)
-    if seen_performances != {(a, m, c) for a in ARRANGEMENTS for m in MEMBERS for c in CONCEPTS}:
-        failures.append("performance matrix does not cover all 36 mix/concept triples")
     seen_members = set()
     for item in members:
         if not isinstance(item, dict):
@@ -407,12 +324,6 @@ def validate_manifest(root: Path, *, check_hashes: bool = True) -> dict:
             if kind == "audio":
                 metrics = inspect_audio(path)
                 failures = audio_metric_failures(metrics)
-            elif kind == "video":
-                metrics = inspect_video(path)
-                failures = video_metric_failures(metrics)
-            elif kind == "performance":
-                metrics = inspect_video(path)
-                failures = performance_metric_failures(metrics)
             else:
                 metrics = inspect_image(path)
                 failures = image_metric_failures(metrics)
@@ -438,9 +349,6 @@ def _set_hashes(manifest: dict, measurements: dict) -> None:
         item["sha256"] = measurements[item["path"]]["sha256"]
     for item in manifest["concepts"]:
         item["stillSha256"] = measurements[item["stillPath"]]["sha256"]
-        item["loopSha256"] = measurements[item["loopPath"]]["sha256"]
-    for item in manifest["performances"]:
-        item["sha256"] = measurements[item["path"]]["sha256"]
     for item in manifest["members"]:
         item["sha256"] = measurements[item["stillPath"]]["sha256"]
     live = manifest["live"]

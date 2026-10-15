@@ -29,6 +29,8 @@ import dev.digitalrain.synthwave.core.model.ConceptId
 import dev.digitalrain.synthwave.core.model.MemberId
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 import kotlin.math.log2
 import kotlin.math.max
@@ -51,6 +53,20 @@ private object FilamentLibraries {
         Filament.init()
         Gltfio.init()
     }
+}
+
+/**
+ * One Filament engine at a time in the process. Filament's Vulkan backend keeps process-wide state:
+ * destroying one engine while another runs crashes the other's driver thread. An activity restart
+ * builds the new screen's stage while the old one is still being freed, so a new engine waits here.
+ */
+private object EngineTurn {
+    private const val WAIT_SECONDS = 5L
+    private val turn = Semaphore(1)
+
+    fun take() = check(turn.tryAcquire(WAIT_SECONDS, TimeUnit.SECONDS)) { "Another stage engine is still running" }
+
+    fun give() = turn.release()
 }
 
 /**
@@ -99,42 +115,49 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
     val duration: Float get() = clip?.duration ?: 0f
 
     init {
-        engine = createEngine(backend)
-        scene = engine.createScene()
-        colorGrading = ColorGrading.Builder().toneMapper(ToneMapper.Filmic()).build(engine)
-        mainView = engine.createView().apply {
-            scene = this@StageScene.scene
-            colorGrading = this@StageScene.colorGrading
-            bloomOptions = bloomOptions.apply { enabled = StageQuality.BLOOM; strength = 0.12f }
-            multiSampleAntiAliasingOptions = multiSampleAntiAliasingOptions.apply {
-                enabled = StageQuality.MSAA; sampleCount = 2
+        EngineTurn.take()
+        engine = try { createEngine(backend) } catch (e: Throwable) { EngineTurn.give(); throw e }
+        try {
+            scene = engine.createScene()
+            colorGrading = ColorGrading.Builder().toneMapper(ToneMapper.Filmic()).build(engine)
+            mainView = engine.createView().apply {
+                scene = this@StageScene.scene
+                colorGrading = this@StageScene.colorGrading
+                bloomOptions = bloomOptions.apply { enabled = StageQuality.BLOOM; strength = 0.12f }
+                multiSampleAntiAliasingOptions = multiSampleAntiAliasingOptions.apply {
+                    enabled = StageQuality.MSAA; sampleCount = 2
+                }
             }
+            // The inset is small: no shadows, bloom or MSAA.
+            camView = engine.createView().apply {
+                scene = this@StageScene.scene
+                colorGrading = this@StageScene.colorGrading
+                setShadowingEnabled(false)
+            }
+            indirectLight = IndirectLight.Builder().irradiance(1, floatArrayOf(0.03f, 0.036f, 0.054f)).intensity(1f).build(engine)
+            scene.indirectLight = indirectLight
+            provider = UbershaderProvider(engine)
+            loader = AssetLoader(engine, provider, EntityManager.get())
+            asset = requireNotNull(loader.createAsset(readBuffer(stagePath))) { "Stage file did not load" }
+            ResourceLoader(engine).apply { loadResources(asset); destroy() }
+            asset.releaseSourceData()
+            scene.addEntities(asset.entities)
+            info = StageInfo.parse(readText(infoPath))
+            val transforms = engine.transformManager
+            for (entity in asset.entities) {
+                val instance = transforms.getInstance(entity)
+                if (instance != 0) restPose[entity] = transforms.getTransform(instance, FloatArray(16))
+            }
+            for (entity in asset.lightEntities) asset.getName(entity)?.let { lights[it] = entity }
+            for (mi in asset.instance.materialInstances) materials.getOrPut(mi.name) { mutableListOf() }.add(mi)
+            for (area in info.areaLights) addAreaLight(area)
+            broadcastCamera = camera(BROADCAST_CAMERA)
+            mainView.camera = broadcastCamera
+        } catch (e: Throwable) {
+            engine.destroy()
+            EngineTurn.give()
+            throw e
         }
-        // The inset is small: no shadows, bloom or MSAA.
-        camView = engine.createView().apply {
-            scene = this@StageScene.scene
-            colorGrading = this@StageScene.colorGrading
-            setShadowingEnabled(false)
-        }
-        indirectLight = IndirectLight.Builder().irradiance(1, floatArrayOf(0.03f, 0.036f, 0.054f)).intensity(1f).build(engine)
-        scene.indirectLight = indirectLight
-        provider = UbershaderProvider(engine)
-        loader = AssetLoader(engine, provider, EntityManager.get())
-        asset = requireNotNull(loader.createAsset(readBuffer(stagePath))) { "Stage file did not load" }
-        ResourceLoader(engine).apply { loadResources(asset); destroy() }
-        asset.releaseSourceData()
-        scene.addEntities(asset.entities)
-        info = StageInfo.parse(readText(infoPath))
-        val transforms = engine.transformManager
-        for (entity in asset.entities) {
-            val instance = transforms.getInstance(entity)
-            if (instance != 0) restPose[entity] = transforms.getTransform(instance, FloatArray(16))
-        }
-        for (entity in asset.lightEntities) asset.getName(entity)?.let { lights[it] = entity }
-        for (mi in asset.instance.materialInstances) materials.getOrPut(mi.name) { mutableListOf() }.add(mi)
-        for (area in info.areaLights) addAreaLight(area)
-        broadcastCamera = camera(BROADCAST_CAMERA)
-        mainView.camera = broadcastCamera
     }
 
     private fun createEngine(backend: StageBackend): Engine {
@@ -318,5 +341,6 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
         engine.destroyView(camView)
         engine.destroyScene(scene)
         engine.destroy()
+        EngineTurn.give()
     }
 }

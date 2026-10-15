@@ -44,52 +44,10 @@ class AssetCatalogTest {
     }
 
     @Test
-    fun everyMixHasAPerformanceInEveryConcept() {
-        val catalog = AssetCatalog(manifest, AssetOpener { true })
-        for (arrangement in ArrangementId.entries) {
-            for (member in MemberId.entries) {
-                for (concept in ConceptId.entries) {
-                    val id = "${concept.name.lowercase()}-${arrangement.name.lowercase()}-${member.name.lowercase()}"
-                    assertEquals(
-                        VisualPlayback.Performance("visual/performance/$id.mp4"),
-                        catalog.visualPlayback(Selection(arrangement, member, concept)),
-                    )
-                }
-            }
-        }
-    }
-
-    @Test
-    fun missingOrFailedVideoFallsBackToTheLoopThenItsMatchingStill() {
-        val warmKeytar = Selection(ArrangementId.DRIVING, MemberId.KEYTAR, ConceptId.WARM)
-        val noPerformance = AssetCatalog(manifest, AssetOpener { !it.startsWith("visual/performance/") })
-        assertEquals(VisualPlayback.Loop("visual/loop-warm.mp4"), noPerformance.visualPlayback(warmKeytar))
-        val noVideo = AssetCatalog(manifest, AssetOpener { it.endsWith(".webp") || it.endsWith(".m4a") })
-        assertEquals(VisualPlayback.Still("visual/concept-warm.webp"), noVideo.visualPlayback(warmKeytar))
-        assertEquals(
-            AssetRecovery.UseStill("loop-warm", "visual/concept-warm.webp"),
-            noVideo.recoveryForDecoderError("visual/loop-warm.mp4"),
-        )
-        assertEquals(
-            AssetRecovery.UseStill("warm-driving-keytar", "visual/concept-warm.webp"),
-            noVideo.recoveryForDecoderError("visual/performance/warm-driving-keytar.mp4"),
-        )
-    }
-
-    @Test
-    fun decoderErrorMapsAudioToBlockingId() {
-        val catalog = AssetCatalog(manifest, AssetOpener { true })
-        assertEquals(
-            AssetRecovery.BlockBooking("layered-keytar"),
-            catalog.recoveryForDecoderError("audio/layered-keytar.m4a"),
-        )
-    }
-
-    @Test
     fun missingStillAndUnknownIdsFailExplicitly() {
         val missingStill = AssetCatalog(manifest, AssetOpener { it != "visual/concept-warm.webp" })
         val error = expectAssetProblem {
-            missingStill.visualPlayback(Selection(ArrangementId.SPARSE, MemberId.FRONTMAN, ConceptId.WARM))
+            missingStill.concept(ConceptId.WARM)
         }
         assertEquals("concept-warm", error.assetId)
         assertEquals(AssetProblem.Kind.STILL, error.kind)
@@ -100,12 +58,6 @@ class AssetCatalogTest {
         }
         assertEquals("sparse-frontman", unknown.assetId)
         assertTrue(unknown.message!!.contains("not in manifest"))
-
-        try {
-            incomplete.recoveryForDecoderError("audio/not-listed.m4a")
-            fail("Unknown decoder path must fail")
-        } catch (_: IllegalArgumentException) {
-        }
     }
 
     private fun expectAssetProblem(block: () -> Unit): AssetProblem {

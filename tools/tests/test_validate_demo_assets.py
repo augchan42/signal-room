@@ -12,13 +12,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from validate_demo_assets import (  # noqa: E402
     audio_metric_failures,
     inspect_audio,
-    inspect_video,
     live_file_failures,
-    performance_metric_failures,
     validate_file,
     validate_manifest,
     validate_manifest_structure,
-    video_metric_failures,
 )
 
 
@@ -67,24 +64,6 @@ class DemoAssetValidationTest(unittest.TestCase):
         self.assertGreater(metrics["truePeakDbtp"], -1)
         self.assertTrue(any("true peak" in failure for failure in audio_metric_failures(metrics)))
 
-    def test_ninety_five_frame_video_is_rejected(self):
-        path = self.root / "short.mp4"
-        self.ffmpeg("-f", "lavfi", "-i", "color=c=black:s=64x64:r=24", "-frames:v", "95", "-c:v", "libx264", "-pix_fmt", "yuv420p", path)
-        metrics = inspect_video(path)
-        self.assertEqual(metrics["frames"], 95)
-        self.assertTrue(any("96 frames" in failure for failure in video_metric_failures(metrics)))
-
-    def test_video_with_audio_track_is_rejected(self):
-        path = self.root / "not-silent.mp4"
-        self.ffmpeg(
-            "-f", "lavfi", "-i", "color=c=black:s=64x64:r=24:d=1",
-            "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", "-shortest", path,
-        )
-        metrics = inspect_video(path)
-        self.assertEqual(metrics["audioStreams"], 1)
-        self.assertTrue(any("silent" in failure for failure in video_metric_failures(metrics)))
-
     def test_audio_metric_boundaries_are_not_rounded(self):
         good = {
             "codec": "aac", "profile": "LC", "sampleRate": 48000, "channels": 2,
@@ -99,29 +78,18 @@ class DemoAssetValidationTest(unittest.TestCase):
         manifest = {
             "schemaVersion": 2,
             "audio": [{"id": "sparse-frontman", "path": "../escape.m4a", "arrangement": "SPARSE", "member": "FRONTMAN", "sha256": ""}] * 12,
-            "concepts": [], "performances": [], "members": [], "controlRoomPath": "visual/control-room.webp", "controlRoomSha256": "",
+            "concepts": [], "members": [], "controlRoomPath": "visual/control-room.webp", "controlRoomSha256": "",
         }
         failures = validate_manifest_structure(manifest, self.root)
         self.assertTrue(any("unsafe" in failure for failure in failures))
         self.assertTrue(any("duplicate" in failure for failure in failures))
         self.assertTrue(any("3 concepts" in failure for failure in failures))
-        self.assertTrue(any("36 performances" in failure for failure in failures))
-
-    def test_performance_must_be_twenty_seconds_at_540_by_960(self):
-        path = self.root / "performance.mp4"
-        self.ffmpeg("-f", "lavfi", "-i", "color=c=black:s=540x960:r=24", "-frames:v", "96", "-c:v", "libx264", "-pix_fmt", "yuv420p", path)
-        failures = performance_metric_failures(inspect_video(path))
-        self.assertTrue(any("480 frames" in failure for failure in failures))
-        self.assertFalse(any("540 x 960" in failure for failure in failures))
-        good = {"codec": "h264", "pixelFormat": "yuv420p", "colorRange": "tv", "width": 540, "height": 960,
-                "fps": 24, "frames": 480, "duration": 20.0, "audioStreams": 0}
-        self.assertEqual([], performance_metric_failures(good))
-        self.assertTrue(any("540 x 960" in f for f in performance_metric_failures({**good, "width": 1080, "height": 1920})))
+        self.assertTrue(any("schemaVersion must be 4" in failure for failure in failures))
 
     def test_failed_validation_never_repairs_manifest(self):
         manifest_path = self.root / "manifest.json"
         original = json.dumps({
-            "schemaVersion": 2, "audio": [], "concepts": [], "performances": [], "members": [],
+            "schemaVersion": 2, "audio": [], "concepts": [], "members": [],
             "controlRoomPath": "visual/control-room.webp", "controlRoomSha256": "",
         })
         manifest_path.write_text(original)
@@ -164,7 +132,7 @@ class DemoAssetValidationTest(unittest.TestCase):
         self.assertTrue(any("missing" in f for f in live_file_failures(self.root / "absent.png", "png")))
 
     def test_manifest_structure_requires_the_live_stage(self):
-        failures = validate_manifest_structure({"schemaVersion": 3, "audio": [], "concepts": [], "performances": [],
+        failures = validate_manifest_structure({"schemaVersion": 4, "audio": [], "concepts": [],
                                                 "members": [], "live": {"screens": [], "mixes": []}}, self.root)
         self.assertTrue(any("live stage path" in f for f in failures))
         self.assertTrue(any("12 live mixes" in f for f in failures))
