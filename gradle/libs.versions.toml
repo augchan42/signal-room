@@ -8,6 +8,8 @@ lifecycle = "2.8.7"
 serialization = "1.7.3"
 coroutines = "1.9.0"
 media3 = "1.11.1"
+# Pinned: Filament 1.76 and later need compileSdk 37, which AGP 8.13.2 does not support.
+filament = "1.75.1"
 junit = "4.13.2"
 androidx-test-ext = "1.3.0"
 espresso = "3.7.0"
@@ -27,6 +29,8 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3" }
 media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3" }
+filament-android = { group = "com.google.android.filament", name = "filament-android", version.ref = "filament" }
+gltfio-android = { group = "com.google.android.filament", name = "gltfio-android", version.ref = "filament" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
