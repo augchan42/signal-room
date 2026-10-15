@@ -1,0 +1,4 @@
+build/
+export/
+godot/export/
+godot/.godot/
