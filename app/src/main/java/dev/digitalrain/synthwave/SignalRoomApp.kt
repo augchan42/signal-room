@@ -130,6 +130,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             playback = playback,
             visual = visual,
             videoPlayer = video.player,
+            camPlayer = video.camPlayer,
             message = message,
             recoveryRequired = recoveryRequired,
             countIn = countIn,

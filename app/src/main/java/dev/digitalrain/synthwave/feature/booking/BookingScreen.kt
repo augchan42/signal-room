@@ -25,6 +25,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +53,7 @@ fun BookingScreen(
     playback: PlaybackState,
     visual: VideoState,
     videoPlayer: ExoPlayer,
+    camPlayer: ExoPlayer,
     message: String?,
     recoveryRequired: Boolean,
     countIn: Int = 0,
@@ -89,7 +91,7 @@ fun BookingScreen(
                         Phase.DESK -> ChooseScreen(snapshot, content, catalog, onAction)
                         Phase.PREPARATION -> PrepareScreen(snapshot, content, onAction)
                         Phase.BROADCAST -> BroadcastScreen(snapshot, content, catalog, playback, visual,
-                            videoPlayer, countIn, onAction, onReset, onPlayPause, onMute)
+                            videoPlayer, camPlayer, countIn, onAction, onReset, onPlayPause, onMute)
                         Phase.VERDICT, Phase.RECAP -> RewardScreen(snapshot, content, onAction, onReset)
                     }
                     if (message != null) PanelCard { Text(message, color = MaterialTheme.colorScheme.error) }
@@ -108,7 +110,7 @@ fun BookingScreen(
 
 @Composable
 private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, catalog: AssetCatalog,
-                            playback: PlaybackState, visual: VideoState, videoPlayer: ExoPlayer,
+                            playback: PlaybackState, visual: VideoState, videoPlayer: ExoPlayer, camPlayer: ExoPlayer,
                             countIn: Int, onAction: (RunAction) -> Unit, onReset: () -> Unit,
                             onPlayPause: () -> Unit, onMute: () -> Unit) {
     Text("ON AIR", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.secondary)
@@ -130,9 +132,13 @@ private fun BroadcastScreen(snapshot: RunSnapshot, content: BookingContent, cata
         }
         Text(timeLeft(playback.positionMs), Modifier.align(Alignment.TopEnd).background(Panel).padding(6.dp),
             fontSize = 18.sp, fontWeight = FontWeight.Medium)
-        Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(100.dp, 134.dp).background(Panel)) {
-            SceneBackdrop("demo/${catalog.member(snapshot.selection.member).stillPath}",
-                "${content.members.getValue(snapshot.selection.member).displayName} fancam inset", Modifier.fillMaxSize())
+        Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(140.dp, 180.dp).background(Panel).clipToBounds()) {
+            if (visual.status == VideoStatus.READY && !visual.loops && playback.status == PlaybackStatus.PLAYING) {
+                MemberCam(camPlayer, snapshot.selection.member, Modifier.fillMaxSize().testTag("member-cam"))
+            } else {
+                SceneBackdrop("demo/${catalog.member(snapshot.selection.member).stillPath}",
+                    "${content.members.getValue(snapshot.selection.member).displayName} fancam inset", Modifier.fillMaxSize())
+            }
             Text("${content.members.getValue(snapshot.selection.member).displayName.uppercase()} CAM",
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Panel).padding(3.dp),
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)

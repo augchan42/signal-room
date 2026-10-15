@@ -42,6 +42,11 @@ class BroadcastVideoController(
         volume = 0f
         repeatMode = Player.REPEAT_MODE_ONE
     }
+    /** Second muted decoder of the same performance, shown zoomed on the featured member. */
+    val camPlayer: ExoPlayer = ExoPlayer.Builder(context.applicationContext).build().apply {
+        volume = 0f
+        repeatMode = Player.REPEAT_MODE_OFF
+    }
     private val mutableState = MutableStateFlow(VideoState())
     val state: StateFlow<VideoState> = mutableState.asStateFlow()
     private var pending: CancellableContinuation<Unit>? = null
@@ -71,6 +76,8 @@ class BroadcastVideoController(
         pending?.cancel(CancellationException("video load superseded"))
         pending = null
         player.stop()
+        camPlayer.stop()
+        camPlayer.clearMediaItems()
         val id = selection.concept
         val media = catalog.visualPlayback(selection)
         val video = when (media) {
@@ -94,6 +101,10 @@ class BroadcastVideoController(
             try {
                 player.setMediaItem(MediaItem.fromUri("asset:///demo/$video"), 0)
                 player.prepare()
+                if (!loops) {
+                    camPlayer.setMediaItem(MediaItem.fromUri("asset:///demo/$video"), 0)
+                    camPlayer.prepare()
+                }
             } catch (_: Exception) {
                 useMatchingStill()
             }
@@ -104,13 +115,22 @@ class BroadcastVideoController(
         if (released || mutableState.value.status != VideoStatus.READY) return
         val loops = mutableState.value.loops
         val expected = BroadcastClock.visualPosition(audioPositionMs, loops)
-        if (BroadcastClock.needsCorrection(audioPositionMs, player.currentPosition, loops)) {
+        if (BroadcastClock.needsCorrection(audioPositionMs, player.currentPosition, loops, player.isSeeking())) {
             player.seekTo(expected)
         }
         if (audioStatus == PlaybackStatus.PLAYING) player.play() else player.pause()
+        if (!loops && camPlayer.mediaItemCount > 0) {
+            if (BroadcastClock.needsCorrection(audioPositionMs, camPlayer.currentPosition, false, camPlayer.isSeeking())) {
+                camPlayer.seekTo(expected)
+            }
+            if (audioStatus == PlaybackStatus.PLAYING) camPlayer.play() else camPlayer.pause()
+        }
     }
 
-    fun onBackground() { player.pause() }
+    fun onBackground() {
+        player.pause()
+        camPlayer.pause()
+    }
 
     fun release() {
         if (released) return
@@ -119,6 +139,7 @@ class BroadcastVideoController(
         pending = null
         player.removeListener(listener)
         player.release()
+        camPlayer.release()
         mutableState.value = VideoState()
     }
 
@@ -128,9 +149,14 @@ class BroadcastVideoController(
         val recovery = catalog.recoveryForDecoderError(loop)
         val still = (recovery as? AssetRecovery.UseStill)?.stillPath ?: return
         player.pause()
+        camPlayer.stop()
+        camPlayer.clearMediaItems()
         mutableState.value = current.copy(status = VideoStatus.FALLBACK, stillPath = still)
         val waiting = pending
         pending = null
         if (waiting?.isActive == true) waiting.resume(Unit)
     }
 }
+
+/** A seek leaves the player buffering until the decoder has caught up to the new position. */
+private fun ExoPlayer.isSeeking(): Boolean = playbackState == Player.STATE_BUFFERING
