@@ -168,6 +168,7 @@ class FilamentStage(
     private fun startTicking() {
         if (ticking) return
         ticking = true
+        lastFrameNanos = 0L
         Choreographer.getInstance().postFrameCallback(this)
     }
 
@@ -182,7 +183,10 @@ class FilamentStage(
         val scene = stage ?: return
         if (frameTimeNanos - lastFrameNanos < FRAME_INTERVAL_NANOS - VSYNC_SLACK_NANOS) return
         val time = (clock.positionMs() / 1000f).coerceIn(0f, scene.duration)
-        if (time == lastTime) return // paused: the last frame stays on screen
+        if (time == lastTime) {
+            lastFrameNanos = 0L // paused: the last frame stays on screen, and the pause isn't a frame interval
+            return
+        }
         val start = System.nanoTime()
         scene.pose(time)
         val drawn = draw(mainTarget, scene.mainView, frameTimeNanos)
