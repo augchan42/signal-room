@@ -45,6 +45,8 @@ class FilamentStage(
         var height = 0
         var swapChain: SwapChain? = null
         var renderer: Renderer? = null
+        /** The show time this view last drew, so a paused view that missed a frame still gets one. */
+        var drawnTime = -1f
     }
 
     // Render thread only.
@@ -53,7 +55,6 @@ class FilamentStage(
     private val camTarget = Target(main = false)
     private var ticking = false
     private var lastFrameNanos = 0L
-    private var lastTime = -1f
     private val stats = FrameStats()
 
     override suspend fun prepare(request: StageRequest): Boolean = suspendCancellableCoroutine { continuation ->
@@ -82,7 +83,7 @@ class FilamentStage(
         scene.drawOffScreen(main = true, 540, 960, 0f, readBack = false)
         scene.drawOffScreen(main = false, 280, 360, 0f, readBack = false)
         for (target in listOf(mainTarget, camTarget)) if (target.surface != null) bind(target, scene)
-        lastTime = -1f
+        redrawAll()
         if (mainTarget.surface != null) startTicking()
         Log.i(STAGE_TAG, "Prepared ${request.motionPath} ${request.concept} in ${SystemClock.elapsedRealtime() - start} ms")
     }
@@ -93,7 +94,7 @@ class FilamentStage(
             val scene = checkNotNull(stage) { "Prepare the stage first" }
             val pixels = scene.drawOffScreen(main, width, height, time, readBack = true)!!
             for (target in listOf(mainTarget, camTarget)) if (target.surface != null) bind(target, scene)
-            lastTime = -1f
+            redrawAll()
             if (continuation.isActive) continuation.resume(pixels)
         }
     }
@@ -134,7 +135,7 @@ class FilamentStage(
         target.width = width
         target.height = height
         stage?.let { bind(target, it) }
-        lastTime = -1f
+        redrawAll()
         if (mainTarget.surface != null) startTicking()
     }
 
@@ -220,29 +221,36 @@ class FilamentStage(
         val scene = stage ?: return
         if (frameTimeNanos - lastFrameNanos < FRAME_INTERVAL_NANOS - VSYNC_SLACK_NANOS) return
         val time = (clock.positionMs() / 1000f).coerceIn(0f, scene.duration)
-        if (time == lastTime) {
+        val mainDue = mainTarget.swapChain != null && mainTarget.drawnTime != time
+        val camDue = camTarget.swapChain != null && camTarget.drawnTime != time
+        if (!mainDue && !camDue) {
             lastFrameNanos = 0L // paused: the last frame stays on screen, and the pause isn't a frame interval
             return
         }
         val start = System.nanoTime()
         scene.pose(time)
-        // Either view counts, so the 30 fps cap and the pause hold even if one view hasn't drawn.
-        val drawnMain = draw(mainTarget, scene.mainView, frameTimeNanos)
-        val drawnCam = draw(camTarget, scene.camView, frameTimeNanos)
+        // A view whose beginFrame skipped tries again next frame, even while paused.
+        val drawnMain = mainDue && draw(mainTarget, scene.mainView, time, frameTimeNanos)
+        val drawnCam = camDue && draw(camTarget, scene.camView, time, frameTimeNanos)
         if (drawnMain || drawnCam) {
             stats.add(frameTimeNanos, lastFrameNanos, System.nanoTime() - start)
-            lastTime = time
             lastFrameNanos = frameTimeNanos
         }
     }
 
-    private fun draw(target: Target, view: View, frameTimeNanos: Long): Boolean {
+    private fun draw(target: Target, view: View, time: Float, frameTimeNanos: Long): Boolean {
         val chain = target.swapChain ?: return false
         val renderer = target.renderer ?: return false
         if (!renderer.beginFrame(chain, frameTimeNanos)) return false
         renderer.render(view)
         renderer.endFrame()
+        target.drawnTime = time
         return true
+    }
+
+    private fun redrawAll() {
+        mainTarget.drawnTime = -1f
+        camTarget.drawnTime = -1f
     }
 
     /** Frame interval and render-thread time, logged every 10 s for the device check. */
