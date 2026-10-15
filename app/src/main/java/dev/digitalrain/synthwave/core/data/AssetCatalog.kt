@@ -8,6 +8,7 @@ import dev.digitalrain.synthwave.core.model.ConceptId
 import dev.digitalrain.synthwave.core.model.MemberAsset
 import dev.digitalrain.synthwave.core.model.MemberId
 import dev.digitalrain.synthwave.core.model.Selection
+import dev.digitalrain.synthwave.core.stage.StageRequest
 import kotlinx.serialization.json.Json
 
 private val assetJson = Json { ignoreUnknownKeys = false }
@@ -85,6 +86,18 @@ class AssetCatalog(
             opener.canOpen(asset.loopPath) -> VisualPlayback.Loop(asset.loopPath)
             else -> VisualPlayback.Still(asset.stillPath)
         }
+    }
+
+    /** The live stage files for this show, or null if any of them can't be opened. */
+    fun liveStage(selection: Selection): StageRequest? {
+        val live = manifest.live
+        val mix = live.mixes.singleOrNull { it.arrangement == selection.arrangement && it.member == selection.member }
+            ?: return null
+        val screen = live.screens.singleOrNull { it.concept == selection.concept } ?: return null
+        val paths = listOf(live.stagePath, live.infoPath, mix.motionPath, mix.tracksPath, screen.path)
+        if (!paths.all(opener::canOpen)) return null
+        return StageRequest("demo/${live.stagePath}", "demo/${live.infoPath}", "demo/${mix.motionPath}",
+            "demo/${mix.tracksPath}", "demo/${screen.path}", selection.concept, selection.member)
     }
 
     fun recoveryForDecoderError(path: String): AssetRecovery {

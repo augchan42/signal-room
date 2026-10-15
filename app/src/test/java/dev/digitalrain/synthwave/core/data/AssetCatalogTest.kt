@@ -4,6 +4,7 @@ import dev.digitalrain.synthwave.core.model.ArrangementId
 import dev.digitalrain.synthwave.core.model.ConceptId
 import dev.digitalrain.synthwave.core.model.MemberId
 import dev.digitalrain.synthwave.core.model.Selection
+import dev.digitalrain.synthwave.core.stage.StageRequest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -115,5 +116,15 @@ class AssetCatalogTest {
             return error
         }
         error("unreachable")
+    }
+
+    @Test
+    fun liveStageNamesTheShowsFilesOrNothingIfOneIsMissing() {
+        val selection = Selection(ArrangementId.DRIVING, MemberId.KEYTAR, ConceptId.WARM)
+        val request = AssetCatalog(manifest, AssetOpener { true }).liveStage(selection)
+        assertEquals(StageRequest("demo/live/stage.glb", "demo/live/stage.json", "demo/live/mix/driving-keytar.motion",
+            "demo/live/mix/driving-keytar.tracks.json", "demo/live/screen-warm.png", ConceptId.WARM, MemberId.KEYTAR), request)
+        val missing = AssetCatalog(manifest, AssetOpener { it != "live/mix/driving-keytar.motion" })
+        assertEquals(null, missing.liveStage(selection))
     }
 }
