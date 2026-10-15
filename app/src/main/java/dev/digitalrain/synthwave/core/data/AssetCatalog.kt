@@ -43,7 +43,7 @@ class AssetCatalog(
     private val opener: AssetOpener,
 ) {
     init {
-        require(manifest.schemaVersion == 2) { "Unsupported asset manifest version" }
+        require(manifest.schemaVersion == 3) { "Unsupported asset manifest version" }
     }
 
     fun audio(selection: Selection): AudioAsset {

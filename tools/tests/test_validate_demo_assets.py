@@ -13,6 +13,7 @@ from validate_demo_assets import (  # noqa: E402
     audio_metric_failures,
     inspect_audio,
     inspect_video,
+    live_file_failures,
     performance_metric_failures,
     validate_file,
     validate_manifest,
@@ -142,6 +143,32 @@ class DemoAssetValidationTest(unittest.TestCase):
         report = validate_manifest(self.root)
         self.assertFalse(report["ok"])
         self.assertTrue(any("object" in failure for failure in report["failures"]))
+
+    def test_live_files_are_checked_by_signature(self):
+        glb = self.root / "stage.glb"
+        glb.write_bytes(b"glTF" + (2).to_bytes(4, "little") + b"\0" * 12)
+        self.assertEqual([], live_file_failures(glb, "glb"))
+        glb.write_bytes(b"GIF89a")
+        self.assertTrue(any("glTF" in f for f in live_file_failures(glb, "glb")))
+        motion = self.root / "mix.motion"
+        motion.write_bytes(b"SRM1" + b"\0" * 12)
+        self.assertEqual([], live_file_failures(motion, "motion"))
+        tracks = self.root / "mix.tracks.json"
+        tracks.write_text('{"fps": 24, "frames": 480}')
+        self.assertEqual([], live_file_failures(tracks, "json"))
+        tracks.write_text('{"fps": 30, "frames": 480}')
+        self.assertTrue(any("24 fps" in f for f in live_file_failures(tracks, "json")))
+        png = self.root / "screen.png"
+        png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0" * 8)
+        self.assertEqual([], live_file_failures(png, "png"))
+        self.assertTrue(any("missing" in f for f in live_file_failures(self.root / "absent.png", "png")))
+
+    def test_manifest_structure_requires_the_live_stage(self):
+        failures = validate_manifest_structure({"schemaVersion": 3, "audio": [], "concepts": [], "performances": [],
+                                                "members": [], "live": {"screens": [], "mixes": []}}, self.root)
+        self.assertTrue(any("live stage path" in f for f in failures))
+        self.assertTrue(any("12 live mixes" in f for f in failures))
+        self.assertTrue(any("3 live screens" in f for f in failures))
 
 
 if __name__ == "__main__":

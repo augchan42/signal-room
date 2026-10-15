@@ -88,6 +88,31 @@ class LiveMotionTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "matrix"):
             live_motion.node_trs({"name": "arm", "matrix": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]})
 
+    LIVE = Path(__file__).resolve().parents[3] / "app" / "src" / "main" / "assets" / "demo" / "live"
+
+    @unittest.skipUnless(LIVE.exists(), "live stage not exported")
+    def test_checked_in_mixes_fit_the_stage(self):
+        stage, _ = live_motion.read_glb(self.LIVE / "stage.glb")
+        names = {node["name"] for node in stage["nodes"]}
+        self.assertNotIn("animations", stage)
+        for arrangement in ("sparse", "driving", "layered"):
+            for member in ("frontman", "keyboardist", "keytar", "drummer"):
+                fps, frames, nodes = live_motion.read_motion(self.LIVE / "mix" / f"{arrangement}-{member}.motion")
+                self.assertEqual((24, 480), (fps, frames))
+                self.assertLessEqual({name for name, _, _, _ in nodes}, names)
+                self.assertGreaterEqual(sum(1 for node in nodes if node[2]), 74)
+                tracks = json.loads((self.LIVE / "mix" / f"{arrangement}-{member}.tracks.json").read_text())
+                self.assertEqual(6, len(tracks["lights"]))
+                self.assertEqual(3, len(tracks["emissive"]))
+                self.assertTrue(all(len(t["watts"]) == 480 for t in tracks["lights"]))
+        info = json.loads((self.LIVE / "stage.json").read_text())
+        self.assertEqual({"MONOCHROME", "WARM", "ELECTRIC"}, set(info["concepts"]))
+        self.assertEqual(4, len(info["areaLights"]))
+        self.assertEqual({"CAM | Broadcast group", "CAM | Frontman fancam", "CAM | Producer fancam",
+                          "CAM | Keytar fancam", "CAM | Drummer fancam"}, set(info["cameras"]) - {"CAM | Control room"})
+        self.assertAlmostEqual(350 / 300, info["concepts"]["ELECTRIC"]["lights"]["Warm portrait key"]["factor"])
+        self.assertAlmostEqual(0.4, info["concepts"]["MONOCHROME"]["lights"]["Cyan rear rim"]["factor"])
+
 
 if __name__ == "__main__":
     unittest.main()

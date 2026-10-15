@@ -80,8 +80,9 @@ def motion_nodes(stage, mix, fps, frames):
             if name in animated:
                 raise ValueError(f"{name} has more than one animated channel")
             times = accessor_floats(mix_gltf, mix_binary, sampler["input"])
-            if len(times) != frames or any(abs(time - k / fps) > 1e-4 for k, time in enumerate(times)):
-                raise ValueError(f"{name}: keys must fall on every frame from 0 at {fps} fps")
+            # Blender's first frame is 1, so keys start at 1/fps; the first key is the show's start.
+            if len(times) != frames or any(abs(time - times[0] - k / fps) > 1e-4 for k, time in enumerate(times)):
+                raise ValueError(f"{name}: keys must fall on every frame at {fps} fps")
             animated[name] = (CHANNELS[path][0], accessor_floats(mix_gltf, mix_binary, sampler["output"]))
     nodes = []
     for node in mix_gltf["nodes"]:

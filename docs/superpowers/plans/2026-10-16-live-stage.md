@@ -788,7 +788,7 @@ EOF
 PATH=/opt/homebrew/bin:$PATH python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report /private/tmp/claude-501/demo-assets.json --write-hashes
 ```
 
-Expected: `Validated 76 demo assets` (12 audio + 3 stills + 3 loops + 36 performances + 4 members + control room + 17 live files).
+Expected: `Validated 88 demo assets` (12 audio + 3 stills + 3 loops + 36 performances + 4 members + control room + 29 live files).
 
 In `MediaModels.kt` add:
 
@@ -2358,7 +2358,7 @@ EOF
 `AssetCatalog.kt`: `require(manifest.schemaVersion == 4)`; delete `VisualPlayback`, `AssetRecovery`, `visualPlayback` and `recoveryForDecoderError`.
 
 Run: `PATH=/opt/homebrew/bin:$PATH python3 tools/validate_demo_assets.py --root app/src/main/assets/demo --report /private/tmp/claude-501/demo-assets.json` and the validator tests.
-Expected: `Validated 37 demo assets` (12 audio, 3 concept stills, 4 member stills, control room, 17 live files); validator tests pass.
+Expected: `Validated 49 demo assets` (12 audio, 3 concept stills, 4 member stills, control room, 29 live files); validator tests pass.
 
 - [ ] **Step 4: Write `LiveStageViews.kt`**
 

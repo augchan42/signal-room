@@ -16,6 +16,28 @@ ARRANGEMENTS = ("SPARSE", "DRIVING", "LAYERED")
 MEMBERS = ("FRONTMAN", "KEYBOARDIST", "KEYTAR", "DRUMMER")
 CONCEPTS = ("MONOCHROME", "WARM", "ELECTRIC")
 HEX_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+LIVE_KINDS = {"glb": b"glTF", "motion": b"SRM1", "png": b"\x89PNG\r\n\x1a\n", "json": None}
+
+
+def live_file_failures(path: Path, kind: str) -> list[str]:
+    """The live stage's files are not media; check that each is present and of its kind."""
+    if not path.is_file():
+        return [f"missing file: {path}"]
+    data = path.read_bytes()
+    if kind == "json":
+        try:
+            content = json.loads(data)
+        except json.JSONDecodeError as error:
+            return [f"{path}: invalid JSON: {error}"]
+        if not isinstance(content, dict) or content.get("fps") != 24 or content.get("frames") != 480:
+            return [f"{path}: live data must be 24 fps, 480 frames"]
+        return []
+    signature = LIVE_KINDS[kind]
+    if not data.startswith(signature):
+        return [f"{path}: not a {'glTF' if kind == 'glb' else kind} file"]
+    if kind == "glb" and int.from_bytes(data[4:8], "little") != 2:
+        return [f"{path}: glTF version must be 2"]
+    return []
 
 
 def _run(*command: str) -> subprocess.CompletedProcess:
@@ -216,14 +238,44 @@ def _manifest_entries(manifest: dict) -> list[tuple[str, str, str]]:
     for item in manifest.get("members", []):
         if isinstance(item, dict):
             entries.append((item.get("stillPath"), "image", item.get("sha256", "")))
+    live = manifest.get("live")
+    if isinstance(live, dict):
+        entries.append((live.get("stagePath"), "glb", live.get("stageSha256", "")))
+        entries.append((live.get("infoPath"), "json", live.get("infoSha256", "")))
+        for item in live.get("screens", []):
+            if isinstance(item, dict):
+                entries.append((item.get("path"), "png", item.get("sha256", "")))
+        for item in live.get("mixes", []):
+            if isinstance(item, dict):
+                entries.append((item.get("motionPath"), "motion", item.get("motionSha256", "")))
+                entries.append((item.get("tracksPath"), "json", item.get("tracksSha256", "")))
     entries.append((manifest.get("controlRoomPath"), "image", manifest.get("controlRoomSha256", "")))
     return entries
 
 
+def _live_structure_failures(live: object) -> list[str]:
+    if not isinstance(live, dict):
+        return ["manifest must describe the live stage"]
+    failures = []
+    if live.get("stagePath") != "live/stage.glb" or live.get("infoPath") != "live/stage.json":
+        failures.append("live stage path must be live/stage.glb with live/stage.json")
+    screens, mixes = live.get("screens"), live.get("mixes")
+    if not isinstance(screens, list) or {(s.get("concept"), s.get("path")) for s in screens if isinstance(s, dict)} != \
+            {(c, f"live/screen-{c.lower()}.png") for c in CONCEPTS} or len(screens) != 3:
+        failures.append("manifest must list 3 live screens, one per concept")
+    expected = {(a, m, f"live/mix/{a.lower()}-{m.lower()}.motion", f"live/mix/{a.lower()}-{m.lower()}.tracks.json")
+                for a in ARRANGEMENTS for m in MEMBERS}
+    if not isinstance(mixes, list) or len(mixes) != 12 or {
+            (x.get("arrangement"), x.get("member"), x.get("motionPath"), x.get("tracksPath"))
+            for x in mixes if isinstance(x, dict)} != expected:
+        failures.append("manifest must list 12 live mixes, one per arrangement and member")
+    return failures
+
+
 def validate_manifest_structure(manifest: dict, root: Path) -> list[str]:
     failures = []
-    if manifest.get("schemaVersion") != 2:
-        failures.append("manifest schemaVersion must be 2")
+    if manifest.get("schemaVersion") != 3:
+        failures.append("manifest schemaVersion must be 3")
     audio = manifest.get("audio")
     concepts = manifest.get("concepts")
     performances = manifest.get("performances")
@@ -296,6 +348,7 @@ def validate_manifest_structure(manifest: dict, root: Path) -> list[str]:
         seen_members.add(identifier)
     if seen_members != set(MEMBERS):
         failures.append("member matrix does not cover all 4 members")
+    failures.extend(_live_structure_failures(manifest.get("live")))
     if manifest.get("controlRoomPath") != "visual/control-room.webp":
         failures.append("control-room path must be visual/control-room.webp")
     paths = []
@@ -337,6 +390,15 @@ def validate_manifest(root: Path, *, check_hashes: bool = True) -> dict:
         if not _safe_path(root, relative):
             continue
         path = root / relative
+        if kind in LIVE_KINDS:
+            failures = live_file_failures(path, kind)
+            if not failures:
+                digest = _sha256(path)
+                report["measurements"][relative] = {"bytes": path.stat().st_size, "sha256": digest}
+                if check_hashes and claimed_hash != digest:
+                    report["failures"].append(f"{relative}: SHA-256 mismatch")
+            report["failures"].extend(failures)
+            continue
         failures = validate_file(path)
         if failures:
             report["failures"].extend(failures)
@@ -381,6 +443,14 @@ def _set_hashes(manifest: dict, measurements: dict) -> None:
         item["sha256"] = measurements[item["path"]]["sha256"]
     for item in manifest["members"]:
         item["sha256"] = measurements[item["stillPath"]]["sha256"]
+    live = manifest["live"]
+    live["stageSha256"] = measurements[live["stagePath"]]["sha256"]
+    live["infoSha256"] = measurements[live["infoPath"]]["sha256"]
+    for item in live["screens"]:
+        item["sha256"] = measurements[item["path"]]["sha256"]
+    for item in live["mixes"]:
+        item["motionSha256"] = measurements[item["motionPath"]]["sha256"]
+        item["tracksSha256"] = measurements[item["tracksPath"]]["sha256"]
     manifest["controlRoomSha256"] = measurements[manifest["controlRoomPath"]]["sha256"]
 
 
