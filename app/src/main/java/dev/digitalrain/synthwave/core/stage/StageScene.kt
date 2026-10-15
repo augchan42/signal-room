@@ -202,6 +202,7 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
 
     /** Puts every node back where the stage file has it, then applies [motion] and [tracks]. */
     fun useMix(path: String, motion: MotionClip, tracks: StageTracks) {
+        mixPath = null // until this mix is fully in place, so a failed switch isn't taken for it
         val transforms = engine.transformManager
         for ((entity, local) in restPose) transforms.setTransform(transforms.getInstance(entity), local)
         val moved = ArrayList<MovingNode>()

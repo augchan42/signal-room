@@ -27,12 +27,14 @@ class LiveStageControllerTest {
         val prepared = mutableListOf<StageRequest>()
         val gates = ArrayDeque<CompletableDeferred<Unit>>()
         var unloads = 0
+        var lost: (() -> Unit)? = null
         override suspend fun prepare(request: StageRequest): Boolean {
             prepared += request
             gates.removeFirstOrNull()?.await()
             return drawn
         }
         override fun unload() { unloads++ }
+        override fun setOnLost(listener: () -> Unit) { lost = listener }
     }
 
     private fun controller(engine: StageEngine, opener: AssetOpener = AssetOpener { true }, clock: StageClock = StageClock { 0 }) =
@@ -92,5 +94,25 @@ class LiveStageControllerTest {
         stage.sync(9_300, PlaybackStatus.PAUSED)
         now += 1_000
         assertEquals(9_300, clock.positionMs())
+    }
+
+    @Test fun aStageLostMidShowFallsBackToTheStill() = runBlocking {
+        val engine = FakeEngine()
+        val stage = controller(engine)
+        stage.load(warmKeytar)
+        requireNotNull(engine.lost).invoke()
+        assertEquals(StageState(ConceptId.WARM, StageStatus.FALLBACK, "visual/concept-warm.webp"), stage.state.value)
+    }
+
+    @Test fun unloadDuringALoadStaysIdle() = runBlocking {
+        val engine = FakeEngine()
+        val gate = CompletableDeferred<Unit>().also { engine.gates += it }
+        val stage = controller(engine)
+        val loading = launch(start = CoroutineStart.UNDISPATCHED) { stage.load(warmKeytar) }
+        assertEquals(StageStatus.LOADING, stage.state.value.status)
+        stage.unload()
+        gate.complete(Unit)
+        loading.join()
+        assertEquals(StageState(), stage.state.value)
     }
 }

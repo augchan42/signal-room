@@ -7,7 +7,9 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
+import sys
 import tempfile
 from pathlib import Path, PurePosixPath
 
@@ -16,11 +18,21 @@ ARRANGEMENTS = ("SPARSE", "DRIVING", "LAYERED")
 MEMBERS = ("FRONTMAN", "KEYBOARDIST", "KEYTAR", "DRUMMER")
 CONCEPTS = ("MONOCHROME", "WARM", "ELECTRIC")
 HEX_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
+# The stage export's own reader and writer, so the check reads files exactly as they were written.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "art" / "blender"))
+from live_motion import read_glb, read_motion  # noqa: E402
+
+SCREEN_MATERIAL = "REAR SCREEN | replaceable feed"
 LIVE_KINDS = {"glb": b"glTF", "motion": b"SRM1", "png": b"\x89PNG\r\n\x1a\n", "json": None}
 
 
-def live_file_failures(path: Path, kind: str) -> list[str]:
-    """The live stage's files are not media; check that each is present and of its kind."""
+def stage_node_names(path: Path) -> set[str]:
+    gltf, _ = read_glb(path)
+    return {node["name"] for node in gltf.get("nodes", []) if "name" in node}
+
+
+def live_file_failures(path: Path, kind: str, stage_nodes: set[str] | None = None) -> list[str]:
+    """The live stage's files are not media; check that each is present and readable as the app reads it."""
     if not path.is_file():
         return [f"missing file: {path}"]
     data = path.read_bytes()
@@ -35,8 +47,27 @@ def live_file_failures(path: Path, kind: str) -> list[str]:
     signature = LIVE_KINDS[kind]
     if not data.startswith(signature):
         return [f"{path}: not a {'glTF' if kind == 'glb' else kind} file"]
-    if kind == "glb" and int.from_bytes(data[4:8], "little") != 2:
-        return [f"{path}: glTF version must be 2"]
+    if kind == "glb":
+        if int.from_bytes(data[4:8], "little") != 2:
+            return [f"{path}: glTF version must be 2"]
+        try:
+            gltf, _ = read_glb(path)
+        except (ValueError, struct.error, json.JSONDecodeError) as error:
+            return [f"{path}: unreadable glTF: {error}"]
+        screen = [m for m in gltf.get("materials", []) if m.get("name") == SCREEN_MATERIAL]
+        if not screen or "emissiveTexture" not in screen[0]:
+            return [f"{path}: '{SCREEN_MATERIAL}' must keep its emissive texture (the concept screen)"]
+    if kind == "motion":
+        try:
+            fps, frames, nodes = read_motion(path)
+        except (ValueError, KeyError, struct.error, UnicodeDecodeError) as error:
+            return [f"{path}: unreadable motion: {error}"]
+        if fps != 24 or frames != 480:
+            return [f"{path}: motion must be 24 fps, 480 frames"]
+        if stage_nodes is not None:
+            unknown = sorted(name for name, *_ in nodes if name not in stage_nodes)
+            if unknown:
+                return [f"{path}: motion names nodes the stage lacks: {', '.join(unknown[:5])}"]
     return []
 
 
@@ -303,12 +334,17 @@ def validate_manifest(root: Path, *, check_hashes: bool = True) -> dict:
         report["ok"] = False
         return report
     report["failures"].extend(validate_manifest_structure(manifest, root))
+    stage_nodes = None
+    live = manifest.get("live")
+    stage_path = live.get("stagePath") if isinstance(live, dict) else None
+    if isinstance(stage_path, str) and _safe_path(root, stage_path) and not live_file_failures(root / stage_path, "glb"):
+        stage_nodes = stage_node_names(root / stage_path)
     for relative, kind, claimed_hash in _manifest_entries(manifest):
         if not _safe_path(root, relative):
             continue
         path = root / relative
         if kind in LIVE_KINDS:
-            failures = live_file_failures(path, kind)
+            failures = live_file_failures(path, kind, stage_nodes)
             if not failures:
                 digest = _sha256(path)
                 report["measurements"][relative] = {"bytes": path.stat().st_size, "sha256": digest}

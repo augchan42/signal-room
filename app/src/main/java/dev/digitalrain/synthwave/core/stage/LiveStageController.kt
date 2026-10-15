@@ -30,6 +30,10 @@ class LiveStageController(
     val state: StateFlow<StageState> = mutableState.asStateFlow()
     private var loads = 0
 
+    init {
+        engine.setOnLost(::lost)
+    }
+
     suspend fun load(selection: Selection) {
         val load = ++loads
         val still = catalog.concept(selection.concept).stillPath
@@ -46,6 +50,13 @@ class LiveStageController(
 
     fun sync(positionMs: Long, status: PlaybackStatus) {
         clock.update(positionMs, status == PlaybackStatus.PLAYING)
+    }
+
+    private fun lost() {
+        val current = mutableState.value
+        if (current.status != StageStatus.READY && current.status != StageStatus.LOADING) return
+        loads++
+        mutableState.value = current.copy(status = StageStatus.FALLBACK)
     }
 
     /** Frees the engine's memory; the next [load] starts it again. */

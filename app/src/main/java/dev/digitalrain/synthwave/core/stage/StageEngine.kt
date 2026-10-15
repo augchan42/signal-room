@@ -21,4 +21,7 @@ interface StageEngine {
 
     /** Frees the engine and everything it holds; the next [prepare] starts again. */
     fun unload()
+
+    /** [listener] runs on the main thread if a prepared stage stops drawing (it has been unloaded). */
+    fun setOnLost(listener: () -> Unit)
 }

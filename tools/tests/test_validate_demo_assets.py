@@ -1,6 +1,7 @@
 """Build-gate tests with actual short FFmpeg media fixtures."""
 
 import json
+import struct
 import subprocess
 import sys
 import tempfile
@@ -10,13 +11,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from validate_demo_assets import (  # noqa: E402
+    SCREEN_MATERIAL,
     audio_metric_failures,
     inspect_audio,
     live_file_failures,
+    stage_node_names,
     validate_file,
     validate_manifest,
     validate_manifest_structure,
 )
+from live_motion import write_motion  # noqa: E402
 
 
 class DemoAssetValidationTest(unittest.TestCase):
@@ -112,15 +116,17 @@ class DemoAssetValidationTest(unittest.TestCase):
         self.assertFalse(report["ok"])
         self.assertTrue(any("object" in failure for failure in report["failures"]))
 
+    def glb(self, path, gltf):
+        body = json.dumps(gltf).encode()
+        body += b" " * (-len(body) % 4)
+        path.write_bytes(b"glTF" + struct.pack("<II", 2, 20 + len(body)) + struct.pack("<II", len(body), 0x4E4F534A) + body)
+
     def test_live_files_are_checked_by_signature(self):
         glb = self.root / "stage.glb"
-        glb.write_bytes(b"glTF" + (2).to_bytes(4, "little") + b"\0" * 12)
+        self.glb(glb, {"asset": {"version": "2.0"}, "materials": [{"name": SCREEN_MATERIAL, "emissiveTexture": {"index": 0}}]})
         self.assertEqual([], live_file_failures(glb, "glb"))
         glb.write_bytes(b"GIF89a")
         self.assertTrue(any("glTF" in f for f in live_file_failures(glb, "glb")))
-        motion = self.root / "mix.motion"
-        motion.write_bytes(b"SRM1" + b"\0" * 12)
-        self.assertEqual([], live_file_failures(motion, "motion"))
         tracks = self.root / "mix.tracks.json"
         tracks.write_text('{"fps": 24, "frames": 480}')
         self.assertEqual([], live_file_failures(tracks, "json"))
@@ -130,6 +136,26 @@ class DemoAssetValidationTest(unittest.TestCase):
         png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\0" * 8)
         self.assertEqual([], live_file_failures(png, "png"))
         self.assertTrue(any("missing" in f for f in live_file_failures(self.root / "absent.png", "png")))
+
+    def test_motion_is_read_like_the_app_reads_it(self):
+        motion = self.root / "mix.motion"
+        rest = [0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+        write_motion(motion, 24, 480, [("Keytar", rest, 1, [0.0] * 3 * 480)])
+        self.assertEqual([], live_file_failures(motion, "motion", stage_nodes={"Keytar", "Drums"}))
+        self.assertTrue(any("Keytar" in f for f in live_file_failures(motion, "motion", stage_nodes={"Drums"})))
+        write_motion(motion, 0, 0, [])
+        self.assertTrue(any("24 fps" in f for f in live_file_failures(motion, "motion")))
+        motion.write_bytes(b"SRM1" + b"\0" * 5)
+        self.assertTrue(live_file_failures(motion, "motion"))
+
+    def test_stage_must_keep_the_screen_emissive_texture(self):
+        glb = self.root / "stage.glb"
+        screen = {"name": SCREEN_MATERIAL, "emissiveTexture": {"index": 0}}
+        self.glb(glb, {"asset": {"version": "2.0"}, "nodes": [{"name": "Keytar"}], "materials": [screen]})
+        self.assertEqual([], live_file_failures(glb, "glb"))
+        self.assertEqual({"Keytar"}, stage_node_names(glb))
+        self.glb(glb, {"asset": {"version": "2.0"}, "materials": [{"name": SCREEN_MATERIAL}]})
+        self.assertTrue(any("emissive" in f for f in live_file_failures(glb, "glb")))
 
     def test_manifest_structure_requires_the_live_stage(self):
         failures = validate_manifest_structure({"schemaVersion": 4, "audio": [], "concepts": [],

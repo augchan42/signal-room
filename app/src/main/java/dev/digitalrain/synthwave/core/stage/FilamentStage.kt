@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import android.view.Choreographer
@@ -12,12 +13,14 @@ import com.google.android.filament.Renderer
 import com.google.android.filament.SwapChain
 import com.google.android.filament.View
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 private const val FRAME_RATE = 30
 private const val FRAME_INTERVAL_NANOS = 1_000_000_000L / FRAME_RATE
 private const val VSYNC_SLACK_NANOS = 4_000_000L
+private const val RELEASE_WAIT_MS = 2_000L
 
 /**
  * The live stage, drawn by Filament. One thread, "stage-render", makes every Filament call; the
@@ -32,6 +35,8 @@ class FilamentStage(
     private val assets = context.applicationContext.assets
     private val thread = HandlerThread("stage-render").apply { start() }
     private val handler = Handler(thread.looper)
+    private val mainHandler = Handler(Looper.getMainLooper())
+    @Volatile private var onLost: () -> Unit = {}
 
     /** A surface the stage draws into: the broadcast SurfaceView or the member-cam TextureView. */
     private class Target(val main: Boolean) {
@@ -54,7 +59,10 @@ class FilamentStage(
     override suspend fun prepare(request: StageRequest): Boolean = suspendCancellableCoroutine { continuation ->
         val posted = handler.post {
             val drawn = runCatching { prepareOnRenderThread(request) }
-                .onFailure { Log.e(STAGE_TAG, "Live stage failed to load", it) }.isSuccess
+                .onFailure {
+                    Log.e(STAGE_TAG, "Live stage failed to load", it)
+                    runCatching { unloadOnRenderThread() } // don't keep a half-set-up stage in memory
+                }.isSuccess
             if (continuation.isActive) continuation.resume(drawn)
         }
         if (!posted && continuation.isActive) continuation.resume(false)
@@ -75,7 +83,7 @@ class FilamentStage(
         scene.drawOffScreen(main = false, 280, 360, 0f, readBack = false)
         for (target in listOf(mainTarget, camTarget)) if (target.surface != null) bind(target, scene)
         lastTime = -1f
-        if (mainTarget.surface != null || camTarget.surface != null) startTicking()
+        if (mainTarget.surface != null) startTicking()
         Log.i(STAGE_TAG, "Prepared ${request.motionPath} ${request.concept} in ${SystemClock.elapsedRealtime() - start} ms")
     }
 
@@ -90,14 +98,30 @@ class FilamentStage(
         }
     }
 
+    override fun setOnLost(listener: () -> Unit) {
+        onLost = listener
+    }
+
+    /** Runs [block] on the render thread; if Filament fails there, frees the stage and reports it lost. */
+    private inline fun guarded(what: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            Log.e(STAGE_TAG, "Live stage failed to $what", e)
+            val hadStage = stage != null
+            runCatching { unloadOnRenderThread() }
+            if (hadStage) mainHandler.post { onLost() }
+        }
+    }
+
     fun attachMain(surface: Surface, width: Int, height: Int) {
-        handler.post { attach(mainTarget, surface, width, height) }
+        handler.post { guarded("attach") { attach(mainTarget, surface, width, height) } }
     }
 
     fun detachMain() = detachAndWait(mainTarget)
 
     fun attachCam(surface: Surface, width: Int, height: Int) {
-        handler.post { attach(camTarget, surface, width, height) }
+        handler.post { guarded("attach") { attach(camTarget, surface, width, height) } }
     }
 
     fun detachCam() = detachAndWait(camTarget)
@@ -111,7 +135,7 @@ class FilamentStage(
         target.height = height
         stage?.let { bind(target, it) }
         lastTime = -1f
-        startTicking()
+        if (mainTarget.surface != null) startTicking()
     }
 
     private fun bind(target: Target, scene: StageScene) {
@@ -129,9 +153,10 @@ class FilamentStage(
     private fun detachAndWait(target: Target) {
         val done = CountDownLatch(1)
         val posted = handler.post {
-            releaseGpu(target)
+            guarded("detach") { releaseGpu(target) }
             target.surface = null
-            if (mainTarget.surface == null && camTarget.surface == null) stopTicking()
+            // The cam is an inset on the broadcast; without the broadcast view nothing is on screen.
+            if (mainTarget.surface == null) stopTicking()
             done.countDown()
         }
         if (posted) done.await()
@@ -159,10 +184,18 @@ class FilamentStage(
         stage = null
     }
 
-    /** Frees everything and stops the render thread; the stage can't be used afterwards. */
+    /**
+     * Frees everything and stops the render thread; the stage can't be used afterwards. Waits (up to
+     * 2 s) for the swap chains to go, since the views' surfaces may be released right after.
+     */
     fun release() {
-        handler.post { unloadOnRenderThread() }
+        val done = CountDownLatch(1)
+        val posted = handler.post {
+            runCatching { unloadOnRenderThread() }
+            done.countDown()
+        }
         thread.quitSafely()
+        if (posted) done.await(RELEASE_WAIT_MS, TimeUnit.MILLISECONDS)
     }
 
     private fun startTicking() {
@@ -180,6 +213,10 @@ class FilamentStage(
     override fun doFrame(frameTimeNanos: Long) {
         if (!ticking) return
         Choreographer.getInstance().postFrameCallback(this)
+        guarded("draw") { drawFrame(frameTimeNanos) }
+    }
+
+    private fun drawFrame(frameTimeNanos: Long) {
         val scene = stage ?: return
         if (frameTimeNanos - lastFrameNanos < FRAME_INTERVAL_NANOS - VSYNC_SLACK_NANOS) return
         val time = (clock.positionMs() / 1000f).coerceIn(0f, scene.duration)
@@ -189,9 +226,10 @@ class FilamentStage(
         }
         val start = System.nanoTime()
         scene.pose(time)
-        val drawn = draw(mainTarget, scene.mainView, frameTimeNanos)
-        draw(camTarget, scene.camView, frameTimeNanos)
-        if (drawn) {
+        // Either view counts, so the 30 fps cap and the pause hold even if one view hasn't drawn.
+        val drawnMain = draw(mainTarget, scene.mainView, frameTimeNanos)
+        val drawnCam = draw(camTarget, scene.camView, frameTimeNanos)
+        if (drawnMain || drawnCam) {
             stats.add(frameTimeNanos, lastFrameNanos, System.nanoTime() - start)
             lastTime = time
             lastFrameNanos = frameTimeNanos

@@ -11,6 +11,7 @@ import dev.digitalrain.synthwave.core.model.Selection
 import java.io.File
 import java.nio.ByteBuffer
 import kotlin.math.abs
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
@@ -61,7 +62,8 @@ class FilamentStageTest {
         assertTrue(first.prepare(show))
         val second = FilamentStage(context, StageClock(), StageBackend.VULKAN)
         try {
-            val loaded = async { second.prepare(show) }
+            // Asks for the second engine before the first is freed, as an activity restart does.
+            val loaded = async(start = CoroutineStart.UNDISPATCHED) { second.prepare(show) }
             first.release()
             assertTrue(loaded.await())
             assertTrue(lit(second.capture(main = true, 270, 480, 10f)) > 0.2f)
@@ -93,11 +95,16 @@ class FilamentStageTest {
     }
 
     @Test fun memberCamDrawsTheFeaturedMember() = withStage(StageBackend.VULKAN) { stage ->
-        for (member in MemberId.entries) {
+        val cams = MemberId.entries.map { member ->
             assertTrue(stage.prepare(request(ArrangementId.LAYERED, member, ConceptId.ELECTRIC)))
             val cam = stage.capture(main = false, 280, 360, 10f)
             save(cam, 280, 360, "live-cam-${member.name.lowercase()}-10s.png")
             assertTrue("$member lit ${lit(cam)}", lit(cam) > 0.2f)
+            cam
+        }
+        // Each cam frames a different member, so no two look alike.
+        for (i in cams.indices) for (j in i + 1 until cams.size) {
+            assertTrue("cams $i $j", difference(cams[i], cams[j]) > 3f)
         }
     }
 

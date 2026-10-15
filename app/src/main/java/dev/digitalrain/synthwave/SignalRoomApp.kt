@@ -67,12 +67,14 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
 
     LaunchedEffect(model) { model.load() }
     DisposableEffect(lifecycleOwner) {
+        var returning = false // the first ON_START replays as the observer is added; the phase effect loads then
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) audio.onBackground()
-            // The stage may have been freed while the app was away; bring it back for the show.
-            if (event == Lifecycle.Event.ON_START && model.state.value.phase == Phase.BROADCAST &&
-                stage.state.value.status == StageStatus.IDLE
+            // The stage may have been freed, or failed, while the app was away; bring it back for the show.
+            if (event == Lifecycle.Event.ON_START && returning && model.state.value.phase == Phase.BROADCAST &&
+                stage.state.value.status.let { it == StageStatus.IDLE || it == StageStatus.FALLBACK }
             ) scope.launch { stage.load(model.state.value.selection) }
+            if (event == Lifecycle.Event.ON_START) returning = true
         }
         // The stage holds a few hundred MB; give it back when the system asks.
         val memory = object : ComponentCallbacks2 {
@@ -80,8 +82,9 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
                 if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) stage.unload()
             }
             override fun onConfigurationChanged(newConfig: Configuration) = Unit
+            // onTrimMemory covers the background case; unloading here would drop the stage mid-show.
             @Deprecated("Deprecated in Java")
-            override fun onLowMemory() = stage.unload()
+            override fun onLowMemory() = Unit
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         context.registerComponentCallbacks(memory)

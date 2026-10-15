@@ -51,6 +51,10 @@ process-wide state, and destroying one engine while another runs crashes the oth
 thread. That happened when an activity restart built the new screen's stage before the old one
 was freed. A new engine now waits up to 5 s for the old one (`EngineTurn` in `StageScene.kt`).
 
+If Filament throws on the render thread (loading, attaching a view, drawing), `FilamentStage`
+frees the stage and the screen shows the concept's still; the next return to the app tries
+again. A native crash inside Filament can't be caught this way.
+
 ## Measurements
 
 Pixel 7 Pro, Android 16, release build signed with the debug key, Driving / Frontman / Warm, on
@@ -75,7 +79,8 @@ Pixel 7 Pro, Android 16, release build signed with the debug key, Driving / Fron
   spike's 1.12 cores. The main thread is well under the spike's 0.19–0.22. End-screen PSS is
   below the video app's 249 MB.
 - When the app is in the background, `TRIM_MEMORY_BACKGROUND` frees the stage: 305 MB → 128 MB.
-  The stage loads again on return (361 ms).
+  The stage loads again on return (361 ms). Before the trim arrives, the stage's threads use 0%
+  CPU: the frame loop runs only while the broadcast view is attached.
 - Release APK: 60.2 MB.
 
 ### Cheaper picture settings tried
