@@ -9,12 +9,31 @@ private val stageJson = Json { ignoreUnknownKeys = false }
 
 const val BROADCAST_CAMERA = "CAM | Broadcast group"
 
-/** The camera in the stage file that follows [member] for the member cam. */
-fun fancamName(member: MemberId): String = when (member) {
-    MemberId.FRONTMAN -> "CAM | Frontman fancam"
-    MemberId.KEYBOARDIST -> "CAM | Producer fancam"
-    MemberId.KEYTAR -> "CAM | Keytar fancam"
-    MemberId.DRUMMER -> "CAM | Drummer fancam"
+/**
+ * What the member cam frames: a window of the broadcast picture centred on [x], [y] (fractions of
+ * the 9:16 frame's width and height, from the top left) and [fieldWidth] of the frame wide. These
+ * are the close-ups the video version cut from the performance video.
+ */
+data class CamFocus(val x: Float, val y: Float, val fieldWidth: Float)
+
+fun camFocus(member: MemberId): CamFocus = when (member) {
+    MemberId.FRONTMAN -> CamFocus(0.585f, 0.515f, 0.13f) // hair, face and mic
+    MemberId.KEYTAR -> CamFocus(0.78f, 0.565f, 0.18f) // both hands on the keytar
+    MemberId.KEYBOARDIST -> CamFocus(0.21f, 0.54f, 0.16f) // hands on the BORG keys
+    MemberId.DRUMMER -> CamFocus(0.47f, 0.47f, 0.22f) // sticks on the pads
+}
+
+/**
+ * Orthographic bounds (left, right, bottom, top) for a [width] x [height] view that shows [focus]
+ * through the broadcast camera, whose half height is [broadcastHalfHeight].
+ */
+fun camWindow(focus: CamFocus, broadcastHalfHeight: Float, width: Int, height: Int): FloatArray {
+    val frameHalfWidth = broadcastHalfHeight * 9 / 16
+    val centreX = (focus.x * 2 - 1) * frameHalfWidth
+    val centreY = (1 - focus.y * 2) * broadcastHalfHeight
+    val halfWidth = focus.fieldWidth * frameHalfWidth
+    val halfHeight = halfWidth * height / width
+    return floatArrayOf(centreX - halfWidth, centreX + halfWidth, centreY - halfHeight, centreY + halfHeight)
 }
 
 /** stage.json from art/blender/export_live_stage.py. Colours are linear; positions in glTF axes. */
