@@ -12,12 +12,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import dev.digitalrain.synthwave.core.ui.LagMonitor
 import dev.digitalrain.synthwave.core.ui.SignalRoomTheme
 import dev.digitalrain.synthwave.core.ui.SplashScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        LagMonitor.install(window)
         setContent {
             // The splash plays once per launch; rotation and process restore skip it.
             var showSplash by rememberSaveable { mutableStateOf(true) }

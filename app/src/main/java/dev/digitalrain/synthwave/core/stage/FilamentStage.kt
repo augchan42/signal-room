@@ -152,8 +152,11 @@ class FilamentStage(
     }
 
     private fun detachAndWait(target: Target) {
+        val start = SystemClock.elapsedRealtime()
+        var started = 0L
         val done = CountDownLatch(1)
         val posted = handler.post {
+            started = SystemClock.elapsedRealtime()
             guarded("detach") { releaseGpu(target) }
             target.surface = null
             // The cam is an inset on the broadcast; without the broadcast view nothing is on screen.
@@ -161,6 +164,9 @@ class FilamentStage(
             done.countDown()
         }
         if (posted) done.await()
+        val end = SystemClock.elapsedRealtime()
+        Log.i(STAGE_TAG, "Detached ${if (target.main) "broadcast" else "cam"}: main thread waited ${end - start} ms, " +
+            "${if (posted) started - start else 0} ms of it for the render thread to be free")
     }
 
     private fun releaseGpu(target: Target) {
@@ -178,11 +184,14 @@ class FilamentStage(
     }
 
     private fun unloadOnRenderThread() {
+        val start = SystemClock.elapsedRealtime()
+        val loaded = stage != null
         stopTicking()
         releaseGpu(mainTarget)
         releaseGpu(camTarget)
         stage?.destroy()
         stage = null
+        if (loaded) Log.i(STAGE_TAG, "Unloaded in ${SystemClock.elapsedRealtime() - start} ms")
     }
 
     /**
