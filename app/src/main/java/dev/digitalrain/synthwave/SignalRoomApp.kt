@@ -1,6 +1,8 @@
 package dev.digitalrain.synthwave
 
+import android.content.ComponentCallbacks2
 import android.content.pm.ApplicationInfo
+import android.content.res.Configuration
 import android.os.SystemClock
 import android.util.Log
 import androidx.compose.runtime.Composable
@@ -16,7 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import dev.digitalrain.synthwave.core.audio.BroadcastVideoController
 import dev.digitalrain.synthwave.core.audio.Media3AudioEngine
 import dev.digitalrain.synthwave.core.audio.PlaybackStatus
 import dev.digitalrain.synthwave.core.audio.PreviewController
@@ -26,6 +27,11 @@ import dev.digitalrain.synthwave.core.data.loadAndroidAssetCatalog
 import dev.digitalrain.synthwave.core.data.loadContent
 import dev.digitalrain.synthwave.core.model.Phase
 import dev.digitalrain.synthwave.core.simulation.RunAction
+import dev.digitalrain.synthwave.core.stage.FilamentStage
+import dev.digitalrain.synthwave.core.stage.LiveStageController
+import dev.digitalrain.synthwave.core.stage.StageClock
+import dev.digitalrain.synthwave.core.stage.StageStatus
+import dev.digitalrain.synthwave.core.stage.chooseBackend
 import dev.digitalrain.synthwave.core.ui.SignalRoomTheme
 import dev.digitalrain.synthwave.feature.booking.BookingScreen
 import dev.digitalrain.synthwave.feature.booking.BookingViewModel
@@ -46,30 +52,48 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
         BookingViewModel(content, snapshotStore ?: FileSnapshotStore(context.filesDir.toPath()))
     }
     val audio = remember { PreviewController(Media3AudioEngine(context)) }
-    val video = remember { BroadcastVideoController(context, catalog) }
+    val stageClock = remember { StageClock() }
+    val liveStage = remember { FilamentStage(context, stageClock, chooseBackend(context)) }
+    val stage = remember { LiveStageController(catalog, liveStage, stageClock) }
     val scope = rememberCoroutineScope()
     val snapshot by model.state.collectAsState()
     val message by model.message.collectAsState()
     val recoveryRequired by model.recoveryRequired.collectAsState()
     val restoredFromStore by model.restoredFromStore.collectAsState()
     val playback by audio.state.collectAsState()
-    val visual by video.state.collectAsState()
+    val stageState by stage.state.collectAsState()
     val broadcastLoadedAttempt = remember { mutableIntStateOf(0) }
     var countIn by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(model) { model.load() }
     DisposableEffect(lifecycleOwner) {
+        var returning = false // the first ON_START replays as the observer is added; the phase effect loads then
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                audio.onBackground()
-                video.onBackground()
+            if (event == Lifecycle.Event.ON_STOP) audio.onBackground()
+            // The stage may have been freed, or failed, while the app was away; bring it back for the show.
+            if (event == Lifecycle.Event.ON_START && returning && model.state.value.phase == Phase.BROADCAST &&
+                stage.state.value.status.let { it == StageStatus.IDLE || it == StageStatus.FALLBACK }
+            ) scope.launch { stage.load(model.state.value.selection) }
+            if (event == Lifecycle.Event.ON_START) returning = true
+        }
+        // The stage holds a few hundred MB; give it back when the system asks.
+        val memory = object : ComponentCallbacks2 {
+            override fun onTrimMemory(level: Int) {
+                if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) stage.unload()
             }
+            override fun onConfigurationChanged(newConfig: Configuration) = Unit
+            // onTrimMemory covers the background case; unloading here would drop the stage mid-show.
+            @Deprecated("Deprecated in Java")
+            override fun onLowMemory() = Unit
         }
         lifecycleOwner.lifecycle.addObserver(observer)
+        context.registerComponentCallbacks(memory)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+            context.unregisterComponentCallbacks(memory)
             audio.close()
-            video.release()
+            stage.unload()
+            liveStage.release()
         }
     }
     LaunchedEffect(snapshot.phase, snapshot.selection.arrangement, snapshot.selection.member, snapshot.attemptId) {
@@ -79,6 +103,8 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     }
     LaunchedEffect(snapshot.phase, snapshot.attemptId) {
         if (snapshot.phase == Phase.BROADCAST) {
+            // Loads during the count-in, so the first frame is ready when the show starts.
+            launch { stage.load(snapshot.selection) }
             if (shouldCountIn(restoredFromStore, snapshot.viewingCompleted, snapshot.broadcastPositionMs)) {
                 audio.reset()
                 try {
@@ -93,18 +119,20 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
                     autoPlay = !restoredFromStore && inForeground)
                 broadcastLoadedAttempt.intValue = snapshot.attemptId
             }
-            launch { video.load(snapshot.selection) }
             audioLoad.join()
-        } else if (snapshot.phase == Phase.VERDICT || snapshot.phase == Phase.RECAP) {
-            audio.pause()
-        } else if (snapshot.phase == Phase.BRIEF) {
-            audio.reset()
+        } else {
+            stage.unload()
+            if (snapshot.phase == Phase.VERDICT || snapshot.phase == Phase.RECAP) {
+                audio.pause()
+            } else if (snapshot.phase == Phase.BRIEF) {
+                audio.reset()
+            }
         }
     }
     LaunchedEffect(snapshot.phase, snapshot.attemptId) {
         while (isActive && snapshot.phase == Phase.BROADCAST) {
             audio.refresh()
-            video.sync(audio.state.value.positionMs, audio.state.value.status)
+            stage.sync(audio.state.value.positionMs, audio.state.value.status)
             delay(50)
         }
     }
@@ -128,9 +156,8 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             content = content,
             catalog = catalog,
             playback = playback,
-            visual = visual,
-            videoPlayer = video.player,
-            camPlayer = video.camPlayer,
+            stage = stageState,
+            liveStage = liveStage,
             message = message,
             recoveryRequired = recoveryRequired,
             countIn = countIn,

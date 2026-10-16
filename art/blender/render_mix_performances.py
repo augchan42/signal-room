@@ -51,6 +51,8 @@ CONCEPTS = {
                      cyan=(.04, .7, 1), coral=(1, .12, .07), rim=1.2, beam=(.25, .65, 1)),
 }
 MIXES = [f"{a}-{m}" for a in ("sparse", "driving", "layered") for m in ("frontman", "keyboardist", "keytar", "drummer")]
+# Key and fill levels in the prepared scene; a concept's level is a factor of these.
+BASE_ENERGY = {"Warm portrait key": 300, "Cool soft fill": 48}
 
 
 def _fcurves(data):
@@ -132,10 +134,10 @@ def apply_concept(concept):
         screen.links.new(image_node.outputs["Color"], saturation.inputs["Color"])
         screen.links.new(saturation.outputs["Color"], emission.inputs["Color"])
     saturation.inputs["Saturation"].default_value = look["saturation"]
-    for name, (color, energy), base in (("Warm portrait key", look["key"], 300), ("Cool soft fill", look["fill"], 48)):
+    for name, (color, energy) in (("Warm portrait key", look["key"]), ("Cool soft fill", look["fill"])):
         light = bpy.data.objects[name].data
         light.color = color
-        _scale(light, "energy", energy / base)
+        _scale(light, "energy", energy / BASE_ENERGY[name])
     for name in ("Cyan rear rim", "Coral rear rim"):
         light = bpy.data.objects[name].data
         light.color = look["cyan" if name.startswith("Cyan") else "coral"]

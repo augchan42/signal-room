@@ -2,6 +2,7 @@ package dev.digitalrain.synthwave.feature.booking
 
 import android.content.pm.ActivityInfo
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -60,6 +61,8 @@ class BroadcastLifecycleTest {
     }).around(compose)
 
     @Test fun restoredBroadcastAndRotationRequireResume() {
+        // The splash covers the broadcast and takes the first tap; wait for it to close.
+        compose.waitUntil(8_000) { compose.onAllNodesWithTag("splash").fetchSemanticsNodes().isEmpty() }
         waitFor("paused")
         compose.onNodeWithTag("broadcast-play-pause").performScrollTo().performClick()
         waitFor("playing")
