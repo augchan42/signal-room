@@ -109,6 +109,8 @@ class Media3AudioEngine(context: Context) : AudioEngine {
             }
             try {
                 player.stop()
+                // A track that played to its end keeps playWhenReady; loading never starts playback.
+                player.playWhenReady = false
                 player.setMediaItem(MediaItem.fromUri("asset:///demo/$path"), atMs.coerceAtLeast(0))
                 player.prepare()
             } catch (error: Exception) {
