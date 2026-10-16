@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -32,6 +33,7 @@ import dev.digitalrain.synthwave.core.stage.LiveStageController
 import dev.digitalrain.synthwave.core.stage.StageClock
 import dev.digitalrain.synthwave.core.stage.StageStatus
 import dev.digitalrain.synthwave.core.stage.chooseBackend
+import dev.digitalrain.synthwave.core.ui.LagMonitor
 import dev.digitalrain.synthwave.core.ui.SignalRoomTheme
 import dev.digitalrain.synthwave.feature.booking.BookingScreen
 import dev.digitalrain.synthwave.feature.booking.BookingViewModel
@@ -66,6 +68,14 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
     var countIn by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(model) { model.load() }
+    val shownState = "${snapshot.phase} attempt ${snapshot.attemptId}"
+    val lastShownState = remember { arrayOf<String?>(null) }
+    SideEffect {
+        if (lastShownState[0] != shownState) {
+            lastShownState[0] = shownState
+            LagMonitor.stateChanged(shownState)
+        }
+    }
     DisposableEffect(lifecycleOwner) {
         var returning = false // the first ON_START replays as the observer is added; the phase effect loads then
         val observer = LifecycleEventObserver { _, event ->
@@ -163,6 +173,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             countIn = countIn,
             onAction = { action ->
                 val start = SystemClock.elapsedRealtime()
+                LagMonitor.tap(action.javaClass.simpleName)
                 if (debugTiming) Log.d("SignalRoomActions", "${action.javaClass.simpleName} requested")
                 scope.launch {
                     model.dispatch(action)
@@ -172,6 +183,7 @@ fun SignalRoomApp(snapshotStore: SnapshotStore? = null) {
             },
             onReset = {
                 val start = SystemClock.elapsedRealtime()
+                LagMonitor.tap("ResetDemo")
                 if (debugTiming) Log.d("SignalRoomActions", "ResetDemo requested")
                 scope.launch {
                     model.startNewDemo()

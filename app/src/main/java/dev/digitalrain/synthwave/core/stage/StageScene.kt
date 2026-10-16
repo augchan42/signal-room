@@ -96,8 +96,10 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
     private val sampler = TextureSampler(TextureSampler.MinFilter.LINEAR_MIPMAP_LINEAR,
         TextureSampler.MagFilter.LINEAR, TextureSampler.WrapMode.CLAMP_TO_EDGE)
     private val broadcastCamera: Camera
-    private var memberCamera: Camera? = null
-    private var memberCameraName: String? = null
+    // The member cam looks through the broadcast camera at a close-up window of the picture.
+    private val camEntity: Int
+    private val memberCamera: Camera
+    private var focus: CamFocus? = null
 
     private class MovingNode(val instance: Int, val motion: NodeMotion)
     private class LightLevel(val instance: Int, val name: String, val watts: FloatArray, var scale: Float)
@@ -153,6 +155,12 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
             for (area in info.areaLights) addAreaLight(area)
             broadcastCamera = camera(BROADCAST_CAMERA)
             mainView.camera = broadcastCamera
+            camEntity = EntityManager.get().create()
+            memberCamera = engine.createCamera(camEntity).apply {
+                setExposure(1f, 1.2f, 100f)
+                setModelMatrix(broadcastCamera.getModelMatrix(FloatArray(16)))
+            }
+            camView.camera = memberCamera
         } catch (e: Throwable) {
             engine.destroy()
             EngineTurn.give()
@@ -262,10 +270,9 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
     }
 
     fun useMember(member: MemberId) {
-        val name = fancamName(member)
-        memberCamera = camera(name)
-        memberCameraName = name
-        camView.camera = memberCamera
+        focus = camFocus(member)
+        val viewport = camView.viewport
+        if (viewport.width > 0) fit(main = false, viewport.width, viewport.height)
     }
 
     /** Poses the band and sets the lights for [time] seconds into the show. */
@@ -284,15 +291,20 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
         }
     }
 
-    /** Sizes [view]'s viewport and its orthographic camera to [width] x [height], keeping the camera's height. */
+    /** Sizes [view]'s viewport and its orthographic camera to [width] x [height]. */
     fun fit(main: Boolean, width: Int, height: Int) {
         val view = if (main) mainView else camView
-        val name = if (main) BROADCAST_CAMERA else memberCameraName ?: return
-        val camera = if (main) broadcastCamera else memberCamera ?: return
         view.viewport = Viewport(0, 0, width, height)
-        val halfHeight = info.cameras.getValue(name).ymag.toDouble()
-        val halfWidth = halfHeight * width / height
-        camera.setProjection(Camera.Projection.ORTHO, -halfWidth, halfWidth, -halfHeight, halfHeight, 0.1, 1000.0)
+        val halfHeight = info.cameras.getValue(BROADCAST_CAMERA).ymag
+        if (main) {
+            val halfWidth = halfHeight.toDouble() * width / height
+            broadcastCamera.setProjection(Camera.Projection.ORTHO, -halfWidth, halfWidth,
+                -halfHeight.toDouble(), halfHeight.toDouble(), 0.1, 1000.0)
+        } else {
+            val (left, right, bottom, top) = camWindow(focus ?: return, halfHeight, width, height).toList()
+            memberCamera.setProjection(Camera.Projection.ORTHO, left.toDouble(), right.toDouble(),
+                bottom.toDouble(), top.toDouble(), 0.1, 1000.0)
+        }
     }
 
     /**
@@ -340,6 +352,8 @@ internal class StageScene(private val assets: AssetManager, backend: StageBacken
         engine.destroyColorGrading(colorGrading)
         engine.destroyView(mainView)
         engine.destroyView(camView)
+        engine.destroyCameraComponent(camEntity)
+        EntityManager.get().destroy(camEntity)
         engine.destroyScene(scene)
         engine.destroy()
         EngineTurn.give()
